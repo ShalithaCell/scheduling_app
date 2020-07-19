@@ -1,6 +1,28 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  margin: auto;
+  margin: 0;
   max-width: 38rem;
-  padding: 2rem;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+#container {
+  width: inherit;
+  height: inherit;
+  margin: 0;
+  padding: 0;
+  background-color: pink;
+}
+
+.title-custom{
+  background-color: #344551;
+  height: 93px;
+  margin-left: -3px;
 }

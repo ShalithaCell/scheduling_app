@@ -1,12 +1,132 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Hello World!</title>
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="./public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="./public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="./public/style/slider-custom.css" />
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
+	<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+		<div class="wrapper d-flex align-items-stretch" style="height: 100%">
+			<nav id="sidebar" style="z-index: 9999;">
+				<div class="custom-menu">
+					<button type="button" id="sidebarCollapse" class="btn btn-primary">
+						<i class="fa fa-bars"></i>
+						<span class="sr-only">Toggle Menu</span>
+					</button>
+				</div>
+				<div class="p-4">
+					<h1><a href="index.html" class="logo">Portfolic <span>Portfolio Agency</span></a></h1>
+					<ul class="list-unstyled components mb-5">
+						<li class="active">
+							<a href="#"><span class="fa fa-home mr-3"></span> Home</a>
+						</li>
+						<li>
+							<a href="#"><span class="fa fa-user mr-3"></span> About</a>
+						</li>
+						<li>
+							<a href="#"><span class="fa fa-briefcase mr-3"></span> Works</a>
+						</li>
+						<li>
+							<a href="#"><span class="fa fa-sticky-note mr-3"></span> Blog</a>
+						</li>
+						<li>
+							<a href="#"><span class="fa fa-suitcase mr-3"></span> Gallery</a>
+						</li>
+						<li>
+							<a href="#"><span class="fa fa-cogs mr-3"></span> Services</a>
+						</li>
+						<li>
+							<a href="#"><span class="fa fa-paper-plane mr-3"></span> Contacts</a>
+						</li>
+					</ul>
+
+					<div class="mb-5">
+						<h3 class="h6 mb-3">Subscribe for newsletter</h3>
+						<form action="#" class="subscribe-form">
+							<div class="form-group d-flex">
+								<div class="icon"><span class="icon-paper-plane"></span></div>
+								<input type="text" class="form-control" placeholder="Enter Email Address">
+							</div>
+						</form>
+					</div>
+
+					<div class="footer">
+						<p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+							Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="#" target="_blank">Colorlib.com</a>
+							<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></p>
+					</div>
+
+				</div>
+			</nav>
+
+			<!-- Page Content  -->
+			<div class="w-100">
+				<div class="w-100 title-custom">
+
+				</div>
+				<div>
+					<table class="table">
+						<thead>
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">First</th>
+							<th scope="col">Last</th>
+							<th scope="col">Handle</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<th scope="row">1</th>
+							<td>Mark</td>
+							<td>Otto</td>
+							<td>@mdo</td>
+						</tr>
+						<tr>
+							<th scope="row">2</th>
+							<td>Jacob</td>
+							<td>Thornton</td>
+							<td>@fat</td>
+						</tr>
+						<tr>
+							<th scope="row">3</th>
+							<td>Larry</td>
+							<td>the Bird</td>
+							<td>@twitter</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+
+
   </body>
+
+  <!-- Insert this line above script imports  -->
+  <script>
+	  if (typeof module === "object") {
+		  window.module = module;
+		  module = undefined;
+	  }
+  </script>
+
+  <!-- normal script imports etc  -->
+  <script src="./public/jquery.min.js"></script>
+  <script src="./public/popper.min.js"></script>
+  <script src="./public/boostrap/bootstrap.min.js"></script>
+  <script src="./public/script/slider-custom.js"></script>
+
+  <!-- Insert this line after script imports -->
+  <script>
+	  if (window.module) module = window.module;
+  </script>
+
 </html>
