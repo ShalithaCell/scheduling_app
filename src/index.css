@@ -26,3 +26,10 @@ html {
   height: 93px;
   margin-left: -3px;
 }
+
+.title-font-custom{
+   padding-top: 2%;
+   padding-left: 4%;
+   color: white;
+   font-weight: bold
+ }
