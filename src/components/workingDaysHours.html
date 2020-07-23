@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
     <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="../public/style/slider-custom.css" />
+	  <link rel="stylesheet" href="../public/style/hours-custom.css" />
+	  <link rel="stylesheet" href="../public/style/material-custom.css" />
   </head>
   <body>
 	<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
@@ -57,30 +59,15 @@
 					<h2 class="title-font-custom">Configure working days and hours</h2>
 				</div>
 				<div>
-					<table class="table">
-						<thead>
-						<tr>
-							<th scope="col">#</th>
-							<th scope="col">First</th>
-							<th scope="col">Last</th>
-							<th scope="col">Handle</th>
-						</tr>
-						</thead>
-						<tbody>
-						<tr>
-							<th scope="row">2</th>
-							<td>Jacob</td>
-							<td>Thornton</td>
-							<td>@fat</td>
-						</tr>
-						<tr>
-							<th scope="row">3</th>
-							<td>Larry</td>
-							<td>the Bird</td>
-							<td>@twitter</td>
-						</tr>
-						</tbody>
-					</table>
+					<div class="form__group">
+						<input type="email" id="email" class="form__field" placeholder="Your Email">
+						<label for="email" class="form__label">Your Email</label>
+					</div>
+
+					<div class="form__group">
+						<textarea id="message" class="form__field" placeholder="Your Message" rows="6"></textarea>
+						<label for="message" class="form__label">Your Message</label>
+					</div>
 				</div>
 			</div>
 
