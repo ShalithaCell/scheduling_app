@@ -33,3 +33,7 @@ html {
    color: white;
    font-weight: bold
  }
+
+.margin-1-custom{
+    margin: 1% !important;
+}
