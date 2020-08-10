@@ -102,7 +102,17 @@
 
 <!-- Insert this line after script imports -->
 <script>
+
 	if (window.module) module = window.module;
+
+	const { timeTableEnum } = require('../systemConst');
+	const { objProx } = require('../services/systemSessionContainer');
+
+	//import external js
+	//$.getScript('../systemConst.js');
+	//$.getScript('../services/systemSessionContainer.js');
+
+
 
 	$(function() {
 		$.confirm({
@@ -117,13 +127,15 @@
 				Weekday: {
 					btnClass: 'btn btn-primary',
 					action: function(){
-						$.alert('Something else?');
+						objProx.timeTableType = timeTableEnum.weekdays;
+						console.log(objProx.timeTableType);
 					}
 				},
 				Weekend: {
 					btnClass: 'btn btn-success',
 					action: function(){
-						$.alert('Something else?');
+						objProx.timeTableType = timeTableEnum.weekend;
+						console.log(objProx.timeTableType);
 					}
 				}
 			},

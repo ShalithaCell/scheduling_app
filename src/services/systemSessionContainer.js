@@ -1,9 +1,8 @@
-import { timeTableEnum } from "../const";
 
 const obj = {
-    timeTableType: timeTableEnum.weekdays
+    timeTableType: ''
 };
-export const objProx = new Proxy(obj, {
+const objProx = new Proxy(obj, {
     get(obj, prop) {
         //console.log('On obj', obj, 'getting', prop);
         return obj[prop];
@@ -13,3 +12,5 @@ export const objProx = new Proxy(obj, {
         return obj[prop] = newVal;
     },
 });
+
+module.exports = { objProx }
