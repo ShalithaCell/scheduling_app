@@ -1,4 +1,4 @@
-const navBar = '<nav id="sidebar" style="z-index: 9999;">' +
+const navBar = '<nav id="sidebar" style="z-index: 9;">' +
     '<div class="custom-menu">' +
     '<button type="button" id="sidebarCollapse" class="btn btn-primary">' +
     '<i class="fa fa-bars"></i>' +

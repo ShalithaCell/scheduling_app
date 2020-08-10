@@ -10,6 +10,8 @@
 	<link rel="stylesheet" href="../public/style/hours-custom.css" />
 	<link rel="stylesheet" href="../public/style/material-custom.css" />
 	<link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+	<link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+
 </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
@@ -26,13 +28,24 @@
 				<div class="card margin-1-custom">
 					<div class="card-body">
 						<div class="form__group">
-							<input type="email" id="email" class="form__field" placeholder="Your Email">
-							<label for="email" class="form__label">Your Email</label>
+							<input type="number" id="txtworkingDays" class="form__field" max="7" placeholder="Enter working days">
+							<label for="txtworkingDays" class="form__label">Number of working days per week</label>
 						</div>
-
-						<div class="form__group">
-							<textarea id="message" class="form__field" placeholder="Your Message" rows="6"></textarea>
-							<label for="message" class="form__label">Your Message</label>
+					</div>
+				</div>
+				<div class="card margin-1-custom">
+					<div class="card-body">
+						<div class="col-md-4">
+							<div class="form__group">
+								<input type="number" id="txtworkingDays2" class="form__field" max="7" placeholder="Enter working days">
+								<label for="txtworkingDays2" class="form__label">Number of working days per week</label>
+							</div>
+						</div>
+						<div class="col-md-8">
+							<div class="form__group">
+								<input type="number" id="txtworkingDays3" class="form__field" max="7" placeholder="Enter working days">
+								<label for="txtworkingDays3" class="form__label">Number of working days per week</label>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -62,6 +75,7 @@
 <script src="../public/boostrap/bootstrap.min.js"></script>
 <script src="../public/script/slider-custom.js"></script>
 <script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
 
 <!-- Insert this line after script imports -->
 <script>
@@ -109,6 +123,29 @@
 				}
 			},
 		});
+
+		$('#txtworkingDays').on('input', function() {
+
+			if($(this).val().length == 0){
+				return ;
+			}
+
+			var num = parseInt($(this).val(), 10);
+
+			if(num > 7 || num < 0){
+				$('#txtworkingDays').val($(this).val().slice(0,-1));
+				$.toast({
+					heading: 'Error',
+					text: 'You cannot enter more than 7 days or less than 0 days !',
+					showHideTransition: 'fade',
+					icon: 'error'
+				});
+
+				return ;
+			}
+
+		});
+
 	});
 
 </script>
