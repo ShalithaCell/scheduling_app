@@ -1,117 +1,147 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Schedule App</title>
-    <link rel="stylesheet" href="../index.css" />
-    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="../public/style/slider-custom.css" />
-  </head>
-  <body>
-	<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
-		<div class="wrapper d-flex align-items-stretch" style="height: 100%">
-			<nav id="sidebar" style="z-index: 9999;">
-				<div class="custom-menu">
-					<button type="button" id="sidebarCollapse" class="btn btn-primary">
-						<i class="fa fa-bars"></i>
-						<span class="sr-only">Toggle Menu</span>
-					</button>
-				</div>
-				<div class="p-4">
-					<h1><a href="../index.html" class="logo">A B C <span>Schedule App</span></a></h1>
-					<ul class="list-unstyled components mb-5">
-						<li >
-							<a href="#"><span class="fa fa-home mr-3"></span> Home</a>
-						</li>
-						<li class="active">
-							<a href="#"><span class="fa fa-briefcase mr-3"></span>  Working days and hours</a>
-						</li>
-						<li>
-							<a href="#"><span class="fa fa-sticky-note mr-3"></span> Blog</a>
-						</li>
-						<li>
-							<a href="#"><span class="fa fa-suitcase mr-3"></span> Gallery</a>
-						</li>
-						<li>
-							<a href="#"><span class="fa fa-cogs mr-3"></span> Services</a>
-						</li>
-						<li>
-							<a href="#"><span class="fa fa-paper-plane mr-3"></span> Contacts</a>
-						</li>
-					</ul>
-
-					<div class="mb-5">
-						<h3 class="h6 mb-3">Subscribe for newsletter</h3>
-						<form action="#" class="subscribe-form">
-							<div class="form-group d-flex">
-								<div class="icon"><span class="icon-paper-plane"></span></div>
-								<input type="text" class="form-control" placeholder="Enter Email Address">
-							</div>
-						</form>
-					</div>
-
-				</div>
-			</nav>
-
-			<!-- Page Content  -->
-			<div class="w-100">
-				<div class="w-100 title-custom">
-					<h2 class="title-font-custom">Configure working days and hours</h2>
-				</div>
-				<div>
-					<table class="table">
-						<thead>
-						<tr>
-							<th scope="col">#</th>
-							<th scope="col">First</th>
-							<th scope="col">Last</th>
-							<th scope="col">Handle</th>
-						</tr>
-						</thead>
-						<tbody>
-						<tr>
-							<th scope="row">2</th>
-							<td>Jacob</td>
-							<td>Thornton</td>
-							<td>@fat</td>
-						</tr>
-						<tr>
-							<th scope="row">3</th>
-							<td>Larry</td>
-							<td>the Bird</td>
-							<td>@twitter</td>
-						</tr>
-						</tbody>
-					</table>
-				</div>
+<head>
+	<meta charset="UTF-8" />
+	<title>Schedule App</title>
+	<link rel="stylesheet" href="../index.css" />
+	<link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+	<link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+	<link rel="stylesheet" href="../public/style/slider-custom.css" />
+	<link rel="stylesheet" href="../public/style/hours-custom.css" />
+	<link rel="stylesheet" href="../public/style/material-custom.css" />
+	<link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+	<div class="wrapper d-flex align-items-stretch" style="height: 100%">
+		<nav id="sidebar" style="z-index: 9999;">
+			<div class="custom-menu">
+				<button type="button" id="sidebarCollapse" class="btn btn-primary">
+					<i class="fa fa-bars"></i>
+					<span class="sr-only">Toggle Menu</span>
+				</button>
 			</div>
+			<div class="p-4">
+				<h1><a href="../index.html" class="logo">A B C <span>Schedule App</span></a></h1>
+				<ul class="list-unstyled components mb-5">
+					<li >
+						<a href="#"><span class="fa fa-home mr-3"></span> Home</a>
+					</li>
+					<li class="active">
+						<a href="#"><span class="fa fa-briefcase mr-3"></span>  Working days and hours</a>
+					</li>
+					<li>
+						<a href="#"><span class="fa fa-suitcase mr-3"></span> Gallery</a>
+					</li>
+					<li>
+						<a href="#"><span class="fa fa-cogs mr-3"></span> Services</a>
+					</li>
+					<li>
+						<a href="#"><span class="fa fa-paper-plane mr-3"></span> Contacts</a>
+					</li>
+				</ul>
 
+				<div class="mb-5">
+					<h3 class="h6 mb-3">Subscribe for newsletter</h3>
+					<form action="#" class="subscribe-form">
+						<div class="form-group d-flex">
+							<div class="icon"><span class="icon-paper-plane"></span></div>
+							<input type="text" class="form-control" placeholder="Enter Email Address">
+						</div>
+					</form>
+				</div>
+
+			</div>
+		</nav>
+
+		<!-- Page Content  -->
+		<div class="w-100">
+			<div class="w-100 title-custom">
+				<h2 class="title-font-custom">Configure working days and hours</h2>
+			</div>
+			<div>
+				<div class="card margin-1-custom">
+					<div class="card-body">
+						<div class="form__group">
+							<input type="email" id="email" class="form__field" placeholder="Your Email">
+							<label for="email" class="form__label">Your Email</label>
+						</div>
+
+						<div class="form__group">
+							<textarea id="message" class="form__field" placeholder="Your Message" rows="6"></textarea>
+							<label for="message" class="form__label">Your Message</label>
+						</div>
+					</div>
+				</div>
+
+			</div>
 		</div>
 
 	</div>
 
+</div>
 
 
-  </body>
 
-  <!-- Insert this line above script imports  -->
-  <script>
-	  if (typeof module === "object") {
-		  window.module = module;
-		  module = undefined;
-	  }
-  </script>
+</body>
 
-  <!-- normal script imports etc  -->
-  <script src="../public/jquery.min.js"></script>
-  <script src="../public/popper.min.js"></script>
-  <script src="../public/boostrap/bootstrap.min.js"></script>
-  <script src="../public/script/slider-custom.js"></script>
+<!-- Insert this line above script imports  -->
+<script>
+	if (typeof module === "object") {
+		window.module = module;
+		module = undefined;
+	}
+</script>
 
-  <!-- Insert this line after script imports -->
-  <script>
-	  if (window.module) module = window.module;
-  </script>
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+	if (window.module) module = window.module;
+
+	const { timeTableEnum } = require('../systemConst');
+	const { objProx } = require('../services/systemSessionContainer');
+
+	//import external js
+	//$.getScript('../systemConst.js');
+	//$.getScript('../services/systemSessionContainer.js');
+
+
+
+	$(function() {
+		$.confirm({
+			icon: 'fa fa-calendar',
+			title: 'Select Timetable Type',
+			content: '',
+			theme: 'modern',
+			closeIcon: true,
+			animation: 'scale',
+			type: 'blue',
+			buttons: {
+				Weekday: {
+					btnClass: 'btn btn-primary',
+					action: function(){
+						objProx.timeTableType = timeTableEnum.weekdays;
+						console.log(objProx.timeTableType);
+					}
+				},
+				Weekend: {
+					btnClass: 'btn btn-success',
+					action: function(){
+						objProx.timeTableType = timeTableEnum.weekend;
+						console.log(objProx.timeTableType);
+					}
+				}
+			},
+		});
+	});
+
+</script>
 
 </html>
