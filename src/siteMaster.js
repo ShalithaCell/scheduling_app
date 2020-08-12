@@ -14,8 +14,8 @@ const navBar = '<nav id="sidebar" style="z-index: 9;">' +
     '<li id="liWorkingDays">' +
     '<a href="./components/workingDaysHours.html"><span class="fa fa-briefcase mr-3"></span>  Working days and hours</a>' +
     '</li>' +
-    '<li>' +
-    '<a href="#"><span class="fa fa-suitcase mr-3"></span> Gallery</a>' +
+    '<li id="liTags">' +
+    '<a href="./components/tags.html"><span class="fa fa-suitcase mr-3"></span> Tags</a>' +
     '</li>' +
     '<li>' +
     '<a href="#"><span class="fa fa-cogs mr-3"></span> Services</a>' +
