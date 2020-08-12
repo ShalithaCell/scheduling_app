@@ -96,6 +96,10 @@
     if (window.module) module = window.module;
     const { navBar } = require('../siteMaster');
 
+
+    var User  = require('../../models/index').User;
+
+
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
 
@@ -123,13 +127,26 @@
                 formSubmit: {
                     text: 'Submit',
                     btnClass: 'btn-blue',
-                    action: function () {
+                    action: async function () {
                         var name = this.$content.find('.name').val();
-                        if(!name){
+                        if (!name) {
                             $.alert('provide a valid name');
                             return false;
                         }
-                        $.alert('Your name is ' + name);
+                        try{
+
+
+                            const jane = new User({ firstName: "sdsdsd", lastName: "asd", email: "asdf@asdf.asdf" });
+                            jane.save();
+                            // Jane exists in the database now!
+                            console.log(jane instanceof User); // true
+                            console.log(jane.firstName); // "Jane"
+                        }
+                        catch (err){
+                            console.log(err); // "Jane"
+                        }
+
+
                     }
                 },
                 cancel: function () {
