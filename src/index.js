@@ -61,4 +61,6 @@ app.on('activate', () => {
   event.returnValue = true;
 })*/
 
+
+// database operations
 require('./services/tagDataService');

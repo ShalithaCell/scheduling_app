@@ -82,8 +82,6 @@
     const electron = require('electron');
     const { ipcRenderer } = electron;
 
-    var tblDatatable = $("#tagTable");
-
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
 
@@ -97,9 +95,13 @@
     });
 
     function LoadTable(){
-        const tagList = ipcRenderer.sendSync('tag:get', null);
-        //console.log(tagList);
 
+        // get all tag data
+        const tagList = ipcRenderer.sendSync('tag:get', null);
+
+        var tblDatatable = $("#tagTable"); //find the table by id
+
+        // table filling and initializing as data-table
         tblDatatable.DataTable ({
             "data" : tagList,
             "ordering": true,
@@ -120,6 +122,17 @@
 
     }
 
+    //reload table data
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
+            $('#tagTable').DataTable().destroy();
+        }
+
+        $('#tagTable tbody').empty();
+        LoadTable();
+    }
+
+    // add new tag method
     function AddNewTag(){
 
         $.confirm({
@@ -136,20 +149,19 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val();
+                        var name = this.$content.find('.name').val(); //get the tag name
+
+                        //check the name is not empty value
                         if (!name) {
                             $.alert('provide a valid tag name');
                             return false;
                         }
 
+                        //saving tag to the database
                         ipcRenderer.sendSync('tag:add', name);
 
-                        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
-                            $('#tagTable').DataTable().destroy();
-                        }
-
-                        $('#tagTable tbody').empty();
-                        LoadTable();
+                        // reload the table
+                        ReloadTable();
 
                     }
                 },
@@ -164,6 +176,7 @@
 
     }
 
+    //edit tag data
     function editTag(id){
         $.confirm({
             title: 'Edit Tag!',
@@ -187,16 +200,11 @@
                             $.alert('provide a valid tag name');
                             return false;
                         }
-                        debugger
+                        // update data
                         const success = ipcRenderer.sendSync('tag:update', {id, name});
 
                         if(success){
-                            if ( $.fn.DataTable.isDataTable('#tagTable') ) {
-                                $('#tagTable').DataTable().destroy();
-                            }
-
-                            $('#tagTable tbody').empty();
-                            LoadTable();
+                            ReloadTable();
                         }
                     }
                 },
@@ -210,6 +218,7 @@
         });
     }
 
+    // delete data
     function deleteTag(id, name){
         $.confirm({
             title: 'Confirm!',
@@ -221,12 +230,7 @@
                     action: function(){
                         ipcRenderer.sendSync('tag:remove', id);
 
-                        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
-                            $('#tagTable').DataTable().destroy();
-                        }
-
-                        $('#tagTable tbody').empty();
-                        LoadTable();
+                        ReloadTable();
                     }
                 },
                 cancel: {
