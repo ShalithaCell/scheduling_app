@@ -9,6 +9,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
+    "build": "electron-packager . --asar",
     "lint": "echo \"No linting configured\""
   },
   "keywords": [],
@@ -46,7 +47,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
-    "sequelize": "^6.3.3",
+    "sequelize": "^6.3.4",
     "sqlite3": "^5.0.0"
   },
   "devDependencies": {

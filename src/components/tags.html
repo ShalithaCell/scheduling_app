@@ -32,31 +32,14 @@
                         <table id="tagTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Office</th>
-                                <th>Age</th>
-                                <th>Start date</th>
-                                <th>Salary</th>
+                                <th class="hide">ID</th>
+                                <th>Tag name</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td>Tiger Nixon</td>
-                                <td>System Architect</td>
-                                <td>Edinburgh</td>
-                                <td>61</td>
-                                <td>2011/04/25</td>
-                                <td>$320,800</td>
-                            </tr>
-                            <tr>
-                                <td>Garrett Winters</td>
-                                <td>Accountant</td>
-                                <td>Tokyo</td>
-                                <td>63</td>
-                                <td>2011/07/25</td>
-                                <td>$170,750</td>
-                            </tr>
+
                             </tbody>
                         </table>
                     </div>
@@ -96,6 +79,9 @@
     if (window.module) module = window.module;
     const { navBar } = require('../siteMaster');
 
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
 
@@ -105,9 +91,48 @@
     });
 
     $(function() {
-
+        LoadTable();
     });
 
+    function LoadTable(){
+
+        // get all tag data
+        const tagList = ipcRenderer.sendSync('tag:get', null);
+
+        var tblDatatable = $("#tagTable"); //find the table by id
+
+        // table filling and initializing as data-table
+        tblDatatable.DataTable ({
+            "data" : tagList,
+            "ordering": true,
+            "order": [[0, 'asc']],
+            "columns" : [
+                { "data" : "id" },
+                { "data" : "tagName" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.tagName+'\')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+
+    }
+
+    //reload table data
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
+            $('#tagTable').DataTable().destroy();
+        }
+
+        $('#tagTable tbody').empty();
+        LoadTable();
+    }
+
+    // add new tag method
     function AddNewTag(){
 
         $.confirm({
@@ -124,12 +149,20 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val();
-                        if(!name){
-                            $.alert('provide a valid name');
+                        var name = this.$content.find('.name').val(); //get the tag name
+
+                        //check the name is not empty value
+                        if (!name) {
+                            $.alert('provide a valid tag name');
                             return false;
                         }
-                        $.alert('Your name is ' + name);
+
+                        //saving tag to the database
+                        ipcRenderer.sendSync('tag:add', name);
+
+                        // reload the table
+                        ReloadTable();
+
                     }
                 },
                 cancel: function () {
@@ -141,6 +174,74 @@
             }
         });
 
+    }
+
+    //edit tag data
+    function editTag(id){
+        $.confirm({
+            title: 'Edit Tag!',
+            content: '' +
+                '<div>' +
+                '<div class="form-group">' +
+                '<label>Enter tag</label>' +
+                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '</div>' +
+                '</div>',
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        var name = this.$content.find('.name').val();
+                        if (!name) {
+                            $.alert('provide a valid tag name');
+                            return false;
+                        }
+                        // update data
+                        const success = ipcRenderer.sendSync('tag:update', {id, name});
+
+                        if(success){
+                            ReloadTable();
+                        }
+                    }
+                },
+            },
+            onContentReady: function () {
+                //console.log(id)
+                const tagData = ipcRenderer.sendSync('tag:getByID', id);
+                //console.log(tagData);
+                this.$content.find('.name').val(tagData[0].tagName);
+            }
+        });
+    }
+
+    // delete data
+    function deleteTag(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('tag:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
     }
 
 </script>
