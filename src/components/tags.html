@@ -32,31 +32,14 @@
                         <table id="tagTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Office</th>
-                                <th>Age</th>
-                                <th>Start date</th>
-                                <th>Salary</th>
+                                <th class="hide">ID</th>
+                                <th>Tag name</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td>Tiger Nixon</td>
-                                <td>System Architect</td>
-                                <td>Edinburgh</td>
-                                <td>61</td>
-                                <td>2011/04/25</td>
-                                <td>$320,800</td>
-                            </tr>
-                            <tr>
-                                <td>Garrett Winters</td>
-                                <td>Accountant</td>
-                                <td>Tokyo</td>
-                                <td>63</td>
-                                <td>2011/07/25</td>
-                                <td>$170,750</td>
-                            </tr>
+
                             </tbody>
                         </table>
                     </div>
@@ -96,9 +79,10 @@
     if (window.module) module = window.module;
     const { navBar } = require('../siteMaster');
 
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
 
-    var User  = require('../../models/index').User;
-
+    var tblDatatable = $("#tagTable");
 
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
@@ -109,8 +93,32 @@
     });
 
     $(function() {
-
+        LoadTable();
     });
+
+    function LoadTable(){
+        const tagList = ipcRenderer.sendSync('tag:get', null);
+        //console.log(tagList);
+
+        tblDatatable.DataTable ({
+            "data" : tagList,
+            "ordering": true,
+            "order": [[0, 'asc']],
+            "columns" : [
+                { "data" : "id" },
+                { "data" : "tagName" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.tagName+'\')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+
+    }
 
     function AddNewTag(){
 
@@ -127,25 +135,21 @@
                 formSubmit: {
                     text: 'Submit',
                     btnClass: 'btn-blue',
-                    action: async function () {
+                    action: function () {
                         var name = this.$content.find('.name').val();
                         if (!name) {
-                            $.alert('provide a valid name');
+                            $.alert('provide a valid tag name');
                             return false;
                         }
-                        try{
 
+                        ipcRenderer.sendSync('tag:add', name);
 
-                            const jane = new User({ firstName: "sdsdsd", lastName: "asd", email: "asdf@asdf.asdf" });
-                            jane.save();
-                            // Jane exists in the database now!
-                            console.log(jane instanceof User); // true
-                            console.log(jane.firstName); // "Jane"
-                        }
-                        catch (err){
-                            console.log(err); // "Jane"
+                        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
+                            $('#tagTable').DataTable().destroy();
                         }
 
+                        $('#tagTable tbody').empty();
+                        LoadTable();
 
                     }
                 },
@@ -158,6 +162,82 @@
             }
         });
 
+    }
+
+    function editTag(id){
+        $.confirm({
+            title: 'Edit Tag!',
+            content: '' +
+                '<div>' +
+                '<div class="form-group">' +
+                '<label>Enter tag</label>' +
+                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '</div>' +
+                '</div>',
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        var name = this.$content.find('.name').val();
+                        if (!name) {
+                            $.alert('provide a valid tag name');
+                            return false;
+                        }
+                        debugger
+                        const success = ipcRenderer.sendSync('tag:update', {id, name});
+
+                        if(success){
+                            if ( $.fn.DataTable.isDataTable('#tagTable') ) {
+                                $('#tagTable').DataTable().destroy();
+                            }
+
+                            $('#tagTable tbody').empty();
+                            LoadTable();
+                        }
+                    }
+                },
+            },
+            onContentReady: function () {
+                //console.log(id)
+                const tagData = ipcRenderer.sendSync('tag:getByID', id);
+                //console.log(tagData);
+                this.$content.find('.name').val(tagData[0].tagName);
+            }
+        });
+    }
+
+    function deleteTag(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('tag:remove', id);
+
+                        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
+                            $('#tagTable').DataTable().destroy();
+                        }
+
+                        $('#tagTable tbody').empty();
+                        LoadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
     }
 
 </script>
