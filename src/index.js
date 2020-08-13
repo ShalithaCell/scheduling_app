@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+global.share= {ipcMain};
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -10,7 +11,11 @@ const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
-    height: 600
+    height: 600,
+    webPreferences:
+        {
+          nodeIntegration: true,
+        }
   });
 
   mainWindow.maximize();
@@ -44,5 +49,18 @@ app.on('activate', () => {
   }
 });
 
+//const tag = new Tags({ tagName: "sdsdsd", isActive: 1}).save();
+//console.log(tag);
+
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+/*ipcMain.on('tag:add', async (event, values) => {
+  const tag = new Tags({ tagName: values, isActive: 1}).save();
+  console.log(tag);
+  event.returnValue = true;
+})*/
+
+
+// database operations
+require('./services/tagDataService');

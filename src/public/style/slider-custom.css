@@ -8324,7 +8324,7 @@ a[data-toggle="collapse"] {
   border-radius: 4px;
   -webkit-box-shadow: none !important;
   box-shadow: none !important;
-  border: transparent; }
+  /*border: transparent;*/ }
   .form-control:focus, .form-control:active {
     border-color: #000; }
   .form-control::-webkit-input-placeholder {
