@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <title>Schedule App</title>
-    <link rel="stylesheet" href="index.css" />
-    <link rel="stylesheet" href="./public/boostrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="./public/font-awesome-4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="./public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
   </head>
   <body>
 	<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
@@ -69,16 +69,16 @@
   </script>
 
   <!-- normal script imports etc  -->
-  <script src="./public/jquery.min.js"></script>
-  <script src="./public/popper.min.js"></script>
-  <script src="./public/boostrap/bootstrap.min.js"></script>
-  <script src="./public/script/slider-custom.js"></script>
+  <script src="../public/jquery.min.js"></script>
+  <script src="../public/popper.min.js"></script>
+  <script src="../public/boostrap/bootstrap.min.js"></script>
+  <script src="../public/script/slider-custom.js"></script>
 
   <!-- Insert this line after script imports -->
   <script>
 	  if (window.module) module = window.module;
 
-	  const { navBar } = require('./siteMaster');
+	  const { navBar } = require('../siteMaster');
 
 	  $(window).on("load", function () {
 		  $("#navBarID").prepend(navBar);

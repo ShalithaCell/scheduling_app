@@ -6,19 +6,19 @@ const navBar = '<nav id="sidebar" style="z-index: 9;">' +
     '</button>' +
     '</div>' +
     '<div class="p-4">' +
-    '<h1><a href="../index.html" class="logo">A B C <span>Schedule App</span></a></h1>' +
+    '<h1><a href="./index.html" class="logo">A B C <span>Schedule App</span></a></h1>' +
     '<ul class="list-unstyled components mb-5">' +
     '<li id="liHome" >' +
     '<a  href="#"><span class="fa fa-home mr-3"></span> Home</a>' +
     '</li>' +
     '<li id="liWorkingDays">' +
-    '<a href="./components/workingDaysHours.html"><span class="fa fa-briefcase mr-3"></span>  Working days and hours</a>' +
+    '<a href="./workingDaysHours.html"><span class="fa fa-briefcase mr-3"></span>  Working days and hours</a>' +
     '</li>' +
     '<li id="liTags">' +
-    '<a href="./components/tags.html"><span class="fa fa-suitcase mr-3"></span> Tags</a>' +
+    '<a href="./tags.html"><span class="fa fa-suitcase mr-3"></span> Tags</a>' +
     '</li>' +
     '<li id="liStudent">' +
-    '<a href="./components/student.html"><span class="fa fa-suitcase mr-3"></span>Student</a>' +
+    '<a href="./student.html"><span class="fa fa-suitcase mr-3"></span>Student</a>' +
     '</li>' +
     '<li>' +
     '<a href="#"><span class="fa fa-cogs mr-3"></span> Services</a>' +
