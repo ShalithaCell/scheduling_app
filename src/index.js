@@ -21,7 +21,7 @@ const createWindow = () => {
   mainWindow.maximize();
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'components/index.html'));
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
