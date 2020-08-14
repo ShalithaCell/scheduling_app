@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Student</h2>
+            </div>
+            <!-- Page Body -->
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+
+                        <div class="jumbotron">
+                            <div class="row w-100">
+                                    <div class="col-md-3">
+                                        <div class="card border-info mx-sm-1 p-3">
+                                            <div class="card border-info shadow text-info p-3 my-card" ><span class="fa fa-car" aria-hidden="true"></span></div>
+                                            <div class="text-info text-center mt-3"><h4>Academic year and semester</h4></div>
+                                 
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-success mx-sm-1 p-3">
+                                            <div class="card border-success shadow text-success p-3 my-card"><span class="fa fa-eye" aria-hidden="true"></span></div>
+                                            <div class="text-success text-center mt-3"><h4> Programme</h4></div>
+                                      
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-danger mx-sm-1 p-3">
+                                            <div class="card border-danger shadow text-danger p-3 my-card" ><span class="fa fa-heart" aria-hidden="true"></span></div>
+                                            <div class="text-danger text-center mt-3"><h4>Groups</h4></div>
+                                            
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-warning mx-sm-1 p-3">
+                                            <div class="card border-warning shadow text-warning p-3 my-card" ><span class="fa fa-inbox" aria-hidden="true"></span></div>
+                                            <div class="text-warning text-center mt-3"><h4>Sub-Groups</h4></div>
+                                            <div class="text-warning text-center mt-2"><h1></h1></div>
+                                        </div>
+                                    </div>
+                                 </div>
+                            </div>
+
+                      
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+
+
+
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liStudent').addClass('active');
+
+    });
+
+
+   
+</script>
+
+</html>
