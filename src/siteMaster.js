@@ -17,6 +17,9 @@ const navBar = '<nav id="sidebar" style="z-index: 9;">' +
     '<li id="liTags">' +
     '<a href="./components/tags.html"><span class="fa fa-suitcase mr-3"></span> Tags</a>' +
     '</li>' +
+    '<li id="liStudent">' +
+    '<a href="./components/student.html"><span class="fa fa-suitcase mr-3"></span>Student</a>' +
+    '</li>' +
     '<li>' +
     '<a href="#"><span class="fa fa-cogs mr-3"></span> Services</a>' +
     '</li>' +
