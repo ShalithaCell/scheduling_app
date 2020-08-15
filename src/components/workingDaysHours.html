@@ -33,21 +33,8 @@
 						</div>
 					</div>
 				</div>
-				<div class="card margin-1-custom">
-					<div class="card-body row">
-						<div class="col-md-4">
-							<div class="form__group">
-								<input type="text" id="txtworkingDays2" class="form__field" placeholder="Enter working days">
-								<label for="txtworkingDays2" class="form__label">Number of working days per week</label>
-							</div>
-						</div>
-						<div class="col-md-8">
-							<div class="form__group">
-								<input type="number" id="txtworkingDays3" class="form__field" max="7" placeholder="Enter working days">
-								<label for="txtworkingDays3" class="form__label">Number of working days per week</label>
-							</div>
-						</div>
-					</div>
+				<div class="card margin-1-custom" id="divWorkingDays">
+
 				</div>
 
 			</div>
@@ -143,6 +130,34 @@
 
 				return ;
 			}
+
+			$('#divWorkingDays').empty();
+			for(var i = 0; i< num; i++){
+				let content = `
+							<div class="card-body row">
+							<div class="col-md-4">
+							<div class="form__group">
+							<input type="text" id="txtDay`+i+ `" class="form__field" placeholder="Enter working days">
+							<label for="txtworkingDays2" class="form__label">Number of working days per week</label>
+							</div>
+							</div>
+							<div class="col-md-8">
+							<div class="form__group">
+							<input type="number" id="txtTime`+i+`" class="form__field" placeholder="Enter working days">
+							<label for="txtworkingDays3" class="form__label">Number of working days per week</label>
+							</div>
+							</div>
+							</div>`;
+
+
+
+				$('#divWorkingDays').append(content);
+
+			}
+			
+
+
+
 
 		});
 
