@@ -65,3 +65,4 @@ app.on('activate', () => {
 // database operations
 require('./services/tagDataService');
 require('./services/dayDataService');
+require('./services/workingDaysDataService');

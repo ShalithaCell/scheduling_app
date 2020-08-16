@@ -32,7 +32,6 @@
                         <table id="tagTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th class="hide">ID</th>
                                 <th>Day</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
@@ -108,17 +107,15 @@
         // table filling and initializing as data-table
         tblDatatable.DataTable ({
             "data" : tagList,
-            "ordering": true,
-            "order": [[0, 'asc']],
+            "ordering": false,
             "columns" : [
-                { "data" : "id" },
                 { "data" : "day" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
                         return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.day+'\')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>'
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.day+'\')" disabled><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>'
                     }
                 },
             ]
@@ -149,6 +146,9 @@
                 '</div>' +
                 '</div>',
             buttons: {
+                cancel: function () {
+                    //close
+                },
                 formSubmit: {
                     text: 'Submit',
                     btnClass: 'btn-blue',
@@ -168,9 +168,6 @@
                         ReloadTable();
 
                     }
-                },
-                cancel: function () {
-                    //close
                 },
             },
             onContentReady: function () {
@@ -215,7 +212,7 @@
             },
             onContentReady: function () {
                 //console.log(id)
-                const tagData = ipcRenderer.sendSync('tag:getByID', id);
+                const tagData = ipcRenderer.sendSync('day:getByID', id);
                 //console.log(tagData);
                 this.$content.find('.name').val(tagData[0].tagName);
             }

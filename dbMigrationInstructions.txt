@@ -18,3 +18,6 @@ i.   STRING
 ii.  INTEGER
 iii. TEXT
 
+
+for further details refer - https://sequelize.org/master/manual/migrations.html
+
