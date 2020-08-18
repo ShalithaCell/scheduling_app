@@ -12,6 +12,15 @@
 	<link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
 	<link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
 
+	<style>
+		.card-body {
+			-webkit-box-flex: 1;
+			-ms-flex: 1 1 auto;
+			flex: 1 1 auto;
+			padding: 0.25rem;
+		}
+	</style>
+
 </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
@@ -22,7 +31,7 @@
 		<!-- Page Content  -->
 		<div class="w-100">
 			<div class="w-100 title-custom">
-				<h2 class="title-font-custom">Configure working days and hours</h2>
+				<h2 class="title-font-custom">Configure working days and hours <span style="cursor: pointer" onclick="changeScheduleType()" class="badge badge-secondary" id="txtTableType">Weekend</span></h2>
 			</div>
 			<div>
 				<div class="card margin-1-custom">
@@ -33,23 +42,13 @@
 						</div>
 					</div>
 				</div>
-				<div class="card margin-1-custom">
-					<div class="card-body row">
-						<div class="col-md-4">
-							<div class="form__group">
-								<input type="text" id="txtworkingDays2" class="form__field" placeholder="Enter working days">
-								<label for="txtworkingDays2" class="form__label">Number of working days per week</label>
-							</div>
-						</div>
-						<div class="col-md-8">
-							<div class="form__group">
-								<input type="number" id="txtworkingDays3" class="form__field" max="7" placeholder="Enter working days">
-								<label for="txtworkingDays3" class="form__label">Number of working days per week</label>
-							</div>
-						</div>
-					</div>
+				<div class="card margin-1-custom" id="divWorkingDays">
+
 				</div>
 
+			</div>
+			<div>
+				<button type="button" id="btnSaveAssign" class="btn btn-success float-right" style="display: none" onclick="SaveData()">Save & Assign Timetable Slots</button>
 			</div>
 		</div>
 
@@ -85,9 +84,14 @@
 	const { timeTableEnum } = require('../systemConst');
 	const { objProx } = require('../services/systemSessionContainer');
 
+	const electron = require('electron');
+	const { ipcRenderer } = electron;
+
 	//import external js
 	//$.getScript('../systemConst.js');
 	//$.getScript('../services/systemSessionContainer.js');
+
+	const { jsonHasKeyVal } = require('../services/applicationServices/commonServices');
 
 	$(window).on("load", function () {
 		$("#navBarID").prepend(navBar);
@@ -97,7 +101,7 @@
 
 	});
 
-	$(function() {
+	function changeScheduleType(){
 		$.confirm({
 			icon: 'fa fa-calendar',
 			title: 'Select Timetable Type',
@@ -111,7 +115,7 @@
 					btnClass: 'btn btn-primary',
 					action: function(){
 						objProx.timeTableType = timeTableEnum.weekdays;
-						console.log(objProx.timeTableType);
+						$('#txtTableType').html('Weekday');
 					}
 				},
 				Weekend: {
@@ -119,14 +123,22 @@
 					action: function(){
 						objProx.timeTableType = timeTableEnum.weekend;
 						console.log(objProx.timeTableType);
+						$('#txtTableType').html('Weekend');
 					}
 				}
 			},
 		});
+	}
+
+	$(function() {
+
+		changeScheduleType();
 
 		$('#txtworkingDays').on('input', function() {
 
 			if($(this).val().length == 0){
+				$('#divWorkingDays').empty();
+				$('#btnSaveAssign').hide();
 				return ;
 			}
 
@@ -144,9 +156,116 @@
 				return ;
 			}
 
+			$('#divWorkingDays').empty();
+
+			const daySet = ipcRenderer.sendSync('day:get', null);
+
+			let ddl = '<select class="form-control cls-day">';
+			ddl += '<option value="0"> Select day </option>';
+			$.each(daySet, function(i, item) {
+				ddl += '<option value="'+ item.id +'">'+item.day+'</option>';
+			});
+			ddl += '</select>';
+
+			for(var i = 0; i< num; i++){
+				let content = `
+							<div class="card-body row">
+							<div class="col-md-4">
+							<div class="form__group">
+							`+ddl+`
+							</div>
+							</div>
+							<div class="col-md-3">
+							<div class="form__group">
+							<input type="number" id="txtTime`+i+`" class="form__field cls-time" placeholder="Enter working time (hh:mm)" required min="0" step="0.01"
+							pattern="^\\d+(?:\\.\\d{1,2})?$" onblur=" this.parentNode.parentNode.style.backgroundColor=/^\\d+(?:\\.\\d{1,2})?$/.test(this.value)?'inherit':'red' ">
+							<label for="txtworkingDays3" class="form__label">Working time (hh:mm)</label>
+							</div>
+							</div>
+							<div class="col-md-5" />
+							</div>`;
+
+				$('#divWorkingDays').append(content);
+
+			}
+			$('#btnSaveAssign').show();
+
 		});
 
 	});
+
+	function SaveData(){
+
+		let count = 0;
+
+		let errorCounter = 0;
+
+		$(".cls-day").map(function() {
+
+			if($(this).val() == '0'){
+				errorCounter++;
+			}
+			if($(this).closest('.card-body').find('.cls-time').val().length <= 0){
+				errorCounter++;
+			}
+
+			count++;
+		}).get();
+
+		if(errorCounter > 0){
+			$.toast({
+				heading: 'Error',
+				text: 'Please select days and times to continue.',
+				showHideTransition: 'fade',
+				icon: 'error'
+			});
+			return ;
+		}
+
+		//get existing data
+		const workDataSet = ipcRenderer.sendSync('work:getByType', objProx.timeTableType);
+		
+		console.log(workDataSet);
+
+		let deleteValues = [];
+
+		$(".cls-day").map(function() {
+
+			const dayId = $(this).val();
+			const daytime = $(this).closest('.card-body').find('.cls-time').val();
+
+
+			if (jsonHasKeyVal(workDataSet, "day", dayId)){
+
+				const dataSet = ipcRenderer.sendSync('work:getByTypeAndDay', {type : objProx.timeTableType, day : dayId});
+
+				ipcRenderer.sendSync('work:update', {id :dataSet.id, day : dayId, time :daytime });
+			}else{
+				ipcRenderer.sendSync('work:add', {day : dayId, time : daytime, type : objProx.timeTableType});
+			}
+
+			deleteValues.push(dayId);
+
+			count++;
+		}).get();
+
+		$.each(workDataSet, function(i, item) {
+			if($.inArray(item.day, deleteValues) === -1){
+				ipcRenderer.sendSync('work:deactivate', item.id);
+			}
+		});
+
+		$.toast({
+			heading: 'Success',
+			text: 'Saved Successfully',
+			showHideTransition: 'fade',
+			icon: 'success'
+		});
+
+		return ;
+
+
+	}
 
 </script>
 
