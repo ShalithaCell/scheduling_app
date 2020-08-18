@@ -66,3 +66,5 @@ app.on('activate', () => {
 require('./services/tagDataService');
 require('./services/dayDataService');
 require('./services/workingDaysDataService');
+require('./services/facilityDataServices');
+require('./services/studyTypeDataServices');
