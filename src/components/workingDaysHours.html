@@ -91,6 +91,8 @@
 	//$.getScript('../systemConst.js');
 	//$.getScript('../services/systemSessionContainer.js');
 
+	const { jsonHasKeyVal } = require('../services/applicationServices/commonServices');
+
 	$(window).on("load", function () {
 		$("#navBarID").prepend(navBar);
 
@@ -221,21 +223,46 @@
 		}
 
 		//get existing data
-debugger;
 		const workDataSet = ipcRenderer.sendSync('work:getByType', objProx.timeTableType);
-
+		
 		console.log(workDataSet);
 
+		let deleteValues = [];
 
-		// $(".cls-day").map(function() {
-		//
-		// 	const dayId = $(this).val();
-		// 	const daytime = $(this).closest('.card-body').find('.cls-time').val();
-		//
-		// 	ipcRenderer.sendSync('work:add', {day : dayId, time : daytime});
-		//
-		// 	count++;
-		// }).get();
+		$(".cls-day").map(function() {
+
+			const dayId = $(this).val();
+			const daytime = $(this).closest('.card-body').find('.cls-time').val();
+
+
+			if (jsonHasKeyVal(workDataSet, "day", dayId)){
+
+				const dataSet = ipcRenderer.sendSync('work:getByTypeAndDay', {type : objProx.timeTableType, day : dayId});
+
+				ipcRenderer.sendSync('work:update', {id :dataSet.id, day : dayId, time :daytime });
+			}else{
+				ipcRenderer.sendSync('work:add', {day : dayId, time : daytime, type : objProx.timeTableType});
+			}
+
+			deleteValues.push(dayId);
+
+			count++;
+		}).get();
+
+		$.each(workDataSet, function(i, item) {
+			if($.inArray(item.day, deleteValues) === -1){
+				ipcRenderer.sendSync('work:deactivate', item.id);
+			}
+		});
+
+		$.toast({
+			heading: 'Success',
+			text: 'Saved Successfully',
+			showHideTransition: 'fade',
+			icon: 'success'
+		});
+
+		return ;
 
 
 	}

@@ -4,7 +4,7 @@ const { WorkingData, Days } = require('../models/index'); //import the tag model
 
 // add new day
 global.share.ipcMain.on('work:add', async (event, values) => {
-    const workData = new WorkingData({ day: values.day, time: values.time, isActive: 1}).save(); //save to database
+    const workData = new WorkingData({ day: values.day, time: values.time, isActive: 1, type : values.type}).save(); //save to database
     event.returnValue = true;
 });
 
@@ -34,12 +34,33 @@ global.share.ipcMain.on('work:getByID', async (event, values) => {
 
 // get specific type by using id from the database
 global.share.ipcMain.on('work:getByType', async (event, values) => {
+
+    WorkingData.hasMany(Days, { foreignKey: 'day' });
+
     const workData = await WorkingData.findAll({
         include: [
             { model: Days, as: 'Days' }
         ],
         where: {
             type: values,
+            isActive: 1
+        },
+        raw: true}); // get the specific data
+    event.returnValue = workData;
+});
+
+// get specific type by using dayID from the database
+global.share.ipcMain.on('work:getByTypeAndDay', async (event, values) => {
+
+    WorkingData.hasMany(Days, { foreignKey: 'day' });
+
+    const workData = await WorkingData.findAll({
+        include: [
+            { model: Days, as: 'Days' }
+        ],
+        where: {
+            type: values.type,
+            day : values.day,
             isActive: 1
         },
         raw: true}); // get the specific data
@@ -60,12 +81,24 @@ global.share.ipcMain.on('work:update', async (event, values) => {
 });
 
 
-// remove tag data from the database
 global.share.ipcMain.on('work:remove', async (event, values) => {
     WorkingData.destroy({
         where: {
             id: values
         }
     });
+    event.returnValue = true;
+});
+
+// remove tag data from the database
+global.share.ipcMain.on('work:deactivate', async (event, values) => {
+    await WorkingData.findOne({where: {id: values}})
+        .then( day => {
+            // Check if record exists in db
+            day.update({isActive : false}).then( updatedRecord => {
+                console.log(`updated record ${JSON.stringify(updatedRecord,null,2)}`)
+                // login into your DB and confirm update
+            })
+        });
     event.returnValue = true;
 });

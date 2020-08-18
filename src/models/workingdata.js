@@ -3,6 +3,8 @@ const {
   Model
 } = require('sequelize');
 
+const { Days } = require('./days');
+
 module.exports = (sequelize, DataTypes) => {
   class WorkingData extends Model {
     /**
@@ -29,5 +31,8 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'WorkingData',
   });
+
+
+
   return WorkingData;
 };

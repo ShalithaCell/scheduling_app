@@ -4,8 +4,6 @@ const {
   Model
 } = require('sequelize');
 
-const { WorkingData } = require('./workingdata');
-
 module.exports = (sequelize, DataTypes) => {
   class Days extends Model {
     /**
@@ -24,7 +22,6 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Days',
   });
-
 
   return Days;
 };
