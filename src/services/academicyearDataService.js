@@ -10,7 +10,10 @@ global.share.ipcMain.on('academic:add', async (event, values) => {
 
 // get all existing academic years and semesters list from database
 global.share.ipcMain.on('academic:get', async (event, values) => {
-    const academics = await academicyearsandsemesters.findAll({raw: true}); // get the list
+    const academics = await academicyearsandsemesters.findAll({where: {
+            isActive: 1
+        },
+        raw: true}); // get the list
     event.returnValue = academics;
 });
 

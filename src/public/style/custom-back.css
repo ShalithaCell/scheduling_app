@@ -1,0 +1,65 @@
+.nav-tabs {
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+    border: none;
+}
+.nav-tabs .nav-link{
+    border: none;
+    border-radius: 0;
+    transition: color .2s ease-out;
+}
+.tabs-dark .nav-link {
+    color: #fff;
+}
+.tabs-light .nav-link {
+    color: rgba(0,0,0,.5);
+}
+.tabs-dark .nav-link:not(.active):hover {
+    color: #aeb0b3;
+}
+.tabs-light .nav-link:not(.active):hover {
+    color: #495057;
+}
+
+.nav-pills .nav-link{
+    border-radius: 2px;
+    color: #495057;
+    transition: color .2s ease-out, box-shadow .2s;
+}
+.nav-pills .nav-link:hover{
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+
+}
+.nav-pills .nav-item {
+    margin: 0 5px;
+}
+.nav-pills.pills-dark .nav-link.active {
+    background-color: #343a40!important;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+}
+.nav-pills.pills-dark .nav-link:not(.active):hover {
+    color: #1d1e22;
+}
+.tabs-marker .nav-link {
+    position: relative;
+}
+.tabs-marker .nav-link.active .marker {
+    height: 30px;
+    width: 30px;
+    left: 50%;
+    bottom: -30px;
+    transform: translatex(-50%);
+    position: absolute;
+    overflow: hidden;
+}
+.tabs-marker .nav-link.active .marker:after {
+    content: "";
+    height: 15px;
+    width: 15px;
+    top: -8px;
+    left: 50%;
+    transform: rotate(45deg) translatex(-50%);
+    transform-origin: left;
+    background-color: #fff;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+    position: absolute;
+}
