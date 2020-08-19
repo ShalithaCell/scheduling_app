@@ -161,8 +161,14 @@
                     defaultContent: ''
                 },
                 { "data" : "name" },
-                { "data" : "group" },
-                { "data" : "students" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<input type="number" value="${data.group}" class="form-control cls-group-count" placeholder="Enter group count" min="0" step="1" oninput="this.value = Math.round(this.value);">`;
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<input type="number" value="${data.students}" class="form-control cls-student-count" placeholder="Enter student count" min="0" step="1" oninput="this.value = Math.round(this.value);">`;
+                    }
+                },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
                         return '<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme(' +data.id +',\''+data.name+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
                     }
