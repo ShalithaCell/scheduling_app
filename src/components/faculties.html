@@ -211,9 +211,7 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
                 const facilityData = ipcRenderer.sendSync('facility:getByID', id);
-                //console.log(facilityData);
                 this.$content.find('.name').val(facilityData[0].facilityName);
             }
         });
@@ -221,7 +219,6 @@
 
     // delete data
     function deleteFacility(id, name){
-        console.log('Clicked Delete Button');
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',

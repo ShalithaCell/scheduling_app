@@ -19,7 +19,6 @@ global.share.ipcMain.on('room:get', async (event, values) => {
             type: sequelize.QueryTypes.SELECT
         }
     );
-    // const rooms = await Rooms.findAll({raw: true}); // get the list
     event.returnValue = rooms;
 });
 
@@ -36,12 +35,6 @@ global.share.ipcMain.on('room:getByID', async (event, values) => {
             type: sequelize.QueryTypes.SELECT
         }
     );
-    // const room = await Rooms.findAll({
-    //     where: {
-    //         id: values,
-    //         isActive: 1
-    //     },
-    //     raw: true}); // get the specific data
     event.returnValue = room;
 });
 
