@@ -247,9 +247,7 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
                 const buildingData = ipcRenderer.sendSync('building:getByID', id);
-                //console.log(buildingData);
                 this.$content.find('.name').val(buildingData[0].buildingName);
                 this.$content.find('.center').val(buildingData[0].center);
             }
@@ -258,7 +256,6 @@
 
     // delete data
     function deleteBuilding(id, name){
-        console.log('Clicked Delete Button');
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',

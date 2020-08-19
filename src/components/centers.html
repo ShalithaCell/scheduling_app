@@ -211,9 +211,7 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
                 const centerData = ipcRenderer.sendSync('center:getByID', id);
-                //console.log(centerData);
                 this.$content.find('.name').val(centerData[0].centerName);
             }
         });
@@ -221,7 +219,6 @@
 
     // delete data
     function deleteCenter(id, name){
-        console.log('Clicked Delete Button');
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
