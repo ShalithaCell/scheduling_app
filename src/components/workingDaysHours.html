@@ -212,15 +212,21 @@
 
 				return ;
 			}
-
 			if(num === 0){
 				$('#divWorkingDays').empty();
 			}else{
-				if ($(".cls-day").length < num){
-					for
+				if ($(".cls-day").length > num){
+
+					for(let x = 0; x < ($(".cls-day").length - num) ; x++){
+						$('.card-body').last().remove();
+					}
+
+					$('#btnSaveAssign').show();
+					return ;
 				}
 			}
 
+			num -=  $(".cls-day").length;
 
 
 			const daySet = ipcRenderer.sendSync('day:get', null);
@@ -276,6 +282,11 @@
 
 			count++;
 		}).get();
+debugger;
+		if($(".cls-day").length <= 0){
+			ipcRenderer.sendSync('work:deactivateAll', objProx.timeTableType);
+			return;
+		}
 
 		if(errorCounter > 0){
 			$.toast({
@@ -316,7 +327,7 @@
 
 		$.each(workDataSet, function(i, item) {
 			if($.inArray(item.day, deleteValues) === -1){
-				ipcRenderer.sendSync('work:deactivate', item.id);
+				ipcRenderer.sendSync('work:deactivate', {day : item.day, type : objProx.timeTableType});
 			}
 		});
 

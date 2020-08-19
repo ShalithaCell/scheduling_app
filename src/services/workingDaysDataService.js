@@ -91,8 +91,24 @@ global.share.ipcMain.on('work:remove', async (event, values) => {
 });
 
 // remove tag data from the database
+global.share.ipcMain.on('work:deactivateAll', async (event, values) => {
+    // await WorkingData.find({where: {type : values}})
+    //     .then( day => {
+    //         // Check if record exists in db
+    //         day.update({isActive : false}).then( updatedRecord => {
+    //             console.log(`updated record ${JSON.stringify(updatedRecord,null,2)}`)
+    //             // login into your DB and confirm update
+    //         })
+    //     });
+
+    WorkingData.update({ isActive : false },{ where : { type : values }});
+
+    event.returnValue = true;
+});
+
+// remove tag data from the database
 global.share.ipcMain.on('work:deactivate', async (event, values) => {
-    await WorkingData.findOne({where: {id: values}})
+    await WorkingData.findOne({where: {day: values.day, type : values.type}})
         .then( day => {
             // Check if record exists in db
             day.update({isActive : false}).then( updatedRecord => {
