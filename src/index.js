@@ -71,4 +71,5 @@ require('./services/dayDataService');
 require('./services/workingDaysDataService');
 require('./services/facilityDataServices');
 require('./services/studyTypeDataServices');
+require('./services/programmeDataServices');
 
