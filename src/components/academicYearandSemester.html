@@ -21,19 +21,19 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom">
-                <h2 class="title-font-custom">Tags</h2>
+                <h2 class="title-font-custom">Academic Year and Semester</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewTag()">Add New</button>
+                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewAcademicYearSemeseter()">Add New</button>
 
-                        <table id="tagTable" class="display" style="width:100%">
+                        <table id="academicTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th class="hide">ID</th> 
-                                <th>Tag name</th>
+                                <th class="hide">ID</th>
+                                <th>Academic Year and Semester</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -86,35 +86,36 @@
         $("#navBarID").prepend(navBar);
 
         // highlight page
-        $('#liTags').addClass('active');
+        $('#liStudent').addClass('active');
 
     });
 
+    
     $(function() {
         LoadTable();
     });
 
     function LoadTable(){
 
-        // get all tag data
-        const tagList = ipcRenderer.sendSync('tag:get', null);
+        // get all  Academic Year and Semeseter data
+        const ademicList = ipcRenderer.sendSync('academic:get', null);
 
-        var tblDatatable = $("#tagTable"); //find the table by id
+        var ademiclDatatable = $("#academicTable"); //find the table by id
 
         // table filling and initializing as data-table
-        tblDatatable.DataTable ({
-            "data" : tagList,
+        ademiclDatatable .DataTable ({
+            "data" : ademicList,
             "ordering": true,
             "order": [[0, 'asc']],
             "columns" : [
                 { "data" : "id" },
-                { "data" : "tagName" },
+                { "data" : "AcademicYearsandSemesters" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editAcademicYearSemeseter(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.tagName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteAcademicYearSemeseter(' +data.id +',\''+data.AcademicYearsandSemesters+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
                     }
                 },
             ]
@@ -124,24 +125,24 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
-            $('#tagTable').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#academicTable') ) {
+            $('#academicTable').DataTable().destroy();
         }
 
-        $('#tagTable tbody').empty();
+        $('#academicTable tbody').empty();
         LoadTable();
     }
 
-    // add new tag method
-    function AddNewTag(){
+    // add new  Academic Year and Semeseter method
+    function AddNewAcademicYearSemeseter(){
 
         $.confirm({
-            title: 'New Tag!',
+            title: 'New Academic Year and Semeseter!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter Academic Year and Semeseter</label>' +
+                '<input type="text" placeholder="Academic Year and Semeseter" class="name form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -149,16 +150,16 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val(); //get the tag name
+                        var name = this.$content.find('.name').val(); //get the  Academic Year and Semeseter name
 
                         //check the name is not empty value
                         if (!name) {
-                            $.alert('provide a valid tag name');
+                            $.alert('provide a valid Academic Year and Semeseter');
                             return false;
                         }
 
-                        //saving tag to the database
-                        ipcRenderer.sendSync('tag:add', name);
+                        //saving  Academic Year and Semeseter to the database
+                        ipcRenderer.sendSync('academic:add', name);
 
                         // reload the table
                         ReloadTable();
@@ -176,15 +177,15 @@
 
     }
 
-    //edit tag data
-    function editTag(id){
+    //edit  Academic Year and Semeseter data
+    function editAcademicYearSemeseter(id){
         $.confirm({
-            title: 'Edit Tag!',
+            title: 'Edit Academic Year and Semeseter!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter Academic Year and Semeseter</label>' +
+                '<input type="text" placeholder="Academic Year and Semeseter" class="name form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -197,11 +198,11 @@
                     action: function () {
                         var name = this.$content.find('.name').val();
                         if (!name) {
-                            $.alert('provide a valid tag name');
+                            $.alert('provide a Academic Year and Semeseter');
                             return false;
                         }
                         // update data
-                        const success = ipcRenderer.sendSync('tag:update', {id, name});
+                        const success = ipcRenderer.sendSync('academic:update', {id, name});
 
                         if(success){
                             ReloadTable();
@@ -211,15 +212,15 @@
             },
             onContentReady: function () {
                 //console.log(id)
-                const tagData = ipcRenderer.sendSync('tag:getByID', id);
-                //console.log(tagData);
-                this.$content.find('.name').val(tagData[0].tagName);
+                const academicData = ipcRenderer.sendSync('academic:getByID', id);
+                //console.log(academicData);
+                this.$content.find('.name').val(academicData[0].AcademicYearsandSemesters);
             }
         });
     }
 
     // delete data
-    function deleteTag(id, name){
+    function deleteAcademicYearSemeseter(id, name){
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
@@ -228,7 +229,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('tag:remove', id);
+                        ipcRenderer.sendSync('academic:remove', id);
 
                         ReloadTable();
                     }
