@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Rooms</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewRoom()">Add New</button>
+
+                        <table id="roomTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Center</th>
+                                <th>Building</th>
+                                <th>Study Type</th>
+                                <th>Max. capacity</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liSettings').addClass('active');
+
+    });
+
+    $(function() {
+        LoadTable();
+    });
+
+    function LoadTable(){
+
+        // get all room data
+        const roomList = ipcRenderer.sendSync('room:get', null);
+
+        if(roomList.length >= 7){
+            $('#btnAdd').hide();
+        }
+
+        var tblDatatable = $("#roomTable"); //find the table by id
+
+        // table filling and initializing as data-table
+        tblDatatable.DataTable ({
+            "data" : roomList,
+            "ordering": false,
+            "columns" : [
+                { "data" : "roomName" },
+                { "data" : "centerName" },
+                { "data" : "buildingName" },
+                { "data" : "tagName" },
+                { "data" : "capacity" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editRoom(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteRoom(${data.id},'${data.roomName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                    }
+                },
+            ]
+        });
+
+    }
+
+    //reload table data
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#roomTable') ) {
+            $('#roomTable').DataTable().destroy();
+        }
+
+        $('#roomTable tbody').empty();
+        LoadTable();
+    }
+
+    function updateBuildings(){
+        const center = $('.center').val();
+        if(center){
+            $('.building').attr('disabled', false);
+        } else {
+            $('.building').attr('disabled', true);
+        }
+        $('.building').find('option').not('[value="0"]').remove();
+
+        const centers = ipcRenderer.sendSync('building:getByCenterID', center);
+        for(const center of centers){
+            $('.building').append(new Option(center.buildingName, center.id));
+        }
+    }
+
+    // add new room method
+    function AddNewRoom(){
+        const centers = ipcRenderer.sendSync('center:get', null);
+        let centerSelection = '<select class="form-control center" onchange="updateBuildings()" required>';
+        centerSelection += '<option value="0" selected disabled> Select center </option>';
+        $.each(centers, function(i, center) {
+            centerSelection += '<option value="' + center.id + '">' + center.centerName + '</option>';
+        });
+        centerSelection += '</select>';
+
+        const tags = ipcRenderer.sendSync('tag:get', null);
+        let tagSelection = '<select class="form-control tag" required>';
+        tagSelection += '<option value="0" selected disabled> Select tag </option>';
+        $.each(tags, function(i, tag) {
+            tagSelection += '<option value="' + tag.id + '">' + tag.tagName + '</option>';
+        });
+        tagSelection += '</select>';
+
+        $.confirm({
+            title: 'New Room!',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Enter room name</label>
+                        <input type="text" placeholder="Room name" class="roomName form-control" required />
+
+                        <label>Enter max. capacity</label>
+                        <input type="number" placeholder="Capacity" class="capacity form-control" required />
+
+                        <label>Select center</label>
+                        ${centerSelection}
+                        <label>Select building</label>
+                        <select class="form-control building" required disabled>
+                            <option value="0" selected disabled> Select building </option>
+                        </select>
+                        <label>Select tag</label>
+                        ${tagSelection}
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let roomName = this.$content.find('.roomName').val(); //get the room name
+                        let capacity = this.$content.find('.capacity').val();
+                        let center = this.$content.find('.center').val();
+                        let building = this.$content.find('.building').val();
+                        let tag = this.$content.find('.tag').val();
+
+                        //check the name is not empty value
+                        if (!roomName) {
+                            $.alert('Provide a valid room name');
+                            return false;
+                        }
+                        if (!capacity) {
+                            $.alert('Provide a valid capacity');
+                            return false;
+                        } else capacity = Number(capacity);
+                        if (!center) {
+                            $.alert('Select a valid center name');
+                            return false;
+                        } else center = Number(center);
+                        if (!building) {
+                            $.alert('Select a valid building name');
+                            return false;
+                        } else building = Number(building);
+                        if (!tag) {
+                            $.alert('Select a valid tag name');
+                            return false;
+                        } else tag = Number(tag);
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('room:add', { roomName, capacity, center, building, tag });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+            },
+            onContentReady: function () {
+
+            }
+        });
+
+    }
+
+    //edit room data
+    function editRoom(id){
+        const centers = ipcRenderer.sendSync('center:get', null);
+        let centerSelection = '<select class="form-control center" onchange="updateBuildings()" required>';
+        centerSelection += '<option value="0" selected disabled> Select center </option>';
+        $.each(centers, function(i, center) {
+            centerSelection += '<option value="' + center.id + '">' + center.centerName + '</option>';
+        });
+        centerSelection += '</select>';
+
+        const tags = ipcRenderer.sendSync('tag:get', null);
+        let tagSelection = '<select class="form-control tag" required>';
+        tagSelection += '<option value="0" selected disabled> Select tag </option>';
+        $.each(tags, function(i, tag) {
+            tagSelection += '<option value="' + tag.id + '">' + tag.tagName + '</option>';
+        });
+        tagSelection += '</select>';
+
+        $.confirm({
+            title: 'Edit Room!',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Enter room name</label>
+                        <input type="text" placeholder="Room name" class="roomName form-control" required />
+
+                        <label>Enter max. capacity</label>
+                        <input type="number" placeholder="Capacity" class="capacity form-control" required />
+
+                        <label>Select center</label>
+                        ${centerSelection}
+                        <label>Select building</label>
+                        <select class="form-control building" required disabled>
+                            <option value="0" selected disabled> Select building </option>
+                        </select>
+                        <label>Select tag</label>
+                        ${tagSelection}
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let roomName = this.$content.find('.roomName').val(); //get the room name
+                        let capacity = this.$content.find('.capacity').val();
+                        let center = this.$content.find('.center').val();
+                        let building = this.$content.find('.building').val();
+                        let tag = this.$content.find('.tag').val();
+
+                        //check the name is not empty value
+                        if (!roomName) {
+                            $.alert('Provide a valid room name');
+                            return false;
+                        }
+                        if (!capacity) {
+                            $.alert('Provide a valid capacity');
+                            return false;
+                        } else capacity = Number(capacity);
+                        if (!center) {
+                            $.alert('Select a valid center name');
+                            return false;
+                        } else center = Number(center);
+                        if (!building) {
+                            $.alert('Select a valid building name');
+                            return false;
+                        } else building = Number(building);
+                        if (!tag) {
+                            $.alert('Select a valid tag name');
+                            return false;
+                        } else tag = Number(tag);
+
+                        // update data
+                        const success = ipcRenderer.sendSync('room:update', { id, roomName, capacity, center, building, tag });
+
+                        if(success){
+                            ReloadTable();
+                        }
+                    }
+                },
+            },
+            onContentReady: function () {
+                const roomData = ipcRenderer.sendSync('room:getByID', id);
+                this.$content.find('.roomName').val(roomData[0].roomName); //get the room name
+                this.$content.find('.capacity').val(roomData[0].capacity);
+                this.$content.find('.center').val(roomData[0].center);
+                updateBuildings();
+                this.$content.find('.building').val(roomData[0].building);
+                this.$content.find('.tag').val(roomData[0].tag);
+            }
+        });
+    }
+
+    // delete data
+    function deleteRoom(id, name){
+        console.log('Clicked Delete Button');
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('room:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+</script>
+
+</html>
