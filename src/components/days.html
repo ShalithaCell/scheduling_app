@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Days</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewTag()">Add New</button>
+
+                        <table id="tagTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liSettings').addClass('active');
+
+    });
+
+    $(function() {
+        LoadTable();
+    });
+
+    function LoadTable(){
+
+        // get all tag data
+        const tagList = ipcRenderer.sendSync('day:get', null);
+
+        if(tagList.length >= 7){
+            $('#btnAdd').hide();
+        }
+
+        var tblDatatable = $("#tagTable"); //find the table by id
+
+        // table filling and initializing as data-table
+        tblDatatable.DataTable ({
+            "data" : tagList,
+            "ordering": false,
+            "columns" : [
+                { "data" : "day" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.day+'\')" disabled><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+
+    }
+
+    //reload table data
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
+            $('#tagTable').DataTable().destroy();
+        }
+
+        $('#tagTable tbody').empty();
+        LoadTable();
+    }
+
+    // add new tag method
+    function AddNewTag(){
+
+        $.confirm({
+            title: 'New Day!',
+            content: '' +
+                '<div>' +
+                '<div class="form-group">' +
+                '<label>Enter day</label>' +
+                '<input type="text" placeholder="day name" class="name form-control" required />' +
+                '</div>' +
+                '</div>',
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        var name = this.$content.find('.name').val(); //get the tag name
+
+                        //check the name is not empty value
+                        if (!name) {
+                            $.alert('provide a valid day name');
+                            return false;
+                        }
+
+                        //saving tag to the database
+                        ipcRenderer.sendSync('day:add', name);
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+            },
+            onContentReady: function () {
+
+            }
+        });
+
+    }
+
+    //edit tag data
+    function editTag(id){
+        $.confirm({
+            title: 'Edit Day!',
+            content: '' +
+                '<div>' +
+                '<div class="form-group">' +
+                '<label>Enter day</label>' +
+                '<input type="text" placeholder="day name" class="name form-control" required />' +
+                '</div>' +
+                '</div>',
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        var name = this.$content.find('.name').val();
+                        if (!name) {
+                            $.alert('provide a valid day name');
+                            return false;
+                        }
+                        // update data
+                        const success = ipcRenderer.sendSync('day:update', {id, name});
+
+                        if(success){
+                            ReloadTable();
+                        }
+                    }
+                },
+            },
+            onContentReady: function () {
+                //console.log(id)
+                const tagData = ipcRenderer.sendSync('day:getByID', id);
+                //console.log(tagData);
+                this.$content.find('.name').val(tagData[0].tagName);
+            }
+        });
+    }
+
+    // delete data
+    function deleteTag(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('day:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+</script>
+
+</html>

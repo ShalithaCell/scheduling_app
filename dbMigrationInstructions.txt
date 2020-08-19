@@ -1,0 +1,23 @@
+For create new database table
+
+1. goto project src folder
+   commad - cd src
+2. create table model
+   command - npx sequelize-cli model:generate --name YourTableName --attributes ColumnName:Datatype
+   
+   example - npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string
+   
+3. next run following commad
+	commad - npx sequelize-cli db:migrate
+	
+4. Then replace scr-database folder schedule.sqlite3 to root folder database folder.
+
+
+-- Data Types
+i.   STRING
+ii.  INTEGER
+iii. TEXT
+
+
+for further details refer - https://sequelize.org/master/manual/migrations.html
+
