@@ -75,3 +75,4 @@ require('./services/centerDataServices');
 require('./services/buildingDataServices');
 require('./services/levelDataServices');
 require('./services/roomDataServices');
+require('./services/programmeDataServices');
