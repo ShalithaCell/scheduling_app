@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+
+    <style>
+<!--        To Remove arrow key of integer feild in emp id-->
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Lecturers</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewLecturer()">Add New</button>
+
+                        <table id="lecturerTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Lecturer Name</th>
+                                <th>Employee ID</th>
+                                <th>Department</th>
+                                <th>Faculty</th>
+                                <th>Center</th>
+                                <th>Building</th>
+                                <th>Rank</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liLecturers').addClass('active');
+
+    });
+
+    $(function() {
+        LoadTable();
+    });
+
+    function LoadTable(){
+
+        // get all lecturer data
+        const lecturerList = ipcRenderer.sendSync('lecturer:get', null);
+
+        if(lecturerList.length >= 7){
+            $('#btnAdd').hide();
+        }
+
+        var tblDatatable = $("#lecturerTable"); //find the table by id
+
+        // table filling and initializing as data-table
+        tblDatatable.DataTable ({
+            "data" : lecturerList,
+            "ordering": false,
+            "columns" : [
+                { "data" : "lecturerName" },
+                { "data" : "empId" },
+                { "data" : "departmentName" },
+                { "data" : "facultyName" },
+                { "data" : "centerName" },
+                { "data" : "buildingName" },
+                { "data" : "levelName" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editLecturer(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteLecturer(${data.id},'${data.lecturerName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                    }
+                },
+            ]
+        });
+
+    }
+
+    //reload table data
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#lecturerTable') ) {
+            $('#lecturerTable').DataTable().destroy();
+        }
+
+        $('#lecturerTable tbody').empty();
+        LoadTable();
+    }
+
+    function updateBuildings(){
+        const center = $('.center').val();
+        if(center){
+            $('.building').attr('disabled', false);
+        } else {
+            $('.building').attr('disabled', true);
+        }
+        $('.building').find('option').not('[value="0"]').remove();
+
+        const centers = ipcRenderer.sendSync('building:getByCenterID', center);
+        for(const center of centers){
+            $('.building').append(new Option(center.buildingName, center.id));
+        }
+    }
+
+    // add new lecturer method
+    function AddNewLecturer(){
+        const centers = ipcRenderer.sendSync('center:get', null);
+        let centerSelection = '<select class="form-control center" onchange="updateBuildings()" required>';
+        centerSelection += '<option value="0" selected disabled> Select center </option>';
+        $.each(centers, function(i, center) {
+            centerSelection += '<option value="' + center.id + '">' + center.centerName + '</option>';
+        });
+        centerSelection += '</select>';
+
+        const departments = ipcRenderer.sendSync('department:get', null);
+        let departmentSelection = '<select class="form-control department" required>';
+        departmentSelection += '<option value="0" selected disabled> Select department </option>';
+        $.each(departments, function(i, department) {
+            departmentSelection += '<option value="' + department.id + '">' + department.departmentName + '</option>';
+        });
+        departmentSelection += '</select>';
+
+        const faculties = ipcRenderer.sendSync('facility:get', null);
+        let facultySelection = '<select class="form-control faculty" required>';
+        facultySelection += '<option value="0" selected disabled> Select Faculty </option>';
+        $.each(faculties, function(i, faculty) {
+            facultySelection += '<option value="' + faculty.id + '">' + faculty.facilityName + '</option>';
+        });
+        facultySelection += '</select>';
+
+        const levels = ipcRenderer.sendSync('level:get', null);
+        let levelSelection = '<select class="form-control level" required>';
+        levelSelection += '<option value="0" selected disabled> Select level </option>';
+        $.each(levels, function(i, level) {
+            levelSelection += '<option value="' + level.id + '">' + level.category + '</option>';
+        });
+        levelSelection += '</select>';
+
+        $.confirm({
+            title: 'New Lecturer!',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Enter lecturer name</label>
+                        <input type="text" placeholder="Lecturer name" class="lecturerName form-control" required />
+
+                        <label>Enter employee ID</label>
+                        <input type="number" placeholder="Employee ID" class="empId form-control" required />
+
+                        <label>Select department</label>
+                        ${departmentSelection}
+
+                        <label>Select faculty</label>
+                        ${facultySelection}
+
+                        <label>Select center</label>
+                        ${centerSelection}
+                        <label>Select building</label>
+                        <select class="form-control building" required disabled>
+                            <option value="0" selected disabled> Select building </option>
+                        </select>
+                        <label>Select Rank</label>
+                        ${levelSelection}
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let lecturerName = this.$content.find('.lecturerName').val(); //get the lecturer name
+                        let empId = this.$content.find('.empId').val();
+                        let department = this.$content.find('.department').val();
+                        let faculty = this.$content.find('.faculty').val();
+                        let center = this.$content.find('.center').val();
+                        let building = this.$content.find('.building').val();
+                        let level = this.$content.find('.level').val();
+
+                        //check the name is not empty value
+                        if (!lecturerName) {
+                            $.alert('Provide a valid lecturer name');
+                            return false;
+                        }
+                        if (!empId) {
+                            $.alert('Provide a valid employee ID');
+                            return false;
+                        } else {
+                            const re = /\b\d{6}\b/g;
+                            if (re.test(empId)){
+                                empId = Number(empId);
+                            } else {
+                                $.alert('Provide a valid employee ID');
+                                return false;
+                            }
+                        }
+                        if (!department) {
+                            $.alert('Select a valid department name');
+                            return false;
+                        } else department = Number(department);
+                        if (!faculty) {
+                            $.alert('Select a valid faculty name');
+                            return false;
+                        } else faculty = Number(faculty);
+                        if (!center) {
+                            $.alert('Select a valid center name');
+                            return false;
+                        } else center = Number(center);
+                        if (!building) {
+                            $.alert('Select a valid building name');
+                            return false;
+                        } else building = Number(building);
+                        if (!level) {
+                            $.alert('Select a valid rank');
+                            return false;
+                        } else level = Number(level);
+
+                        //saving lecturer to the database
+                        ipcRenderer.sendSync('lecturer:add', { lecturerName, empId, department, faculty, center, building, level });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+            },
+            onContentReady: function () {
+
+            }
+        });
+
+    }
+
+    //edit lecturer data
+    function editLecturer(id){
+        const centers = ipcRenderer.sendSync('center:get', null);
+        let centerSelection = '<select class="form-control center" onchange="updateBuildings()" required>';
+        centerSelection += '<option value="0" selected disabled> Select center </option>';
+        $.each(centers, function(i, center) {
+            centerSelection += '<option value="' + center.id + '">' + center.centerName + '</option>';
+        });
+        centerSelection += '</select>';
+
+        const departments = ipcRenderer.sendSync('department:get', null);
+        let departmentSelection = '<select class="form-control department" required>';
+        departmentSelection += '<option value="0" selected disabled> Select department </option>';
+        $.each(departments, function(i, department) {
+            departmentSelection += '<option value="' + department.id + '">' + department.departmentName + '</option>';
+        });
+        departmentSelection += '</select>';
+
+        const faculties = ipcRenderer.sendSync('facility:get', null);
+        let facultySelection = '<select class="form-control faculty" required>';
+        facultySelection += '<option value="0" selected disabled> Select Faculty </option>';
+        $.each(faculties, function(i, faculty) {
+            facultySelection += '<option value="' + faculty.id + '">' + faculty.facilityName + '</option>';
+        });
+        facultySelection += '</select>';
+
+        const levels = ipcRenderer.sendSync('level:get', null);
+        let levelSelection = '<select class="form-control level" required>';
+        levelSelection += '<option value="0" selected disabled> Select level </option>';
+        $.each(levels, function(i, level) {
+            levelSelection += '<option value="' + level.id + '">' + level.category + '</option>';
+        });
+        levelSelection += '</select>';
+
+        $.confirm({
+            title: 'New Lecturer!',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Enter lecturer name</label>
+                        <input type="text" placeholder="Lecturer name" class="lecturerName form-control" required />
+
+                        <label>Enter employee ID</label>
+                        <input type="number" placeholder="Employee ID" class="empId form-control" required />
+
+                        <label>Select department</label>
+                        ${departmentSelection}
+
+                        <label>Select faculty</label>
+                        ${facultySelection}
+
+                        <label>Select center</label>
+                        ${centerSelection}
+                        <label>Select building</label>
+                        <select class="form-control building" required disabled>
+                            <option value="0" selected disabled> Select building </option>
+                        </select>
+                        <label>Select Rank</label>
+                        ${levelSelection}
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let lecturerName = this.$content.find('.lecturerName').val(); //get the lecturer name
+                        let empId = this.$content.find('.empId').val();
+                        let department = this.$content.find('.department').val();
+                        let faculty = this.$content.find('.faculty').val();
+                        let center = this.$content.find('.center').val();
+                        let building = this.$content.find('.building').val();
+                        let level = this.$content.find('.level').val();
+
+                        //check the name is not empty value
+                        if (!lecturerName) {
+                            $.alert('Provide a valid lecturer name');
+                            return false;
+                        }
+                        if (!empId) {
+                            $.alert('Provide a valid employee ID');
+                            return false;
+                        } else {
+                            const re = /\b\d{6}\b/g;
+                            if (re.test(empId)){
+                                empId = Number(empId);
+                            } else {
+                                $.alert('Provide a valid employee ID');
+                                return false;
+                            }
+                        }
+                        if (!department) {
+                            $.alert('Select a valid department name');
+                            return false;
+                        } else department = Number(department);
+                        if (!faculty) {
+                            $.alert('Select a valid faculty name');
+                            return false;
+                        } else faculty = Number(faculty);
+                        if (!center) {
+                            $.alert('Select a valid center name');
+                            return false;
+                        } else center = Number(center);
+                        if (!building) {
+                            $.alert('Select a valid building name');
+                            return false;
+                        } else building = Number(building);
+                        if (!level) {
+                            $.alert('Select a valid rank');
+                            return false;
+                        } else level = Number(level);
+
+                        // update data
+                        const success = ipcRenderer.sendSync('lecturer:update', { id, lecturerName, empId, department, faculty, center, building, level });
+
+                        if(success){
+                            ReloadTable();
+                        }
+                    }
+                },
+            },
+            onContentReady: function () {
+                const lecturerData = ipcRenderer.sendSync('lecturer:getByID', id);
+
+                this.$content.find('.lecturerName').val(lecturerData[0].lecturerName); //get the lecturer name
+                this.$content.find('.empId').val(lecturerData[0].empId);
+                this.$content.find('.department').val(lecturerData[0].department);
+                this.$content.find('.faculty').val(lecturerData[0].faculty);
+                this.$content.find('.center').val(lecturerData[0].center);
+                updateBuildings();
+                this.$content.find('.building').val(lecturerData[0].building);
+                this.$content.find('.level').val(lecturerData[0].level);
+            }
+        });
+    }
+
+    // delete data
+    function deleteLecturer(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('lecturer:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+</script>
+
+</html>
