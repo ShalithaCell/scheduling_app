@@ -282,7 +282,7 @@
 
 			count++;
 		}).get();
-debugger;
+
 		if($(".cls-day").length <= 0){
 			ipcRenderer.sendSync('work:deactivateAll', objProx.timeTableType);
 			return;
@@ -310,7 +310,6 @@ debugger;
 			const dayId = $(this).val();
 			const daytime = $(this).closest('.card-body').find('.cls-time').val();
 
-			debugger;
 			if (jsonHasKeyValFoRDays(workDataSet, dayId)){
 
 				const dataSet = ipcRenderer.sendSync('work:getByTypeAndDay', {type : objProx.timeTableType, day : dayId});
@@ -337,6 +336,8 @@ debugger;
 			showHideTransition: 'fade',
 			icon: 'success'
 		});
+
+		window.location.href = "./timeSlots.html";
 
 		return ;
 

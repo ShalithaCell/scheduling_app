@@ -1,6 +1,8 @@
 // all the working days database operations are initialized in here
 
 const { WorkingData, Days } = require('../models/index'); //import the tag model
+const { QueryTypes } = require('sequelize');
+const {sequelize} = require('../models/index');
 
 // add new day
 global.share.ipcMain.on('work:add', async (event, values) => {
@@ -47,6 +49,13 @@ global.share.ipcMain.on('work:getByType', async (event, values) => {
         },
         raw: true}); // get the specific data
     event.returnValue = workData;
+});
+
+// get specific type by using id from the database
+global.share.ipcMain.on('work:getByTypeRow', async (event, values) => {
+
+    const data =  await sequelize.query("select W.id, W.time, D.id as 'dayID', D.day from WorkingData W inner join Days D on W.day = D.id where W.isActive = 1", { type: QueryTypes.SELECT });
+    event.returnValue = data;
 });
 
 // get specific type by using dayID from the database

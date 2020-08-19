@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/hours-custom.css" />
+    <link rel="stylesheet" href="../public/style/material-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/custom-back.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./workingDaysHours.html'">Back</button>
+                <h2 class="title-font-custom">Assign Timetable Slots </h2>
+            </div>
+            <div>
+                <div class="margin-1-custom">
+                    <div class="container">
+                        <ul class="nav nav-tabs tabs-marker tabs-dark bg-dark" id="myTab" role="tablist">
+                        </ul>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mt-4">
+                            <div class="card ">
+                                <div class="card-body">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8 mt-4">
+                            <div class="card ">
+                                <div class="card-body">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+    const { timeTableEnum } = require('../systemConst');
+    const { objProx } = require('../services/systemSessionContainer');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liWorkingDays').addClass('active');
+
+    });
+
+
+    $(function() {
+        const data = ipcRenderer.sendSync('work:getByTypeRow', objProx.timeTableType);
+
+        const widthGenerate = (100 / data.length);
+
+        $.each(data, function(i, item) {
+
+            let content;
+            if(i === 0){
+                content = `<li class="nav-item" style="width: `+widthGenerate+`%">
+                                <a class="nav-link active" style="cursor: pointer; text-align: center" id="`+ item.dayID+`" data-toggle="tab" role="tab" aria-controls="home" aria-selected="true">`+ item.day+`<span class="marker"></span></a>
+                            </li>`;
+            }else{
+                content = `<li class="nav-item" style="width: `+widthGenerate+`%">
+                                <a class="nav-link" id="`+ item.dayID+`" style="cursor: pointer; text-align: center" data-toggle="tab" role="tab" aria-controls="home" aria-selected="true">`+ item.day+`<span class="marker"></span></a>
+                            </li>`;
+            }
+
+
+
+
+            $('#myTab').append(content);
+        });
+
+        console.log(data);
+    });
+
+
+</script>
+
+</html>
