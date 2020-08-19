@@ -46,24 +46,47 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="card border-success mx-sm-1 p-3">
+                                <div class="card border-success mx-sm-1 p-3" onclick="RedirectTo('faculties')">
                                     <div class="card border-success shadow text-success p-3 my-card"><span class="fa fa-eye" aria-hidden="true"></span></div>
                                     <div class="text-success text-center mt-3"><h4></h4></div>
-                                    <div class="text-success text-center mt-2"><h1>9332</h1></div>
+                                    <div class="text-success text-center mt-2"><h1>Faculties</h1></div>
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="card border-danger mx-sm-1 p-3">
+                                <div class="card border-danger mx-sm-1 p-3" onclick="RedirectTo('studyTypes')">
                                     <div class="card border-danger shadow text-danger p-3 my-card" ><span class="fa fa-heart" aria-hidden="true"></span></div>
                                     <div class="text-danger text-center mt-3"><h4></h4></div>
-                                    <div class="text-danger text-center mt-2"><h1>346</h1></div>
+                                    <div class="text-danger text-center mt-2"><h1>Lab, Lecture hall and Tutorial</h1></div>
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="card border-warning mx-sm-1 p-3">
+                                <div class="card border-warning mx-sm-1 p-3" onclick="RedirectTo('centers')">
                                     <div class="card border-warning shadow text-warning p-3 my-card" ><span class="fa fa-inbox" aria-hidden="true"></span></div>
                                     <div class="text-warning text-center mt-3"><h4></h4></div>
-                                    <div class="text-warning text-center mt-2"><h1>346</h1></div>
+                                    <div class="text-warning text-center mt-2"><h1>Centers</h1></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row w-100">
+                            <div class="col-md-3">
+                                <div class="card border-warning mx-sm-1 p-3" onclick="RedirectTo('buildings')">
+                                    <div class="card border-warning shadow text-warning p-3 my-card" ><span class="fa fa-inbox" aria-hidden="true"></span></div>
+                                    <div class="text-warning text-center mt-3"><h4></h4></div>
+                                    <div class="text-warning text-center mt-2"><h1>Buildings</h1></div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-warning mx-sm-1 p-3" onclick="RedirectTo('levels')">
+                                    <div class="card border-warning shadow text-warning p-3 my-card" ><span class="fa fa-inbox" aria-hidden="true"></span></div>
+                                    <div class="text-warning text-center mt-3"><h4></h4></div>
+                                    <div class="text-warning text-center mt-2"><h1>Levels</h1></div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-warning mx-sm-1 p-3" onclick="RedirectTo('rooms')">
+                                    <div class="card border-warning shadow text-warning p-3 my-card" ><span class="fa fa-inbox" aria-hidden="true"></span></div>
+                                    <div class="text-warning text-center mt-3"><h4></h4></div>
+                                    <div class="text-warning text-center mt-2"><h1>Rooms</h1></div>
                                 </div>
                             </div>
                         </div>
@@ -119,8 +142,25 @@
     });
 
     function RedirectTo(value){
-        if(value === 'days'){
-            window.location.href = "./days.html";
+        switch (value) {
+            case 'days':
+                window.location.href = "./days.html";
+                break;
+            case 'faculties':
+                window.location.href = "./faculties.html";
+                break;
+            case 'studyTypes':
+                window.location.href = "./studyTypes.html";
+                break;
+            case 'centers':
+                window.location.href = "./centers.html";
+                break;
+            case 'buildings':
+                window.location.href = "./buildings.html";
+                break;
+            case 'levels':
+                window.location.href = "./levels.html";
+                break;
         }
     }
 
