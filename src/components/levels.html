@@ -21,18 +21,19 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom">
-                <h2 class="title-font-custom">Lab, Lecture hall and Tutorial</h2>
+                <h2 class="title-font-custom">Levels</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewStudyType()" disabled>Add New</button>
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewLevel()">Add New</button>
 
-                        <table id="studyTypeTable" class="display" style="width:100%">
+                        <table id="levelTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Study Type</th>
+                                <th>Category</th>
+                                <th>Level</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -95,27 +96,28 @@
 
     function LoadTable(){
 
-        // get all studyType data
-        const studyTypeList = ipcRenderer.sendSync('studyType:get', null);
-
-        if(studyTypeList.length >= 7){
+        // get all level data
+        const levelList = ipcRenderer.sendSync('level:get', null);
+        console.log(levelList);
+        if(levelList.length >= 7){
             $('#btnAdd').hide();
         }
 
-        var tblDatatable = $("#studyTypeTable"); //find the table by id
+        var tblDatatable = $("#levelTable"); //find the table by id
 
         // table filling and initializing as data-table
         tblDatatable.DataTable ({
-            "data" : studyTypeList,
+            "data" : levelList,
             "ordering": false,
             "columns" : [
-                { "data" : "studyTypeName" },
+                { "data" : "category" },
+                { "data" : "level" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editStudyType(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editLevel(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteStudyType(${data.id},'${data.studyTypeName}')" disabled><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteLevel(${data.id},'${data.category}')" disabled><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
                     }
                 },
             ]
@@ -125,24 +127,26 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#studyTypeTable') ) {
-            $('#studyTypeTable').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#levelTable') ) {
+            $('#levelTable').DataTable().destroy();
         }
 
-        $('#studyTypeTable tbody').empty();
+        $('#levelTable tbody').empty();
         LoadTable();
     }
 
-    // add new studyType method
-    function AddNewStudyType(){
+    // add new level method
+    function AddNewLevel(){
 
         $.confirm({
-            title: 'New Study Type!',
+            title: 'New Level!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter study type name</label>' +
-                '<input type="text" placeholder="day name" class="name form-control" required />' +
+                '<label>Enter category</label>' +
+                '<input type="text" placeholder="Category" class="category form-control" required />' +
+                '<label>Enter level</label>' +
+                '<input type="text" placeholder="Level" class="level form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -153,16 +157,21 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val(); //get the studyType name
+                        const category = this.$content.find('.category').val(); //get the category
+                        const level = this.$content.find('.level').val(); //get the category
 
                         //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid studyType name');
+                        if (!category) {
+                            $.alert('provide a valid category');
+                            return false;
+                        }
+                        if (!level) {
+                            $.alert('provide a valid level');
                             return false;
                         }
 
-                        //saving studyType to the database
-                        ipcRenderer.sendSync('studyType:add', name);
+                        //saving level to the database
+                        ipcRenderer.sendSync('level:add', { category, level });
 
                         // reload the table
                         ReloadTable();
@@ -177,15 +186,17 @@
 
     }
 
-    //edit studyType data
-    function editStudyType(id){
+    //edit level data
+    function editLevel(id){
         $.confirm({
-            title: 'Edit StudyType!',
+            title: 'Edit Level!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter studyType name</label>' +
-                '<input type="text" placeholder="day name" class="name form-control" required />' +
+                '<label>Enter category</label>' +
+                '<input type="text" placeholder="Category" class="category form-control" required />' +
+                '<label>Enter level</label>' +
+                '<input type="text" placeholder="Level" class="level form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -196,13 +207,20 @@
                     text: 'Save',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val();
-                        if (!name) {
-                            $.alert('provide a valid studyType name');
+                        const category = this.$content.find('.category').val(); //get the category
+                        const level = this.$content.find('.level').val(); //get the category
+
+                        //check the name is not empty value
+                        if (!category) {
+                            $.alert('provide a valid category');
+                            return false;
+                        }
+                        if (!level) {
+                            $.alert('provide a valid level');
                             return false;
                         }
                         // update data
-                        const success = ipcRenderer.sendSync('studyType:update', {id, name});
+                        const success = ipcRenderer.sendSync('level:update', {id, category, level});
 
                         if(success){
                             ReloadTable();
@@ -212,15 +230,16 @@
             },
             onContentReady: function () {
                 //console.log(id)
-                const studyTypeData = ipcRenderer.sendSync('studyType:getByID', id);
-                //console.log(studyTypeData);
-                this.$content.find('.name').val(studyTypeData[0].studyTypeName);
+                const levelData = ipcRenderer.sendSync('level:getByID', id);
+                //console.log(levelData);
+                this.$content.find('.category').val(levelData[0].category);
+                this.$content.find('.level').val(levelData[0].level);
             }
         });
     }
 
     // delete data
-    function deleteStudyType(id, name){
+    function deleteLevel(id, name){
         console.log('Clicked Delete Button');
         $.confirm({
             title: 'Confirm!',
@@ -230,7 +249,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('studyType:remove', id);
+                        ipcRenderer.sendSync('level:remove', id);
 
                         ReloadTable();
                     }

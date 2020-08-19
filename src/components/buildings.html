@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8" />
-    <title>Schedule App</title>
-    <link rel="stylesheet" href="../index.css" />
-    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="../public/style/slider-custom.css" />
-    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
-    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
-    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+        <head>
+            <meta charset="UTF-8" />
+            <title>Schedule App</title>
+            <link rel="stylesheet" href="../index.css" />
+            <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+            <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+            <link rel="stylesheet" href="../public/style/slider-custom.css" />
+            <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+            <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+            <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
 
-</head>
+        </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
 
@@ -21,18 +21,18 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom">
-                <h2 class="title-font-custom">Lab, Lecture hall and Tutorial</h2>
+                <h2 class="title-font-custom">Buildings</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewStudyType()" disabled>Add New</button>
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewBuilding()">Add New</button>
 
-                        <table id="studyTypeTable" class="display" style="width:100%">
+                        <table id="buildingTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Study Type</th>
+                                <th>Building</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -95,27 +95,27 @@
 
     function LoadTable(){
 
-        // get all studyType data
-        const studyTypeList = ipcRenderer.sendSync('studyType:get', null);
+        // get all building data
+        const buildingList = ipcRenderer.sendSync('building:get', null);
 
-        if(studyTypeList.length >= 7){
+        if(buildingList.length >= 7){
             $('#btnAdd').hide();
         }
 
-        var tblDatatable = $("#studyTypeTable"); //find the table by id
+        var tblDatatable = $("#buildingTable"); //find the table by id
 
         // table filling and initializing as data-table
         tblDatatable.DataTable ({
-            "data" : studyTypeList,
+            "data" : buildingList,
             "ordering": false,
             "columns" : [
-                { "data" : "studyTypeName" },
+                { "data" : "buildingName" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editStudyType(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editBuilding(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteStudyType(${data.id},'${data.studyTypeName}')" disabled><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteBuilding(${data.id},'${data.buildingName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
                     }
                 },
             ]
@@ -125,23 +125,23 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#studyTypeTable') ) {
-            $('#studyTypeTable').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#buildingTable') ) {
+            $('#buildingTable').DataTable().destroy();
         }
 
-        $('#studyTypeTable tbody').empty();
+        $('#buildingTable tbody').empty();
         LoadTable();
     }
 
-    // add new studyType method
-    function AddNewStudyType(){
+    // add new building method
+    function AddNewBuilding(){
 
         $.confirm({
-            title: 'New Study Type!',
+            title: 'New Building!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter study type name</label>' +
+                '<label>Enter building name</label>' +
                 '<input type="text" placeholder="day name" class="name form-control" required />' +
                 '</div>' +
                 '</div>',
@@ -153,16 +153,16 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val(); //get the studyType name
+                        var name = this.$content.find('.name').val(); //get the building name
 
                         //check the name is not empty value
                         if (!name) {
-                            $.alert('provide a valid studyType name');
+                            $.alert('provide a valid building name');
                             return false;
                         }
 
-                        //saving studyType to the database
-                        ipcRenderer.sendSync('studyType:add', name);
+                        //saving building to the database
+                        ipcRenderer.sendSync('building:add', name);
 
                         // reload the table
                         ReloadTable();
@@ -177,14 +177,14 @@
 
     }
 
-    //edit studyType data
-    function editStudyType(id){
+    //edit building data
+    function editBuilding(id){
         $.confirm({
-            title: 'Edit StudyType!',
+            title: 'Edit Building!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter studyType name</label>' +
+                '<label>Enter building name</label>' +
                 '<input type="text" placeholder="day name" class="name form-control" required />' +
                 '</div>' +
                 '</div>',
@@ -198,11 +198,11 @@
                     action: function () {
                         var name = this.$content.find('.name').val();
                         if (!name) {
-                            $.alert('provide a valid studyType name');
+                            $.alert('provide a valid building name');
                             return false;
                         }
                         // update data
-                        const success = ipcRenderer.sendSync('studyType:update', {id, name});
+                        const success = ipcRenderer.sendSync('building:update', {id, name});
 
                         if(success){
                             ReloadTable();
@@ -212,15 +212,15 @@
             },
             onContentReady: function () {
                 //console.log(id)
-                const studyTypeData = ipcRenderer.sendSync('studyType:getByID', id);
-                //console.log(studyTypeData);
-                this.$content.find('.name').val(studyTypeData[0].studyTypeName);
+                const buildingData = ipcRenderer.sendSync('building:getByID', id);
+                //console.log(buildingData);
+                this.$content.find('.name').val(buildingData[0].buildingName);
             }
         });
     }
 
     // delete data
-    function deleteStudyType(id, name){
+    function deleteBuilding(id, name){
         console.log('Clicked Delete Button');
         $.confirm({
             title: 'Confirm!',
@@ -230,7 +230,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('studyType:remove', id);
+                        ipcRenderer.sendSync('building:remove', id);
 
                         ReloadTable();
                     }
