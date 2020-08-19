@@ -161,12 +161,12 @@
 							<div class="card-body row">
 							<div class="col-md-4">
 							<div class="form__group">
-							`+ddl+`
+							${ddl}
 							</div>
 							</div>
 							<div class="col-md-3">
 							<div class="form__group">
-							<input type="number" id="txtTime`+i+`" class="form__field cls-time" placeholder="Enter working time (hh:mm)" value="`+ item.time +`" required min="0" step="0.01"
+							<input type="number" id="txtTime${i}" class="form__field cls-time" placeholder="Enter working time (hh:mm)" value="${item.time}" required min="0" step="0.01"
 							pattern="^\\d+(?:\\.\\d{1,2})?$" onblur=" this.parentNode.parentNode.style.backgroundColor=/^\\d+(?:\\.\\d{1,2})?$/.test(this.value)?'inherit':'red' ">
 							<label for="txtworkingDays3" class="form__label">Working time (hh:mm)</label>
 							</div>
@@ -300,7 +300,7 @@
 
 		//get existing data
 		const workDataSet = ipcRenderer.sendSync('work:getByType', objProx.timeTableType);
-		
+
 		console.log(workDataSet);
 
 		let deleteValues = [];
