@@ -76,3 +76,7 @@ require('./services/buildingDataServices');
 require('./services/levelDataServices');
 require('./services/roomDataServices');
 require('./services/programmeDataServices');
+require('./services/groupsDataServices');
+require('./services/subGroupDataServices');
+require('./services/holdGroupsDataService');
+require('./services/holdSubGroupDataService');

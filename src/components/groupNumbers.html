@@ -24,13 +24,12 @@
         <div class="w-100">
             <div class="w-100 title-custom form-inline">
                 <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./student.html'">Back</button>
-
                 <h2 class="title-font-custom">Groups</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
-
+                        <button type="button" class="btn btn-warning float-right mb-2" onclick="RestoreAll()">Reset All Deletes</button>
                         <table id="tblProgramme" class="display" style="width:100%">
                             <thead>
                             <tr>
@@ -38,7 +37,7 @@
                                 <th>Academic year and semester with Program</th>
                                 <th>No of groups</th>
                                 <th>No Of Students</th>
-                                <th>Edit</th>
+                                <th>Delete</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -93,10 +92,137 @@
 
     });
 
+    let table;
 
     $(function() {
         LoadTable();
+
+        $('#tblProgramme tbody').on('click', 'td.details-control', function () {
+            LoadChildTable($(this), true);
+        });
+
+        $('.cls-group-count').on('input propertychange paste', function() {
+
+            var tr = $(this).closest('tr');
+            var row = table.row(tr);
+
+            let groupName = row.data().name;
+            const groupCount = tr.find('.cls-group-count').val();
+            const studentCount = tr.find('.cls-student-count').val();
+            const data = ipcRenderer.sendSync('group:getByName', groupName);
+
+            console.log(data);
+
+            if(data.length > 0){
+                ipcRenderer.sendSync('group:update', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+            }else{
+                ipcRenderer.sendSync('group:add', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+            }
+
+            ReloadTableChild($(this));
+        });
+
+        $('.cls-student-count').on('input propertychange paste', function() {
+
+            var tr = $(this).closest('tr');
+            var row = table.row(tr);
+
+            let groupName = row.data().name;
+            const groupCount = tr.find('.cls-group-count').val();
+            const studentCount = tr.find('.cls-student-count').val();
+            const data = ipcRenderer.sendSync('group:getByName', groupName);
+
+            console.log(data);
+
+            if(data.length > 0){
+                ipcRenderer.sendSync('group:update', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+            }else{
+                ipcRenderer.sendSync('group:add', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+            }
+        });
+
+
+        $('body').on('input propertychange paste', '.cls-sub-group-count', function() {
+
+            var tr = $(this).closest('tr');
+            let groupName = tr.find('.sub-name').html();
+            const studentCount = tr.find('.cls-sub-group-count').val();
+            const data = ipcRenderer.sendSync('sub-group:getByName', groupName);
+
+
+            if(data.length > 0){
+                ipcRenderer.sendSync('sub-group:update', {name : groupName, studentCount : studentCount});
+            }else{
+                ipcRenderer.sendSync('sub-group:add', {name : groupName,studentCount : studentCount});
+            }
+        });
+
+
     });
+
+    function LoadChildTable(RowSelected, expandStatus){
+        var tr = $(RowSelected).closest('tr');
+
+        var row = table.row(tr);
+
+        const groupCount = tr.find('.cls-group-count').val();
+
+        console.log(row.child.isShown());
+
+        if (row.child.isShown() && expandStatus) {
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            console.log(row.data());
+
+            row.child(format(row.data())).show();
+
+            let dataForChild = [];
+
+            for(let x = 0; x < groupCount; x++){
+                const groupNameSub = row.data().name + '.'+ (x+1);
+
+                const holdData = ipcRenderer.sendSync('hold-sub-group:getByName', groupNameSub);
+
+                if(holdData.length == 0){
+                    const dataSub = ipcRenderer.sendSync('sub-group:getByName', groupNameSub);
+
+                    let count = 0;
+
+                    if(dataSub.length > 0){
+                        count = dataSub[0].studentCount;
+                    }
+
+                    dataForChild.push({id : x, name : groupNameSub, no: count });
+                }
+            }
+
+            var table_id = '#myInnerTable_' + row.data().id;
+            var childTable = $(table_id).DataTable({
+                "data" : dataForChild,
+                pageLength: 100,
+                dom: "lrt<'myinfo'i>p",
+                initComplete: function () {
+                },
+                "order": [[0, "asc"]],
+                columns: [
+                    { 'data': 'name', className: 'sub-name'},
+                    { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                            return `<input type="number" value="${data.no}" class="form-control cls-sub-group-count" placeholder="Enter group count" min="0" step="1" oninput="this.value = Math.round(this.value);">`;
+                        }
+                    },
+                    { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                            return '<button type="button" class="btn btn-danger btn-header" onclick="deleteSubGroup(' +data.id +',\''+data.name+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        }
+                    }
+                ]
+            });
+
+
+            tr.addClass('shown');
+        }
+    }
 
     function LoadTable(){
 
@@ -110,7 +236,7 @@
 
             const start = program.startYearText;
             const end = program.endYearText;
-            debugger;
+            
             const startYear = Number(start.split('.')[0].match(/\d+/));
             const startSem = Number(start.split('.')[1].match(/\d+/));
 
@@ -123,22 +249,40 @@
                 const SemAC = Number(years.AcademicYearsandSemesters.split('.')[1].match(/\d+/));
 
                 if((startYear <= YearAC) && (endYear >=  YearAC)){
+
+                    let isAllowed = false;
+
                     if(YearAC < endYear){
                         // ok
-
-                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
-
-                        generatedData.push({id: years.id, name : displayData, group : 0, students : 0});
+                        isAllowed = true;
                     }else if((YearAC === startYear) && (startSem <= SemAC)){
                         // ok
-                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
-
-                        generatedData.push({id: years.id, name : displayData, group : 0, students : 0});
+                        isAllowed = true;
                     }else if((YearAC === endYear) && (endSem >= SemAC)){
                         //ok
+                        isAllowed = true;
+                    }
+
+                    if(isAllowed){
                         const displayData = years.AcademicYearsandSemesters + '.' + program.name;
 
-                        generatedData.push({id: years.id, name : displayData, group : 0, students : 0});
+                        const holdData = ipcRenderer.sendSync('hold-group:getByName', displayData);
+
+                        if(holdData.length == 0){
+                            const existsData = ipcRenderer.sendSync('group:getByName', displayData);
+
+                            let groupCal = 0;
+                            let studentCal = 0;
+
+                            if(existsData.length > 0){
+                                groupCal = existsData[0].groupCount;
+                                studentCal = existsData[0].studentCount;
+                            }
+
+                            generatedData.push({id: years.id, name : displayData, group : groupCal, students : studentCal});
+                        }
+
+
                     }
                 }
 
@@ -149,7 +293,7 @@
         var prgrammeTable = $("#tblProgramme"); //find the table by id
 
         // table filling and initializing as data-table
-        prgrammeTable .DataTable ({
+        table = prgrammeTable .DataTable ({
             "data" : generatedData,
             "ordering": true,
             "order": [[0, 'asc']],
@@ -160,7 +304,7 @@
                     data: null,
                     defaultContent: ''
                 },
-                { "data" : "name" },
+                { "data" : "name", className: 'name-cus' },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
                         return `<input type="number" value="${data.group}" class="form-control cls-group-count" placeholder="Enter group count" min="0" step="1" oninput="this.value = Math.round(this.value);">`;
                     }
@@ -188,6 +332,31 @@
         LoadTable();
     }
 
+    function ReloadTableChild(rowSelected){
+
+        var tr = $(rowSelected).closest('tr');
+
+        var row = table.row(tr);
+
+
+        const tableID = 'myInnerTable_'+row.data().id;
+
+        $('#'+tableID).remove();
+        LoadChildTable(rowSelected, false);
+    }
+
+    function format(rowData) {
+        var innerTable = '<table id="myInnerTable_' + rowData.id + '" class="table table-striped table-bordered table-condensed no-footer">';
+        innerTable += '<thead><tr>';
+        innerTable += '<th>Group</th><th>Number Of Students</th>';
+        innerTable += '<th data-orderable="false" class="text-center no-sort">Delete</th>';
+        innerTable += '</tr></thead>';
+        innerTable += '<tbody></tbody>';
+        var tbl = $(innerTable);
+
+        return tbl;
+    }
+
     // delete data
     function deleteProgramme(id, name){
         $.confirm({
@@ -198,7 +367,59 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('programme:remove', id);
+                        ipcRenderer.sendSync('hold-group:add', {name : name});
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+    // delete data
+    function deleteSubGroup(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('hold-sub-group:add', {name : name});
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+    function RestoreAll(){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Are you sure restore all deletes?',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('hold-sub-group:removeAll', null);
+                        ipcRenderer.sendSync('hold-group:removeAll', null);
 
                         ReloadTable();
                     }
