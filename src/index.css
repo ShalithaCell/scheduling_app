@@ -38,3 +38,12 @@ html {
     margin: 1% !important;
 }
 
+td.details-control {
+    background: url('./public/images/details_open.png.png') no-repeat center center;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    background: url('./public/images/details_close.png.png') no-repeat center center;
+}
+
+

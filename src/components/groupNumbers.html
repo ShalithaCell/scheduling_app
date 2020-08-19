@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/custom-back.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./student.html'">Back</button>
+
+                <h2 class="title-font-custom">Groups</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+
+                        <table id="tblProgramme" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>Academic year and semester with Program</th>
+                                <th>No of groups</th>
+                                <th>No Of Students</th>
+                                <th>Edit</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liStudent').addClass('active');
+
+    });
+
+
+    $(function() {
+        LoadTable();
+    });
+
+    function LoadTable(){
+
+        // get all programme data
+        const academicList = ipcRenderer.sendSync('academic:get', null);
+        const programList = ipcRenderer.sendSync('programme:getAllByRow', null);
+
+        let generatedData = [];
+
+        $.each(programList, function(i, program) {
+
+            const start = program.startYearText;
+            const end = program.endYearText;
+            debugger;
+            const startYear = Number(start.split('.')[0].match(/\d+/));
+            const startSem = Number(start.split('.')[1].match(/\d+/));
+
+            const endYear = Number(end.split('.')[0].match(/\d+/));
+            const endSem = Number(end.split('.')[1].match(/\d+/));
+
+            $.each(academicList, function(i, years) {
+
+                const YearAC = Number(years.AcademicYearsandSemesters.split('.')[0].match(/\d+/));
+                const SemAC = Number(years.AcademicYearsandSemesters.split('.')[1].match(/\d+/));
+
+                if((startYear <= YearAC) && (endYear >=  YearAC)){
+                    if(YearAC < endYear){
+                        // ok
+
+                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
+
+                        generatedData.push({id: years.id, name : displayData, group : 0, students : 0});
+                    }else if((YearAC === startYear) && (startSem <= SemAC)){
+                        // ok
+                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
+
+                        generatedData.push({id: years.id, name : displayData, group : 0, students : 0});
+                    }else if((YearAC === endYear) && (endSem >= SemAC)){
+                        //ok
+                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
+
+                        generatedData.push({id: years.id, name : displayData, group : 0, students : 0});
+                    }
+                }
+
+            });
+
+        });
+
+        var prgrammeTable = $("#tblProgramme"); //find the table by id
+
+        // table filling and initializing as data-table
+        prgrammeTable .DataTable ({
+            "data" : generatedData,
+            "ordering": true,
+            "order": [[0, 'asc']],
+            "columns" : [
+                {
+                    className: 'details-control small-col',
+                    orderable: false,
+                    data: null,
+                    defaultContent: ''
+                },
+                { "data" : "name" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<input type="number" value="${data.group}" class="form-control cls-group-count" placeholder="Enter group count" min="0" step="1" oninput="this.value = Math.round(this.value);">`;
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<input type="number" value="${data.students}" class="form-control cls-student-count" placeholder="Enter student count" min="0" step="1" oninput="this.value = Math.round(this.value);">`;
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme(' +data.id +',\''+data.name+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+
+    }
+
+    //reload table data
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tblProgramme') ) {
+            $('#tblProgramme').DataTable().destroy();
+        }
+
+        $('#tblProgramme tbody').empty();
+        LoadTable();
+    }
+
+    // delete data
+    function deleteProgramme(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('programme:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+</script>
+
+</html>
