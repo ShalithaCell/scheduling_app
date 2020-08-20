@@ -16,19 +16,19 @@ const navBar = `
                     <a href="./workingDaysHours.html"><span class="fa fa-briefcase mr-3"></span>Working days and hours</a>
                 </li>
                 <li id="liSubjects">
-                    <a href="./subjects.html"><span class="fa fa-briefcase mr-3"></span>Subjects</a>
+                    <a href="./subjects.html"><span class="fa fa-paperclip mr-3"></span>Subjects</a>
                 </li>
                 <li id="liTags">
-                    <a href="./tags.html"><span class="fa fa-suitcase mr-3"></span>Tags</a>
+                    <a href="./tags.html"><span class="fa fa-tag mr-3"></span>Tags</a>
                 </li>
                 <li id="liLecturers">
                     <a href="./lecturers.html"><span class="fa fa-suitcase mr-3"></span>Lecturers</a>
                 </li>
                 <li id="liStudent">
-                    <a href="./student.html"><span class="fa fa-suitcase mr-3"></span>Student</a>
+                    <a href="./student.html"><span class="fa fa-user mr-3"></span>Student</a>
                 </li>
-                <li>
-                    <a href="#"><span class="fa fa-cogs mr-3"></span>Services</a>
+                <li id="liStatics">
+                    <a href="./statistics.html"><span class="fa fa-line-chart mr-3"></span>Statistics</a>
                 </li>
                 <li id="liSettings">
                     <a href="./settings.html"><span class="fa fa-cogs mr-3"></span>Settings</a>

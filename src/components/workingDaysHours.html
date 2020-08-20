@@ -309,7 +309,6 @@
 
 			const dayId = $(this).val();
 			const daytime = $(this).closest('.card-body').find('.cls-time').val();
-
 			if (jsonHasKeyValFoRDays(workDataSet, dayId)){
 
 				const dataSet = ipcRenderer.sendSync('work:getByTypeAndDay', {type : objProx.timeTableType, day : dayId});
@@ -319,13 +318,12 @@
 				ipcRenderer.sendSync('work:add', {day : dayId, time : daytime, type : objProx.timeTableType});
 			}
 
-			deleteValues.push(dayId);
+			deleteValues.push(dayId.toString());
 
 			count++;
 		}).get();
-
 		$.each(workDataSet, function(i, item) {
-			if($.inArray(item.day, deleteValues) === -1){
+			if($.inArray(item.day.toString(), deleteValues) === -1){
 				ipcRenderer.sendSync('work:deactivate', {day : item.day, type : objProx.timeTableType});
 			}
 		});

@@ -14,6 +14,7 @@ const createWindow = () => {
     height: 600,
     webPreferences:
         {
+          //devTools : false,
           nodeIntegration: true,
         }
   });
@@ -85,3 +86,4 @@ require('./services/extendSubGroupDataService');
 require('./services/extendSubGroupHoldDataService');
 require('./services/subjectDataServices');
 require('./services/lecturerDataServices');
+require('./services/timeTableDataService');

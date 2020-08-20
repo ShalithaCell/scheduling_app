@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Timetables</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+                        <table id="tagTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>View</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Statistics related to lecturers</td>
+                                <td><button type="button" class="btn btn-link" onclick='window.location.href="lectureStatistics.html"'>View</button></td>
+                            </tr>
+                            <tr>
+                                <td>Statistics related to students</td>
+                                <td><button type="button" class="btn btn-link" onclick='window.location.href="studentStatistics.html"'>View</button></td>
+                            </tr>
+                            <tr>
+                                <td>Statistics related to subjects</td>
+                                <td><button type="button" class="btn btn-link" onclick='window.location.href="subjectStatistics.html"'>View</button></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+    if (window.module) module = window.module;
+
+    const { navBar } = require('../siteMaster');
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liStatics').addClass('active');
+    });
+
+</script>
+
+</html>

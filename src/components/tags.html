@@ -32,7 +32,6 @@
                         <table id="tagTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th class="hide">ID</th> 
                                 <th>Tag name</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
@@ -107,7 +106,6 @@
             "ordering": true,
             "order": [[0, 'asc']],
             "columns" : [
-                { "data" : "id" },
                 { "data" : "tagName" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
                         return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
