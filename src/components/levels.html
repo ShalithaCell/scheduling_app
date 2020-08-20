@@ -98,7 +98,6 @@
 
         // get all level data
         const levelList = ipcRenderer.sendSync('level:get', null);
-        console.log(levelList);
         if(levelList.length >= 7){
             $('#btnAdd').hide();
         }
@@ -229,9 +228,7 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
                 const levelData = ipcRenderer.sendSync('level:getByID', id);
-                //console.log(levelData);
                 this.$content.find('.category').val(levelData[0].category);
                 this.$content.find('.level').val(levelData[0].level);
             }
@@ -240,7 +237,6 @@
 
     // delete data
     function deleteLevel(id, name){
-        console.log('Clicked Delete Button');
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
