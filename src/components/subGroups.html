@@ -24,7 +24,7 @@
         <div class="w-100">
             <div class="w-100 title-custom form-inline">
                 <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./student.html'">Back</button>
-                <h2 class="title-font-custom">Groups</h2>
+                <h2 class="title-font-custom">Sub-Groups</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
@@ -34,8 +34,8 @@
                             <thead>
                             <tr>
                                 <th></th>
-                                <th>Academic year and semester with Program</th>
-                                <th>No of groups</th>
+                                <th>Groups</th>
+                                <th>No of sub groups</th>
                                 <th>No Of Students</th>
                                 <th>Delete</th>
                             </tr>
@@ -109,14 +109,15 @@
             let groupName = row.data().name;
             const groupCount = tr.find('.cls-group-count').val();
             const studentCount = tr.find('.cls-student-count').val();
-            const data = ipcRenderer.sendSync('group:getByName', groupName);
+            const data = ipcRenderer.sendSync('extend-group:getByName', groupName);
 
             console.log(data);
 
             if(data.length > 0){
-                ipcRenderer.sendSync('group:update', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+                ipcRenderer.sendSync('extend-group:update', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+                ipcRenderer.sendSync('sub-group:update', {name : groupName, studentCount : studentCount});
             }else{
-                ipcRenderer.sendSync('group:add', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+                ipcRenderer.sendSync('extend-group:add', {name : groupName, groupCount : groupCount, studentCount : studentCount});
             }
 
             ReloadTableChild($(this));
@@ -130,14 +131,15 @@
             let groupName = row.data().name;
             const groupCount = tr.find('.cls-group-count').val();
             const studentCount = tr.find('.cls-student-count').val();
-            const data = ipcRenderer.sendSync('group:getByName', groupName);
+            const data = ipcRenderer.sendSync('extend-group:getByName', groupName);
 
             console.log(data);
 
             if(data.length > 0){
-                ipcRenderer.sendSync('group:update', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+                ipcRenderer.sendSync('extend-group:update', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+                ipcRenderer.sendSync('sub-group:update', {name : groupName, studentCount : studentCount});
             }else{
-                ipcRenderer.sendSync('group:add', {name : groupName, groupCount : groupCount, studentCount : studentCount});
+                ipcRenderer.sendSync('extend-group:add', {name : groupName, groupCount : groupCount, studentCount : studentCount});
             }
         });
 
@@ -147,13 +149,13 @@
             var tr = $(this).closest('tr');
             let groupName = tr.find('.sub-name').html();
             const studentCount = tr.find('.cls-sub-group-count').val();
-            const data = ipcRenderer.sendSync('sub-group:getByName', groupName);
+            const data = ipcRenderer.sendSync('extend-sub-group:getByName', groupName);
 
 
             if(data.length > 0){
-                ipcRenderer.sendSync('sub-group:update', {name : groupName, studentCount : studentCount});
+                ipcRenderer.sendSync('extend-sub-group:update', {name : groupName, studentCount : studentCount});
             }else{
-                ipcRenderer.sendSync('sub-group:add', {name : groupName,studentCount : studentCount});
+                ipcRenderer.sendSync('extend-sub-group:add', {name : groupName,studentCount : studentCount});
             }
         });
 
@@ -183,10 +185,10 @@
             for(let x = 0; x < groupCount; x++){
                 const groupNameSub = row.data().name + '.'+ (x+1);
 
-                const holdData = ipcRenderer.sendSync('hold-sub-group:getByName', groupNameSub);
+                const holdData = ipcRenderer.sendSync('extend-hold-sub-group:getByName', groupNameSub);
 
                 if(holdData.length == 0){
-                    const dataSub = ipcRenderer.sendSync('sub-group:getByName', groupNameSub);
+                    const dataSub = ipcRenderer.sendSync('extend-sub-group:getByName', groupNameSub);
 
                     let count = 0;
 
@@ -236,7 +238,7 @@
 
             const start = program.startYearText;
             const end = program.endYearText;
-            
+
             const startYear = Number(start.split('.')[0].match(/\d+/));
             const startSem = Number(start.split('.')[1].match(/\d+/));
 
@@ -270,7 +272,6 @@
 
                         if(holdData.length == 0){
                             const existsData = ipcRenderer.sendSync('group:getByName', displayData);
-
                             let groupCal = 0;
                             let studentCal = 0;
 
@@ -279,7 +280,37 @@
                                 studentCal = existsData[0].studentCount;
                             }
 
-                            generatedData.push({id: years.id, name : displayData, group : groupCal, students : studentCal});
+                            
+                            for(let x = 0; x < groupCal; x++){
+                                
+                                const groupNameSub = displayData + '.'+ (x+1);
+                                const holdDataSub = ipcRenderer.sendSync('hold-sub-group:getByName', groupNameSub);
+
+                                if(holdDataSub.length == 0){
+                                    const dataSub = ipcRenderer.sendSync('sub-group:getByName', groupNameSub);
+
+                                    let count = 0;
+
+                                    if(dataSub.length > 0){
+                                        count = dataSub[0].studentCount;
+                                    }
+
+                                    const existsSubData = ipcRenderer.sendSync('extend-group:getByName', groupNameSub);
+
+                                    let countGroup = 0;
+
+                                    if(existsSubData.length > 0){
+                                        countGroup = existsSubData[0].groupCount;
+                                    }
+
+                                    generatedData.push({name : groupNameSub, group : countGroup, students : count});
+                                }
+                            }
+
+                            // if(groupCal == 0){
+                            //     generatedData.push({name : displayData, group : groupCal, students : studentCal});
+                            // }
+
                         }
 
 
@@ -314,7 +345,7 @@
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme(' +data.id +',\''+data.name+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return '<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme(' +data.name+ ')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
                     }
                 },
             ]
@@ -367,7 +398,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('hold-group:add', {name : name});
+                        ipcRenderer.sendSync('extend-group:add', {name : name});
 
                         ReloadTable();
                     }
@@ -393,7 +424,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('hold-sub-group:add', {name : name});
+                        ipcRenderer.sendSync('extend-hold-sub-group:add', {name : name});
 
                         ReloadTable();
                     }
@@ -419,7 +450,7 @@
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
                         ipcRenderer.sendSync('hold-sub-group:removeAll', null);
-                        ipcRenderer.sendSync('hold-group:removeAll', null);
+                        ipcRenderer.sendSync('extend-hold-sub-group:removeAll', null);
 
                         ReloadTable();
                     }
