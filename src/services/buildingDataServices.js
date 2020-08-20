@@ -49,7 +49,7 @@ global.share.ipcMain.on('building:update', async (event, values) => {
     await Buildings.findOne({where: {id: values.id}})
         .then( building => {
             // Check if record exists in db
-            building.update({buildingName : values.name, center: Number(values.center)}).then( updatedRecord => {
+            building.update({buildingName : values.buildingName, center: Number(values.center)}).then( updatedRecord => {
                 console.log(`updated record ${JSON.stringify(updatedRecord,null,2)}`)
                 // login into your DB and confirm update
             })
