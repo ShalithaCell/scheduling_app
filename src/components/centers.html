@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8" />
-    <title>Schedule App</title>
-    <link rel="stylesheet" href="../index.css" />
-    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="../public/style/slider-custom.css" />
-    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
-    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
-    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+        <head>
+            <meta charset="UTF-8" />
+            <title>Schedule App</title>
+            <link rel="stylesheet" href="../index.css" />
+            <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+            <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+            <link rel="stylesheet" href="../public/style/slider-custom.css" />
+            <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+            <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+            <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
 
-</head>
+        </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
 
@@ -21,18 +21,18 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom">
-                <h2 class="title-font-custom">Tags</h2>
+                <h2 class="title-font-custom">Centers</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewTag()">Add New</button>
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewCenter()">Add New</button>
 
-                        <table id="tagTable" class="display" style="width:100%">
+                        <table id="centerTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Tag name</th>
+                                <th>Center</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -85,7 +85,7 @@
         $("#navBarID").prepend(navBar);
 
         // highlight page
-        $('#liTags').addClass('active');
+        $('#liSettings').addClass('active');
 
     });
 
@@ -95,24 +95,27 @@
 
     function LoadTable(){
 
-        // get all tag data
-        const tagList = ipcRenderer.sendSync('tag:get', null);
+        // get all center data
+        const centerList = ipcRenderer.sendSync('center:get', null);
 
-        var tblDatatable = $("#tagTable"); //find the table by id
+        if(centerList.length >= 7){
+            $('#btnAdd').hide();
+        }
+
+        var tblDatatable = $("#centerTable"); //find the table by id
 
         // table filling and initializing as data-table
         tblDatatable.DataTable ({
-            "data" : tagList,
-            "ordering": true,
-            "order": [[0, 'asc']],
+            "data" : centerList,
+            "ordering": false,
             "columns" : [
-                { "data" : "tagName" },
+                { "data" : "centerName" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editCenter(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.tagName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteCenter(${data.id},'${data.centerName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
                     }
                 },
             ]
@@ -122,49 +125,49 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
-            $('#tagTable').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#centerTable') ) {
+            $('#centerTable').DataTable().destroy();
         }
 
-        $('#tagTable tbody').empty();
+        $('#centerTable tbody').empty();
         LoadTable();
     }
 
-    // add new tag method
-    function AddNewTag(){
+    // add new center method
+    function AddNewCenter(){
 
         $.confirm({
-            title: 'New Tag!',
+            title: 'New Center!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter center name</label>' +
+                '<input type="text" placeholder="day name" class="name form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
+                cancel: function () {
+                    //close
+                },
                 formSubmit: {
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val(); //get the tag name
+                        var name = this.$content.find('.name').val(); //get the center name
 
                         //check the name is not empty value
                         if (!name) {
-                            $.alert('provide a valid tag name');
+                            $.alert('provide a valid center name');
                             return false;
                         }
 
-                        //saving tag to the database
-                        ipcRenderer.sendSync('tag:add', name);
+                        //saving center to the database
+                        ipcRenderer.sendSync('center:add', name);
 
                         // reload the table
                         ReloadTable();
 
                     }
-                },
-                cancel: function () {
-                    //close
                 },
             },
             onContentReady: function () {
@@ -174,15 +177,15 @@
 
     }
 
-    //edit tag data
-    function editTag(id){
+    //edit center data
+    function editCenter(id){
         $.confirm({
-            title: 'Edit Tag!',
+            title: 'Edit Center!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter center name</label>' +
+                '<input type="text" placeholder="day name" class="name form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -195,11 +198,11 @@
                     action: function () {
                         var name = this.$content.find('.name').val();
                         if (!name) {
-                            $.alert('provide a valid tag name');
+                            $.alert('provide a valid center name');
                             return false;
                         }
                         // update data
-                        const success = ipcRenderer.sendSync('tag:update', {id, name});
+                        const success = ipcRenderer.sendSync('center:update', {id, name});
 
                         if(success){
                             ReloadTable();
@@ -208,16 +211,14 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
-                const tagData = ipcRenderer.sendSync('tag:getByID', id);
-                //console.log(tagData);
-                this.$content.find('.name').val(tagData[0].tagName);
+                const centerData = ipcRenderer.sendSync('center:getByID', id);
+                this.$content.find('.name').val(centerData[0].centerName);
             }
         });
     }
 
     // delete data
-    function deleteTag(id, name){
+    function deleteCenter(id, name){
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
@@ -226,7 +227,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('tag:remove', id);
+                        ipcRenderer.sendSync('center:remove', id);
 
                         ReloadTable();
                     }

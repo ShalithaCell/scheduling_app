@@ -14,6 +14,7 @@ const createWindow = () => {
     height: 600,
     webPreferences:
         {
+          //devTools : false,
           nodeIntegration: true,
         }
   });
@@ -21,7 +22,7 @@ const createWindow = () => {
   mainWindow.maximize();
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'components/index.html'));
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
@@ -64,3 +65,25 @@ app.on('activate', () => {
 
 // database operations
 require('./services/tagDataService');
+
+require('./services/academicyearDataService');
+
+require('./services/dayDataService');
+require('./services/workingDaysDataService');
+require('./services/facilityDataServices');
+require('./services/departmentDataServices');
+require('./services/centerDataServices');
+require('./services/buildingDataServices');
+require('./services/levelDataServices');
+require('./services/roomDataServices');
+require('./services/programmeDataServices');
+require('./services/groupsDataServices');
+require('./services/subGroupDataServices');
+require('./services/holdGroupsDataService');
+require('./services/holdSubGroupDataService');
+require('./services/extendGroupsDataService');
+require('./services/extendSubGroupDataService');
+require('./services/extendSubGroupHoldDataService');
+require('./services/subjectDataServices');
+require('./services/lecturerDataServices');
+require('./services/timeTableDataService');

@@ -1,6 +1,6 @@
 
 const obj = {
-    timeTableType: ''
+    timeTableType: 1
 };
 const objProx = new Proxy(obj, {
     get(obj, prop) {

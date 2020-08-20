@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Statistics related to subjects</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+                        <canvas id="myChart" ></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/Chart.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+    if (window.module) module = window.module;
+
+    const { navBar } = require('../siteMaster');
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liStatics').addClass('active');
+    });
+
+    $(function() {
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['SPM', 'CSSE', 'DBS', 'UEE'],
+                datasets: [{
+                    label: '# Lectures for subject',
+                    data: [12, 19, 3, 5],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    });
+
+</script>
+
+</html>

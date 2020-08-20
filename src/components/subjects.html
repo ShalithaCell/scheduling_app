@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Subjects</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewRoom()">Add New</button>
+
+                        <table id="subjectTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                                <th>Academic Year and Semester</th>
+                                <th>Lecture Hours</th>
+                                <th>Tutorial Hours</th>
+                                <th>Lab Hours</th>
+                                <th>Evaluation Hours</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liSubjects').addClass('active');
+
+    });
+
+    $(function() {
+        LoadTable();
+    });
+
+    function LoadTable(){
+        // get all subject data
+        const subjectList = ipcRenderer.sendSync('subject:get', null);
+
+        if(subjectList.length >= 7){
+            $('#btnAdd').hide();
+        }
+
+        var tblDatatable = $("#subjectTable"); //find the table by id
+
+        // table filling and initializing as data-table
+        tblDatatable.DataTable ({
+            "data" : subjectList,
+            "ordering": false,
+            "columns" : [
+                { "data" : "subjectCode" },
+                { "data" : "subjectName" },
+                { "data" : "AcademicYearsandSemesters" },
+                { "data" : "lectureHours" },
+                { "data" : "tutorialHours" },
+                { "data" : "labHours" },
+                { "data" : "evaluationHours" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editRoom(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteRoom(${data.id},'${data.subjectName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                    }
+                },
+            ]
+        });
+
+    }
+
+    //reload table data
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#subjectTable') ) {
+            $('#subjectTable').DataTable().destroy();
+        }
+
+        $('#subjectTable tbody').empty();
+        LoadTable();
+    }
+
+    // add new subject method
+    function AddNewRoom(){
+        const academics = ipcRenderer.sendSync('academic:get', null);
+        let academicYearAndSemesterSelection = '<select class="form-control academicYearAndSemester" required>';
+        academicYearAndSemesterSelection += '<option value="0" selected disabled>Select Academic Year and Semester</option>';
+        $.each(academics, function(i, academic) {
+            academicYearAndSemesterSelection += '<option value="' + academic.id + '">' + academic.AcademicYearsandSemesters + '</option>';
+        });
+        academicYearAndSemesterSelection += '</select>';
+
+        $.confirm({
+            title: 'New Subject!',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Enter subject name</label>
+                        <input type="text" placeholder="Room name" class="subjectName form-control" required />
+
+                        <label>Enter subject code</label>
+                        <input type="text" placeholder="Capacity" class="subjectCode form-control" required />
+
+                        <label>Academic Year and Semester</label>
+                        ${ academicYearAndSemesterSelection }
+
+                        <label>Enter lecture hours</label>
+                        <input type="number" placeholder="Lecture Hours" class="lectureHours form-control" required />
+
+                        <label>Enter tutorial hours</label>
+                        <input type="number" placeholder="Tutorial Hours" class="tutorialHours form-control" required />
+
+                        <label>Enter lab hours</label>
+                        <input type="number" placeholder="Lab Hours" class="labHours form-control" required />
+
+                        <label>Enter evaluation hours</label>
+                        <input type="number" placeholder="Evaluation Hours" class="evaluationHours form-control" required />
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let subjectName = this.$content.find('.subjectName').val(); //get the subject name
+                        let subjectCode = this.$content.find('.subjectCode').val();
+                        let academicYearAndSemester = this.$content.find('.academicYearAndSemester').val();
+                        let lectureHours = this.$content.find('.lectureHours').val();
+                        let tutorialHours = this.$content.find('.tutorialHours').val();
+                        let labHours = this.$content.find('.labHours').val();
+                        let evaluationHours = this.$content.find('.evaluationHours').val();
+
+                        //check the name is not empty value
+                        if (!subjectName) {
+                            $.alert('Provide a valid subject name');
+                            return false;
+                        }
+                        if (!subjectCode) {
+                            $.alert('Provide a valid subject code');
+                            return false;
+                        }
+                        if (!academicYearAndSemester) {
+                            $.alert('Select a valid academic year and semester');
+                            return false;
+                        }
+                        if (!lectureHours) {
+                            $.alert('Provide a valid lecture hours');
+                            return false;
+                        }
+                        if (!tutorialHours) {
+                            $.alert('Provide a valid tutorial hours');
+                            return false;
+                        } else tutorialHours = Number(tutorialHours);
+                        if (!labHours) {
+                            $.alert('Provide a valid lab hours');
+                            return false;
+                        } else labHours = Number(labHours);
+                        if (!evaluationHours) {
+                            $.alert('Provide a valid evaluation hours');
+                            return false;
+                        } else evaluationHours = Number(evaluationHours);
+
+                        //saving subject to the database
+                        ipcRenderer.sendSync('subject:add', { subjectName, subjectCode, academicYearAndSemester, lectureHours, tutorialHours, labHours, evaluationHours });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+            },
+            onContentReady: function () {
+
+            }
+        });
+
+    }
+
+    //edit subject data
+    function editRoom(id){
+        const academics = ipcRenderer.sendSync('academic:get', null);
+        let academicYearAndSemesterSelection = '<select class="form-control academicYearAndSemester" required>';
+        academicYearAndSemesterSelection += '<option value="0" selected disabled>Select Academic Year and Semester</option>';
+        $.each(academics, function(i, academic) {
+            academicYearAndSemesterSelection += '<option value="' + academic.id + '">' + academic.AcademicYearsandSemesters + '</option>';
+        });
+        academicYearAndSemesterSelection += '</select>';
+
+        $.confirm({
+            title: 'New Subject!',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Enter subject name</label>
+                        <input type="text" placeholder="Room name" class="subjectName form-control" required />
+
+                        <label>Enter subject code</label>
+                        <input type="text" placeholder="Capacity" class="subjectCode form-control" required />
+
+                        <label>Academic Year and Semester</label>
+                        ${ academicYearAndSemesterSelection }
+
+                        <label>Enter lecture hours</label>
+                        <input type="number" placeholder="Lecture Hours" class="lectureHours form-control" required />
+
+                        <label>Enter tutorial hours</label>
+                        <input type="number" placeholder="Tutorial Hours" class="tutorialHours form-control" required />
+
+                        <label>Enter lab hours</label>
+                        <input type="number" placeholder="Lab Hours" class="labHours form-control" required />
+
+                        <label>Enter evaluation hours</label>
+                        <input type="number" placeholder="Evaluation Hours" class="evaluationHours form-control" required />
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let subjectName = this.$content.find('.subjectName').val(); //get the subject name
+                        let subjectCode = this.$content.find('.subjectCode').val();
+                        let academicYearAndSemester = this.$content.find('.academicYearAndSemester').val();
+                        let lectureHours = this.$content.find('.lectureHours').val();
+                        let tutorialHours = this.$content.find('.tutorialHours').val();
+                        let labHours = this.$content.find('.labHours').val();
+                        let evaluationHours = this.$content.find('.evaluationHours').val();
+
+                        //check the name is not empty value
+                        if (!subjectName) {
+                            $.alert('Provide a valid subject name');
+                            return false;
+                        }
+                        if (!subjectCode) {
+                            $.alert('Provide a valid subject code');
+                            return false;
+                        }
+                        if (!academicYearAndSemester) {
+                            $.alert('Select a valid academic year and semester');
+                            return false;
+                        }
+                        if (!lectureHours) {
+                            $.alert('Provide a valid lecture hours');
+                            return false;
+                        }
+                        if (!tutorialHours) {
+                            $.alert('Provide a valid tutorial hours');
+                            return false;
+                        } else tutorialHours = Number(tutorialHours);
+                        if (!labHours) {
+                            $.alert('Provide a valid lab hours');
+                            return false;
+                        } else labHours = Number(labHours);
+                        if (!evaluationHours) {
+                            $.alert('Provide a valid evaluation hours');
+                            return false;
+                        } else evaluationHours = Number(evaluationHours);
+
+                        // update data
+                        const success = ipcRenderer.sendSync('subject:update', { id, subjectName, subjectCode, academicYearAndSemester, lectureHours, tutorialHours, labHours, evaluationHours });
+
+                        if(success){
+                            ReloadTable();
+                        }
+                    }
+                },
+            },
+            onContentReady: function () {
+                const subjectData = ipcRenderer.sendSync('subject:getByID', id);
+                this.$content.find('.subjectName').val(subjectData[0].subjectName); //get the subject name
+                this.$content.find('.subjectCode').val(subjectData[0].subjectCode);
+                this.$content.find('.academicYearAndSemester').val(subjectData[0].academicYearAndSemester);
+                this.$content.find('.lectureHours').val(subjectData[0].lectureHours);
+                this.$content.find('.tutorialHours').val(subjectData[0].tutorialHours);
+                this.$content.find('.labHours').val(subjectData[0].labHours);
+                this.$content.find('.evaluationHours').val(subjectData[0].evaluationHours);
+            }
+        });
+    }
+
+    // delete data
+    function deleteRoom(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('subject:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+</script>
+
+</html>

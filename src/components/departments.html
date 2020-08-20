@@ -21,18 +21,18 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom">
-                <h2 class="title-font-custom">Tags</h2>
+                <h2 class="title-font-custom">Departments</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewTag()">Add New</button>
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewDepartment()">Add New</button>
 
-                        <table id="tagTable" class="display" style="width:100%">
+                        <table id="departmentTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Tag name</th>
+                                <th>Department</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -85,7 +85,7 @@
         $("#navBarID").prepend(navBar);
 
         // highlight page
-        $('#liTags').addClass('active');
+        $('#liSettings').addClass('active');
 
     });
 
@@ -95,24 +95,26 @@
 
     function LoadTable(){
 
-        // get all tag data
-        const tagList = ipcRenderer.sendSync('tag:get', null);
+        // get all department data
+        const departmentList = ipcRenderer.sendSync('department:get', null);
+        if(departmentList.length >= 7){
+            $('#btnAdd').hide();
+        }
 
-        var tblDatatable = $("#tagTable"); //find the table by id
+        var tblDatatable = $("#departmentTable"); //find the table by id
 
         // table filling and initializing as data-table
         tblDatatable.DataTable ({
-            "data" : tagList,
-            "ordering": true,
-            "order": [[0, 'asc']],
+            "data" : departmentList,
+            "ordering": false,
             "columns" : [
-                { "data" : "tagName" },
+                { "data" : "departmentName" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editDepartment(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.tagName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteDepartment(${data.id},'${data.departmentName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
                     }
                 },
             ]
@@ -122,49 +124,49 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
-            $('#tagTable').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#departmentTable') ) {
+            $('#departmentTable').DataTable().destroy();
         }
 
-        $('#tagTable tbody').empty();
+        $('#departmentTable tbody').empty();
         LoadTable();
     }
 
-    // add new tag method
-    function AddNewTag(){
+    // add new department method
+    function AddNewDepartment(){
 
         $.confirm({
-            title: 'New Tag!',
+            title: 'New Department!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter department name</label>' +
+                '<input type="text" placeholder="Department" class="departmentName form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
+                cancel: function () {
+                    //close
+                },
                 formSubmit: {
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val(); //get the tag name
+                        const departmentName = this.$content.find('.departmentName').val(); //get the department
 
                         //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid tag name');
+                        if (!departmentName) {
+                            $.alert('provide a valid department name');
                             return false;
                         }
 
-                        //saving tag to the database
-                        ipcRenderer.sendSync('tag:add', name);
+                        //saving department to the database
+                        ipcRenderer.sendSync('department:add', { departmentName });
 
                         // reload the table
                         ReloadTable();
 
                     }
-                },
-                cancel: function () {
-                    //close
                 },
             },
             onContentReady: function () {
@@ -174,15 +176,15 @@
 
     }
 
-    //edit tag data
-    function editTag(id){
+    //edit department data
+    function editDepartment(id){
         $.confirm({
-            title: 'Edit Tag!',
+            title: 'Edit Department!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter department name</label>' +
+                '<input type="text" placeholder="Department" class="departmentName form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -193,13 +195,15 @@
                     text: 'Save',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val();
-                        if (!name) {
-                            $.alert('provide a valid tag name');
+                        const departmentName = this.$content.find('.departmentName').val(); //get the department
+
+                        //check the name is not empty value
+                        if (!departmentName) {
+                            $.alert('provide a valid department name');
                             return false;
                         }
                         // update data
-                        const success = ipcRenderer.sendSync('tag:update', {id, name});
+                        const success = ipcRenderer.sendSync('department:update', {id, departmentName});
 
                         if(success){
                             ReloadTable();
@@ -208,16 +212,14 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
-                const tagData = ipcRenderer.sendSync('tag:getByID', id);
-                //console.log(tagData);
-                this.$content.find('.name').val(tagData[0].tagName);
+                const departmentData = ipcRenderer.sendSync('department:getByID', id);
+                this.$content.find('.departmentName').val(departmentData[0].departmentName);
             }
         });
     }
 
     // delete data
-    function deleteTag(id, name){
+    function deleteDepartment(id, name){
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
@@ -226,7 +228,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('tag:remove', id);
+                        ipcRenderer.sendSync('department:remove', id);
 
                         ReloadTable();
                     }

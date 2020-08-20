@@ -21,18 +21,19 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom">
-                <h2 class="title-font-custom">Tags</h2>
+                <h2 class="title-font-custom">Levels</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewTag()">Add New</button>
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewLevel()">Add New</button>
 
-                        <table id="tagTable" class="display" style="width:100%">
+                        <table id="levelTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Tag name</th>
+                                <th>Category</th>
+                                <th>Level</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -85,7 +86,7 @@
         $("#navBarID").prepend(navBar);
 
         // highlight page
-        $('#liTags').addClass('active');
+        $('#liSettings').addClass('active');
 
     });
 
@@ -95,24 +96,27 @@
 
     function LoadTable(){
 
-        // get all tag data
-        const tagList = ipcRenderer.sendSync('tag:get', null);
+        // get all level data
+        const levelList = ipcRenderer.sendSync('level:get', null);
+        if(levelList.length >= 7){
+            $('#btnAdd').hide();
+        }
 
-        var tblDatatable = $("#tagTable"); //find the table by id
+        var tblDatatable = $("#levelTable"); //find the table by id
 
         // table filling and initializing as data-table
         tblDatatable.DataTable ({
-            "data" : tagList,
-            "ordering": true,
-            "order": [[0, 'asc']],
+            "data" : levelList,
+            "ordering": false,
             "columns" : [
-                { "data" : "tagName" },
+                { "data" : "category" },
+                { "data" : "level" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editTag(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editLevel(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-danger btn-header" onclick="deleteTag(' +data.id +',\''+data.tagName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteLevel(${data.id},'${data.category}')" disabled><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
                     }
                 },
             ]
@@ -122,49 +126,56 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#tagTable') ) {
-            $('#tagTable').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#levelTable') ) {
+            $('#levelTable').DataTable().destroy();
         }
 
-        $('#tagTable tbody').empty();
+        $('#levelTable tbody').empty();
         LoadTable();
     }
 
-    // add new tag method
-    function AddNewTag(){
+    // add new level method
+    function AddNewLevel(){
 
         $.confirm({
-            title: 'New Tag!',
+            title: 'New Level!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter category</label>' +
+                '<input type="text" placeholder="Category" class="category form-control" required />' +
+                '<label>Enter level</label>' +
+                '<input type="text" placeholder="Level" class="level form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
+                cancel: function () {
+                    //close
+                },
                 formSubmit: {
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val(); //get the tag name
+                        const category = this.$content.find('.category').val(); //get the category
+                        const level = this.$content.find('.level').val(); //get the category
 
                         //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid tag name');
+                        if (!category) {
+                            $.alert('provide a valid category');
+                            return false;
+                        }
+                        if (!level) {
+                            $.alert('provide a valid level');
                             return false;
                         }
 
-                        //saving tag to the database
-                        ipcRenderer.sendSync('tag:add', name);
+                        //saving level to the database
+                        ipcRenderer.sendSync('level:add', { category, level });
 
                         // reload the table
                         ReloadTable();
 
                     }
-                },
-                cancel: function () {
-                    //close
                 },
             },
             onContentReady: function () {
@@ -174,15 +185,17 @@
 
     }
 
-    //edit tag data
-    function editTag(id){
+    //edit level data
+    function editLevel(id){
         $.confirm({
-            title: 'Edit Tag!',
+            title: 'Edit Level!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter tag</label>' +
-                '<input type="text" placeholder="tag name" class="name form-control" required />' +
+                '<label>Enter category</label>' +
+                '<input type="text" placeholder="Category" class="category form-control" required />' +
+                '<label>Enter level</label>' +
+                '<input type="text" placeholder="Level" class="level form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -193,13 +206,20 @@
                     text: 'Save',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val();
-                        if (!name) {
-                            $.alert('provide a valid tag name');
+                        const category = this.$content.find('.category').val(); //get the category
+                        const level = this.$content.find('.level').val(); //get the category
+
+                        //check the name is not empty value
+                        if (!category) {
+                            $.alert('provide a valid category');
+                            return false;
+                        }
+                        if (!level) {
+                            $.alert('provide a valid level');
                             return false;
                         }
                         // update data
-                        const success = ipcRenderer.sendSync('tag:update', {id, name});
+                        const success = ipcRenderer.sendSync('level:update', {id, category, level});
 
                         if(success){
                             ReloadTable();
@@ -208,16 +228,15 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
-                const tagData = ipcRenderer.sendSync('tag:getByID', id);
-                //console.log(tagData);
-                this.$content.find('.name').val(tagData[0].tagName);
+                const levelData = ipcRenderer.sendSync('level:getByID', id);
+                this.$content.find('.category').val(levelData[0].category);
+                this.$content.find('.level').val(levelData[0].level);
             }
         });
     }
 
     // delete data
-    function deleteTag(id, name){
+    function deleteLevel(id, name){
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
@@ -226,7 +245,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('tag:remove', id);
+                        ipcRenderer.sendSync('level:remove', id);
 
                         ReloadTable();
                     }

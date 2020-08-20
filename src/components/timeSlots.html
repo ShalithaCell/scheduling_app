@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/hours-custom.css" />
+    <link rel="stylesheet" href="../public/style/material-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/custom-back.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./workingDaysHours.html'">Back</button>
+                <h2 class="title-font-custom">Assign Timetable Slots </h2>
+            </div>
+            <div>
+                <div class="margin-1-custom">
+                    <div class="container">
+                        <ul class="nav nav-tabs tabs-marker tabs-dark bg-dark" id="myTab" role="tablist">
+                        </ul>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mt-4">
+                            <div class="card ">
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="ddlDuplicate">Duplicate as</label>
+                                        <select class="form-control" id="ddlDuplicate">
+                                            <option value="0">None</option>
+                                        </select>
+                                    </div>
+                                    <hr>
+                                    <div class="form-group">
+                                        <h6 >Insert Time slots</h6>
+                                        <button type="button w-100" style="width: 100%" class="btn btn-primary" onclick="addThirtyMinutes()">Thirty minutes</button>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="button w-100" style="width: 100%" class="btn btn-info" onclick="addOneHour()">One hour</button>
+                                    </div>
+                                    <hr>
+                                    <div class="form-group">
+                                        <button type="button w-100" style="width: 100%" class="btn btn-warning">View Timetable Format</button>
+                                    </div>
+                                    <hr>
+                                    <div class="form-group">
+                                        <button type="button w-100" style="width: 100%" class="btn btn-success">Save & Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8 mt-4">
+                            <div class="card ">
+                                <div class="card-body">
+                                    <table class="table table-bordered" id="timeTable">
+                                        <thead>
+                                            <th scope="col text-center">Time</th>
+                                            <th scope="col text-center" id="colName">Monday</th>
+                                            <th scope="col text-center"></th>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/moment.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+    const { timeTableEnum } = require('../systemConst');
+    const { objProx } = require('../services/systemSessionContainer');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liWorkingDays').addClass('active');
+
+    });
+
+
+    $(function() {
+        const data = ipcRenderer.sendSync('work:getByTypeRow', objProx.timeTableType);
+
+        const widthGenerate = (100 / data.length);
+
+        $.each(data, function(i, item) {
+
+            let content;
+            if(i === 0){
+                content = `<li class="nav-item" style="width: `+widthGenerate+`%">
+                                <a class="nav-link active" style="cursor: pointer; text-align: center" id="`+ item.dayID+`" data-toggle="tab" role="tab" aria-controls="home" aria-selected="true">`+ item.day+`<span class="marker"></span></a>
+                            </li>`;
+
+                $('#colName').val(item.day);
+
+            }else{
+                content = `<li class="nav-item" style="width: `+widthGenerate+`%">
+                                <a class="nav-link" id="`+ item.dayID+`" style="cursor: pointer; text-align: center" data-toggle="tab" role="tab" aria-controls="home" aria-selected="true">`+ item.day+`<span class="marker"></span></a>
+                            </li>`;
+            }
+
+
+            $('#ddlDuplicate').append($("<option />").val(item.dayID).text(item.day));
+
+            $('#myTab').append(content);
+        });
+
+        LoadData();
+
+        $("#myTab a").click(function(e){
+            LoadData($(this).attr('id'))
+        });
+
+        $("#ddlDuplicate").change(function () {
+
+            if($(this).val() == 0){
+                return ;
+            }
+
+            $('#timeTable').find('tbody').find('tr').remove();
+
+            const data = ipcRenderer.sendSync('timetable:getByTypeAndDay', { day : $(this).val(), type : objProx.timeTableType });
+
+            $.each(data, function(i, itemDay) {
+                let content = `<tr>
+                            <td timeat="${itemDay.slot}" class="cls-time-cus">${itemDay.slot}</td>
+                            <td></td>
+                            <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
+                        </tr>`;
+
+                $('#timeTable tbody').append(content);
+            });
+
+            save();
+        });
+
+    });
+
+    function LoadData(day){
+        $('#timeTable').find('tbody').find('tr').remove();
+
+        let currentDay;
+
+        if(day){
+            currentDay = day;
+        }else {
+            currentDay = $("#myTab").find('.active').attr('id');
+        }
+
+        const data = ipcRenderer.sendSync('timetable:getByTypeAndDay', { day : currentDay, type : objProx.timeTableType });
+
+        $.each(data, function(i, itemDay) {
+            let content = `<tr>
+                            <td timeat="${itemDay.slot}" class="cls-time-cus">${itemDay.slot}</td>
+                            <td></td>
+                            <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
+                        </tr>`;
+
+            $('#timeTable tbody').append(content);
+        });
+
+    }
+
+    function addThirtyMinutes(){
+
+        const rowCount = $('#timeTable').find('tbody').find('tr').length;
+        let content;
+        if(rowCount === 0){
+            content = `<tr>
+                            <td timeat="8.30" class="cls-time-cus">8.30</td>
+                            <td></td>
+                            <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
+                        </tr>`;
+        }else{
+            const time = $('#timeTable tr:last').find('.cls-time-cus').attr('timeat');
+            var newTime = moment(time,'h:mm').add(30, 'minutes').format('h:mm');
+
+            content = `<tr>
+                            <td timeat="${newTime}" class="cls-time-cus">${newTime}</td>
+                            <td></td>
+                            <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
+                        </tr>`;
+
+        }
+
+
+        $('#timeTable tbody').append(content);
+        setRemoveButtonStatus();
+        save();
+    }
+
+    function addOneHour(){
+
+        const rowCount = $('#timeTable').find('tbody').find('tr').length;
+        let content;
+        if(rowCount === 0){
+            content = `<tr>
+                            <td timeat="8.30" class="cls-time-cus">8.30</td>
+                            <td></td>
+                            <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
+                        </tr>`;
+        }else{
+            const time = $('#timeTable tr:last').find('.cls-time-cus').attr('timeat');
+            var newTime = moment(time,'h:mm').add(60, 'minutes').format('h:mm');
+
+            content = `<tr>
+                            <td timeat="${newTime}" class="cls-time-cus">${newTime}</td>
+                            <td ></td>
+                            <td ><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
+                        </tr>`;
+
+        }
+
+
+        $('#timeTable tbody').append(content);
+        setRemoveButtonStatus();
+        save();
+    }
+
+    function setRemoveButtonStatus() {
+
+        const rowCount = $('#timeTable').find('tbody').find('tr').length;
+
+        $('#timeTable').find('tbody').find('tr').each(function (i, row) {
+            if( (rowCount-1) === i ){
+                $(this).find('.btn-header').attr('disabled', false);
+            }else{
+                $(this).find('.btn-header').attr('disabled', true);
+            }
+        });
+
+    }
+
+    function save(){
+        const currentDay = $("#myTab").find('.active').attr('id');
+
+        ipcRenderer.sendSync('timetable:removeAllByTypeAndDay', { day : currentDay, type : objProx.timeTableType });
+
+        $('#timeTable').find('tbody').find('tr').each(function (i, row) {
+            const time = $(this).find('.cls-time-cus').attr('timeat');
+
+            if(time){
+                ipcRenderer.sendSync('timetable:add', { day : currentDay, type : objProx.timeTableType, slot :time });
+            }
+
+        });
+
+    }
+
+    function removeRow(){
+        $('#timeTable tr:last').remove();
+        setRemoveButtonStatus();
+        save();
+    }
+
+
+</script>
+
+</html>
