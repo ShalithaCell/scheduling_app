@@ -21,18 +21,18 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom">
-                <h2 class="title-font-custom">Lab, Lecture hall and Tutorial</h2>
+                <h2 class="title-font-custom">Departments</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewStudyType()" disabled>Add New</button>
+                        <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewDepartment()">Add New</button>
 
-                        <table id="studyTypeTable" class="display" style="width:100%">
+                        <table id="departmentTable" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Study Type</th>
+                                <th>Department</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -95,27 +95,26 @@
 
     function LoadTable(){
 
-        // get all studyType data
-        const studyTypeList = ipcRenderer.sendSync('studyType:get', null);
-
-        if(studyTypeList.length >= 7){
+        // get all department data
+        const departmentList = ipcRenderer.sendSync('department:get', null);
+        if(departmentList.length >= 7){
             $('#btnAdd').hide();
         }
 
-        var tblDatatable = $("#studyTypeTable"); //find the table by id
+        var tblDatatable = $("#departmentTable"); //find the table by id
 
         // table filling and initializing as data-table
         tblDatatable.DataTable ({
-            "data" : studyTypeList,
+            "data" : departmentList,
             "ordering": false,
             "columns" : [
-                { "data" : "studyTypeName" },
+                { "data" : "departmentName" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editStudyType(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editDepartment(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteStudyType(${data.id},'${data.studyTypeName}')" disabled><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteDepartment(${data.id},'${data.departmentName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
                     }
                 },
             ]
@@ -125,24 +124,24 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#studyTypeTable') ) {
-            $('#studyTypeTable').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#departmentTable') ) {
+            $('#departmentTable').DataTable().destroy();
         }
 
-        $('#studyTypeTable tbody').empty();
+        $('#departmentTable tbody').empty();
         LoadTable();
     }
 
-    // add new studyType method
-    function AddNewStudyType(){
+    // add new department method
+    function AddNewDepartment(){
 
         $.confirm({
-            title: 'New Study Type!',
+            title: 'New Department!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter study type name</label>' +
-                '<input type="text" placeholder="day name" class="name form-control" required />' +
+                '<label>Enter department name</label>' +
+                '<input type="text" placeholder="Department" class="departmentName form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -153,16 +152,16 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val(); //get the studyType name
+                        const departmentName = this.$content.find('.departmentName').val(); //get the department
 
                         //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid studyType name');
+                        if (!departmentName) {
+                            $.alert('provide a valid department name');
                             return false;
                         }
 
-                        //saving studyType to the database
-                        ipcRenderer.sendSync('studyType:add', name);
+                        //saving department to the database
+                        ipcRenderer.sendSync('department:add', { departmentName });
 
                         // reload the table
                         ReloadTable();
@@ -177,15 +176,15 @@
 
     }
 
-    //edit studyType data
-    function editStudyType(id){
+    //edit department data
+    function editDepartment(id){
         $.confirm({
-            title: 'Edit StudyType!',
+            title: 'Edit Department!',
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter studyType name</label>' +
-                '<input type="text" placeholder="day name" class="name form-control" required />' +
+                '<label>Enter department name</label>' +
+                '<input type="text" placeholder="Department" class="departmentName form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -196,13 +195,15 @@
                     text: 'Save',
                     btnClass: 'btn-blue',
                     action: function () {
-                        var name = this.$content.find('.name').val();
-                        if (!name) {
-                            $.alert('provide a valid studyType name');
+                        const departmentName = this.$content.find('.departmentName').val(); //get the department
+
+                        //check the name is not empty value
+                        if (!departmentName) {
+                            $.alert('provide a valid department name');
                             return false;
                         }
                         // update data
-                        const success = ipcRenderer.sendSync('studyType:update', {id, name});
+                        const success = ipcRenderer.sendSync('department:update', {id, departmentName});
 
                         if(success){
                             ReloadTable();
@@ -211,17 +212,14 @@
                 },
             },
             onContentReady: function () {
-                //console.log(id)
-                const studyTypeData = ipcRenderer.sendSync('studyType:getByID', id);
-                //console.log(studyTypeData);
-                this.$content.find('.name').val(studyTypeData[0].studyTypeName);
+                const departmentData = ipcRenderer.sendSync('department:getByID', id);
+                this.$content.find('.departmentName').val(departmentData[0].departmentName);
             }
         });
     }
 
     // delete data
-    function deleteStudyType(id, name){
-        console.log('Clicked Delete Button');
+    function deleteDepartment(id, name){
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
@@ -230,7 +228,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('studyType:remove', id);
+                        ipcRenderer.sendSync('department:remove', id);
 
                         ReloadTable();
                     }

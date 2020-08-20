@@ -21,6 +21,9 @@ const navBar = `
                 <li id="liTags">
                     <a href="./tags.html"><span class="fa fa-suitcase mr-3"></span>Tags</a>
                 </li>
+                <li id="liLecturers">
+                    <a href="./lecturers.html"><span class="fa fa-suitcase mr-3"></span>Lecturers</a>
+                </li>
                 <li id="liStudent">
                     <a href="./student.html"><span class="fa fa-suitcase mr-3"></span>Student</a>
                 </li>
