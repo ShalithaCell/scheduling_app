@@ -80,3 +80,6 @@ require('./services/groupsDataServices');
 require('./services/subGroupDataServices');
 require('./services/holdGroupsDataService');
 require('./services/holdSubGroupDataService');
+require('./services/extendGroupsDataService');
+require('./services/extendSubGroupDataService');
+require('./services/extendSubGroupHoldDataService');
