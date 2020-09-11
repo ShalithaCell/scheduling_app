@@ -15,7 +15,10 @@ global.share.ipcMain.on('work:get', async (event, values) => {
     const workData = await WorkingData.findAll({
         include: [
             { model: Days, as: 'Days' }
-        ]
+        ],
+            where: {
+                isActive: 1
+            }
         ,raw: true}); // get the list
     event.returnValue = workData;
 });
@@ -54,7 +57,7 @@ global.share.ipcMain.on('work:getByType', async (event, values) => {
 // get specific type by using id from the database
 global.share.ipcMain.on('work:getByTypeRow', async (event, values) => {
 
-    const data =  await sequelize.query("select W.id, W.time, D.id as 'dayID', D.day from WorkingData W inner join Days D on W.day = D.id where W.isActive = 1", { type: QueryTypes.SELECT });
+    const data =  await sequelize.query(`select W.id, W.time, D.id as 'dayID', D.day from WorkingData W inner join Days D on W.day = D.id where W.isActive = 1 and type = ${values}`, { type: QueryTypes.SELECT });
     event.returnValue = data;
 });
 

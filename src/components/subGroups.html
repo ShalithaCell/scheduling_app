@@ -345,7 +345,7 @@
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme(' +data.name+ ')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return `<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme('${data.name}')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>`
                     }
                 },
             ]
@@ -389,7 +389,7 @@
     }
 
     // delete data
-    function deleteProgramme(id, name){
+    function deleteProgramme(name){
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
