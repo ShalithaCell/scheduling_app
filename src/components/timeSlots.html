@@ -373,13 +373,13 @@
                         const currentDayTimeSet = ipcRenderer.sendSync('timetable:getByTypeAndDay', {type : objProx.timeTableType, day: $(item).attr('day')});
 
                         $.each(currentDayTimeSet, function(n, timeVal) {
-                            $("#tbl_timeSlot tr").each(function(){
+                            $("#tbl_timeSlot tbody>tr").each(function(){
                                 debugger;
                                 let th = $('#tbl_timeSlot th').eq(i).html();
                                 const cellTime = $(this).find("td:eq(" + i + ")").attr('time');
 
-                                if(cellTime === timeVal.time){
-                                    $(this).find("td:eq(" + i + ")").text(timeVal.time);
+                                if(cellTime === timeVal.slot){
+                                    $(this).find("td:eq(" + i + ")").text(timeVal.slot);
                                 }
 
                             });
