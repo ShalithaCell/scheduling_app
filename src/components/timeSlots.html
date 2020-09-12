@@ -136,8 +136,11 @@
 
 
     $(function() {
+        let tableTpe = getUrlVars()["type"];
+        objProx.timeTableType = tableTpe === "1" ? timeTableEnum.weekdays : timeTableEnum.weekend;
         const data = ipcRenderer.sendSync('work:getByTypeRow', objProx.timeTableType);
 
+        debugger;
         const widthGenerate = (100 / data.length);
         $.each(data, function(i, item) {
 
@@ -194,6 +197,19 @@
         setRemoveButtonStatus();
 
     });
+
+    function getUrlVars()
+    {
+        var vars = [], hash;
+        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        for(var i = 0; i < hashes.length; i++)
+        {
+            hash = hashes[i].split('=');
+            vars.push(hash[0]);
+            vars[hash[0]] = hash[1];
+        }
+        return vars;
+    }
 
     function LoadData(day){
         $('#timeTable').find('tbody').find('tr').remove();

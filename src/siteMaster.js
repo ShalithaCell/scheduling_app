@@ -34,15 +34,7 @@ const navBar = `
                     <a href="./settings.html"><span class="fa fa-cogs mr-3"></span>Settings</a>
                 </li>
             </ul>
-            <div class="mb-5">
-                <h3 class="h6 mb-3">Subscribe for newsletter</h3>
-                <form action="#" class="subscribe-form">
-                    <div class="form-group d-flex">
-                        <div class="icon"><span class="icon-paper-plane"></span></div>
-                        <input type="text" class="form-control" placeholder="Enter Email Address">
-                    </div>
-                </form>
-            </div>
+            
         </div>
     </nav>
 `;
