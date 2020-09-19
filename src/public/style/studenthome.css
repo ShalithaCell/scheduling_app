@@ -4,4 +4,11 @@
     left:40%;
     top:-20px;
     border-radius:50%;
+
 }
+
+.col-md-3:hover {
+    transform: scale(1.05);
+   /* background: #b3c8c9;*/
+  
+  }

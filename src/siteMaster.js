@@ -31,7 +31,7 @@ const navBar = `
                     <a href="./statistics.html"><span class="fa fa-line-chart mr-3"></span>Statistics</a>
                 </li>
                 <li id="liGeneralSettings">
-                <a href="./generalSettings.html"><span class="fa fa-listgit  mr-3"></span>Schedule Management</a>
+                <a href="./generalSettings.html"><span class="fa fa-list mr-3"></span>Schedule Management</a>
             </li>
                 <li id="liSettings">
                     <a href="./settings.html"><span class="fa fa-cogs mr-3"></span>Settings</a>
