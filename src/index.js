@@ -87,3 +87,5 @@ require('./services/extendSubGroupHoldDataService');
 require('./services/subjectDataServices');
 require('./services/lecturerDataServices');
 require('./services/timeTableDataService');
+require('./services/notAvailableGroupsDataService');
+
