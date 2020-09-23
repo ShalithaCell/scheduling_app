@@ -23,3 +23,9 @@ iii. TEXT
 
 for further details refer - https://sequelize.org/master/manual/migrations.html
 
+
+//msg danna confirm
+jquery confirm dialog
+
+//db eka check karanna
+db browser for sqlite free download

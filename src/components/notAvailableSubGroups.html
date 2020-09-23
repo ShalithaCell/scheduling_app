@@ -23,23 +23,23 @@
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom form-inline">
-                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./student.html'">Back</button>
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./notAvailableHome.html'">Back</button>
 
-                
-                <h2 class="title-font-custom">Programme</h2>
+                <h2 class="title-font-custom">Not Available Time of Sub Groups</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewProgramme()">Add New</button>
+                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewNotAvailableSubGroup()">Add New</button>
 
-                        <table id="tblProgramme" class="display" style="width:100%">
+                        <table id="tblnotavailablesubgroups" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Programme</th>
-                                <th>Start Academic Year and Semester</th>
-                                <th>End Academic Year and Semester</th>
+                                <th>Sub Group ID</th>
+                                <th>Day</th>
+                                <th>From</th>
+                                <th>To</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -92,7 +92,7 @@
         $("#navBarID").prepend(navBar);
 
         // highlight page
-        $('#liStudent').addClass('active');
+        $('#liGeneralSettings').addClass('active');
 
     });
 
