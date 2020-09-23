@@ -7,11 +7,27 @@
     <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
     <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/timepicker.css" />
     <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
     <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
     <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="../public/style/back-button-custom.css" />
     <link rel="stylesheet" href="../public/style/custom-back.css" />
+  
+
+    <style>
+        .ui-timepicker-standard {
+    font-family: Verdana,Arial,sans-serif;
+    font-size: 1.1em;
+    background-color: #FFF;
+    border: 1px solid #AAA;
+    color: #222;
+    margin: 0;
+    padding: 2px;
+    z-index: 99999999999999 !important;
+}
+    </style>
+ 
 
 </head>
 <body>
@@ -79,6 +95,11 @@
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/datatable/jquery.dataTables.min.js"></script>
 
+
+<!--jquery time picker-->
+<script src="../public/script/timepicker.js"></script>
+
+
 <!-- Insert this line after script imports -->
 <script>
 
@@ -103,161 +124,192 @@
 
     function LoadTable(){
 
-        // get all programme data
-        const programmeList = ipcRenderer.sendSync('programme:getAllByRow', null);
-        var prgrammeTable = $("#tblProgramme"); //find the table by id
+// get all NotAvailableGroups data
+const NotAvailableGroupsList = ipcRenderer.sendSync('NotAvailableGroups:get', null);
+var tblDatatable = $("#tblnotavailablegroups"); //find the table by id
 
-        // table filling and initializing as data-table
-        prgrammeTable .DataTable ({
-            "data" : programmeList,
-            "ordering": true,
-            "order": [[0, 'asc']],
-            "columns" : [
-                { "data" : "name" },
-                { "data" : "startYearText" },
-                { "data" : "endYearText" },
-                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="button" class="btn btn-warning btn-header" onclick="editProgramme('${data.id}', '${data.name}','${data.startYear}','${data.endYear}')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
-                    }
-                },
-                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme(' +data.id +',\''+data.name+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
-                    }
-                },
-            ]
-        });
+// table filling and initializing as data-table
+tblDatatable.DataTable ({
+    "data" : NotAvailableGroupsList,
+    "ordering": false,
+    "columns" : [
+        { "data" : "groupName" },
+        { "data" : "fday" },
+        { "data" : "fromt" },
+        { "data" : "tot" },
+        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                return `<button type="botton" class="btn btn-warning btn-header" onclick="editNotAvailableGroups(${data.notID})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+            }
+        },
+        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteNotAvailableGroups(${data.notID},'${data.groupName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+            }
+        },
+    ]
+});
 
-    }
+}
 
-    //reload table data
-    function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#tblProgramme') ) {
-            $('#tblProgramme').DataTable().destroy();
-        }
+//reload table data
+function ReloadTable(){
+if ( $.fn.DataTable.isDataTable('#tblnotavailablegroups') ) {
+    $('#tblnotavailablegroups').DataTable().destroy();
+}
 
-        $('#tblProgramme tbody').empty();
-        LoadTable();
-    }
+$('#tblnotavailablegroups tbody').empty();
+LoadTable();
+}
 
-    // add new
-    function AddNewProgramme(){
+// add new notavailablegroups method
+function AddNewNotAvailableGroup(){
+   
+const groupName = ipcRenderer.sendSync('group:get', null);
+let groupNameSelection = '<select class="form-control Groups" required>';
+    groupNameSelection += '<option value="0" selected disabled> Select Group ID </option>';
+$.each(groupName , function(i, Groups) {
+    groupNameSelection += '<option value="' + Groups.id + '">' + Groups.groupName + '</option>';
+});
+groupNameSelection  += '</select>';
 
-        const academicYears = ipcRenderer.sendSync('academic:get', null);
+const day = ipcRenderer.sendSync('day:get', null);
+let daySelection = '<select class="form-control Days" required>';
+    daySelection += '<option value="0" selected disabled> Select Day </option>';
+$.each(day, function(i,  Days) {
+    daySelection += '<option value="' +  Days.id + '">' +  Days.day + '</option>';
+});
+daySelection += '</select>';
 
-        let ddl = '<select id="ddlSatrtYear" class="form-control">';
-        ddl += '<option value="0"> Select academic years </option>';
 
-        let ddlEnd = '<select id="ddlEndYear" class="form-control">';
-        ddlEnd += '<option value="0"> Select academic years </option>';
+$.confirm({
+    title: 'New Time for Not Available Groups!',
+    content: `
+        <div>
+       
+                <label>Select Group ID</label>
+                ${groupNameSelection}
+
+                <label>Select  Day</label>
+                ${daySelection}
+
+                
+
+                <label>Enter From</label>
+                <input type="text" name="timepicker" class="timepicker timeFrom" required >
+
+                </br>
+
+                <label>Enter To</label>
+                <input type="text" name="timepicker" class="timepicker timeTo" required >
+                
+            </div>
+        </div>`,
+    buttons: {
+        cancel: function () {
+            //close
+        },
+        formSubmit: {
+            text: 'Submit',
+            btnClass: 'btn-blue',
+            action: function () {
+            
+                let Groups = this.$content.find('.Groups').val();
+                let Days = this.$content.find('.Days').val();
+                let fromt = $('.timeFrom').val();
+                let tot = $('.timeTo').val();
+                //check the name is not empty value
+        
+           
+                if (!Groups) {
+                    $.alert('Select a valid Groups ID');
+                    return false;
+                } else Groups = Number(Groups);
 
 
-        $.each(academicYears, function(i, item) {
+                if (!Days) {
+                    $.alert('Select a valid Days');
+                    return false;
+                } else Days = Number(Days);
 
-            ddl += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
-            ddlEnd += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
-        });
-        ddl += '</select>';
-        ddlEnd += '</select>';
+                
+                if (!fromt) {
+                    $.alert('Enter time for from ');
+                    return false;
+                }
 
-        $.confirm({
-            title: 'New Programme',
-            content: '' +
-                '<div>' +
-                '<div class="form-group">' +
-                '<label>Enter Programme</label>' +
-                '<input type="text" placeholder="Programme" class="name form-control" required />' +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>Start Academic Year and semester</label>' +
-                 ddl +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>End Academic Year and semester</label>' +
-                 ddlEnd +
-                '</div>' +
-                '</div>',
-            buttons: {
-                cancel: function () {
-                    //close
-                },
-                formSubmit: {
-                    text: 'Submit',
-                    btnClass: 'btn-blue',
-                    action: function () {
-                        let name = this.$content.find('.name').val();
+                if (!tot ) {
+                    $.alert('Enter time for to');
+                    return false;
+                } 
+               
 
-                        //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid Programme name');
-                            return false;
-                        }
-
-                        let startYear = this.$content.find('#ddlSatrtYear').val();
-                        let endYear = this.$content.find('#ddlEndYear').val();
-
-                        if(!startYear){
-                            $.alert('provide a valid Start academic year');
-                            return false;
-                        }
-
-                        if(!endYear){
-                            $.alert('provide a valid End academic year');
-                            return false;
-                        }
-
-                        //saving
-                        ipcRenderer.sendSync('programme:add', { name: name , startYear: startYear, endYear:endYear});
-
-                        // reload the table
-                        ReloadTable();
-
-                    }
-                },
-            },
-            onContentReady: function () {
+                //saving notavailablegroups to the database
+                debugger;
+                ipcRenderer.sendSync('NotAvailableGroups:add', {groupid:Groups,day:Days,fromt:fromt,tot:tot });
+                    
+                // reload the table
+                ReloadTable();
 
             }
+        },
+    },
+    onContentReady: function () {
+        $('.timepicker').timepicker({
+            timeFormat: 'h:mm p',
+            interval: 30,
+            minTime: '8.30 AM',
+            maxTime: '8:30 PM',
+            startTime: '8:30 AM',
+            dynamic: false,
+            dropdown: true,
+            scrollbar: true
         });
 
     }
+});
+}
 
-    //edit  Academic Year and Semeseter data
-    function editProgramme(id, name, start, end){
+//edit NotAvailableGroups data
+function editNotAvailableGroups(id){
+    const groupName = ipcRenderer.sendSync('group:get', null);
+let groupNameSelection = '<select class="form-control Groups" required>';
+    groupNameSelection += '<option value="0" selected disabled> Select Group ID </option>';
+$.each(groupName , function(i, Groups) {
+    groupNameSelection += '<option value="' + Groups.id + '">' + Groups.groupName + '</option>';
+});
+groupNameSelection  += '</select>';
 
-        const academicYears = ipcRenderer.sendSync('academic:get', null);
+const day = ipcRenderer.sendSync('day:get', null);
+let daySelection = '<select class="form-control Days" required>';
+    daySelection += '<option value="0" selected disabled> Select Day </option>';
+$.each(day, function(i,  Days) {
+    daySelection += '<option value="' +  Days.id + '">' +  Days.day + '</option>';
+});
+daySelection += '</select>';
 
-        let ddl = '<select id="ddlSatrtYear" class="form-control">';
-        ddl += '<option value="0"> Select academic years </option>';
 
-        let ddlEnd = '<select id="ddlEndYear" class="form-control">';
-        ddlEnd += '<option value="0"> Select academic years </option>';
+$.confirm({
+    title: 'New Time for Not Available Groups!',
+    content: `
+        <div>
+       
+                <label>Select Group ID</label>
+                ${groupNameSelection}
 
+                <label>Select  Day</label>
+                ${daySelection}
 
-        $.each(academicYears, function(i, item) {
+                
 
-            ddl += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
-            ddlEnd += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
-        });
-        ddl += '</select>';
-        ddlEnd += '</select>';
+                <label>Enter From</label>
+                <input type="text" name="timepicker" class="timepicker timeFrom" required >
 
-        $.confirm({
-            title: 'Edit Programme',
-            content: '' +
-                '<div>' +
-                '<div class="form-group">' +
-                '<label>Enter Programme</label>' +
-                '<input type="text" placeholder="Programme" class="name form-control" required value="'+ name +'" />' +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>Start Academic Year and semester</label>' +
-                ddl +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>End Academic Year and semester</label>' +
-                ddlEnd +
-                '</div>' +
-                '</div>',
+                </br>
+
+                <label>Enter To</label>
+                <input type="text" name="timepicker" class="timepicker timeTo" required >
+                
+            </div>
+        </div>`,
             buttons: {
                 cancel: function () {
                     //close
@@ -266,68 +318,102 @@
                     text: 'Save',
                     btnClass: 'btn-blue',
                     action: function () {
-                        let name = this.$content.find('.name').val();
 
-                        //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid Programme name');
-                            return false;
-                        }
+                      
+                     
+                let Groups = this.$content.find('.Groups').val();
+                let Days = this.$content.find('.Days').val();
+                let fromt = $('.timeFrom').val();
+                let tot = $('.timeTo').val();
 
-                        let startYear = this.$content.find('#ddlSatrtYear').val();
-                        let endYear = this.$content.find('#ddlEndYear').val();
+                //check the name is not empty value
+        
+           
+                if (!Groups) {
+                    $.alert('Select a valid Groups ID');
+                    return false;
+                } else Groups = Number(Groups);
 
-                        if(!startYear){
-                            $.alert('provide a valid Start academic year');
-                            return false;
-                        }
 
-                        if(!endYear){
-                            $.alert('provide a valid End academic year');
-                            return false;
-                        }
+                if (!Days) {
+                    $.alert('Select a valid Days');
+                    return false;
+                } else Days = Number(Days);
 
-                        //saving
-                        ipcRenderer.sendSync('programme:update', { id: id, name: name , startYear: startYear, endYear: endYear});
-
-                        // reload the table
-                        ReloadTable();
-                    }
-                },
-            },
-            onContentReady: function () {
-                //console.log(academicData);
-                this.$content.find('#ddlSatrtYear').val(start);
-                this.$content.find('#ddlEndYear').val(end);
-            }
-        });
-    }
-
-    // delete data
-    function deleteProgramme(id, name){
-        $.confirm({
-            title: 'Confirm!',
-            content: 'Confirm to remove "'+ name + '"',
-            buttons: {
-                confirm:  {
-                    text: 'confirm', // text for button
-                    btnClass: 'btn-danger', // class for the button
-                    action: function(){
-                        ipcRenderer.sendSync('programme:remove', id);
-
-                        ReloadTable();
-                    }
-                },
-                cancel: {
-                    text: 'cancel', // text for button
-                    btnClass: 'btn-warning', // class for the button
-                    action: function(){
-
-                    }
+                
+                if (!fromt) {
+                    $.alert('Enter time for from ');
+                    return false;
                 }
+
+                if (!tot ) {
+                    $.alert('Enter time for to');
+                    return false;
+                } 
+            
+               
+                        // update data
+                        debugger;
+                        const success = ipcRenderer.sendSync('NotAvailableGroups:update', {id:id, groupid:Groups,day:Days,fromt:fromt,tot:tot });
+
+                        if(success){
+                            ReloadTable();
+                        }
+
             }
+        },
+    },
+    onContentReady: function () {
+        $('.timepicker').timepicker({
+            timeFormat: 'h:mm p',
+            interval: 30,
+            minTime: '8.30 AM',
+            maxTime: '8:30 PM',
+            startTime: '8:30 AM',
+            dynamic: false,
+            dropdown: true,
+            scrollbar: true
         });
+
+                  debugger;    
+                const NotAvailableGroupsData = ipcRenderer.sendSync('NotAvailableGroups:getByID', id);
+              
+                this.$content.find('.Groups').val(NotAvailableGroupsData[0].groupid);
+                this.$content.find('.Days').val(NotAvailableGroupsData[0].day);
+                this.$content.find('.timeFrom').val(NotAvailableGroupsData[0].fromt);
+                this.$content.find('.timeTo').val(NotAvailableGroupsData[0].tot);
+
     }
+});
+}
+
+
+// delete data
+function deleteNotAvailableGroups(id, groupid){
+$.confirm({
+    title: 'Confirm!',
+    content: 'Confirm to remove "'+ groupid + '"',
+    buttons: {
+        confirm:  {
+            text: 'confirm', // text for button
+            btnClass: 'btn-danger', // class for the button
+            action: function(){
+                debugger;
+                ipcRenderer.sendSync('NotAvailableGroups:remove', id);
+
+                ReloadTable();
+            }
+        },
+        cancel: {
+            text: 'cancel', // text for button
+            btnClass: 'btn-warning', // class for the button
+            action: function(){
+
+            }
+        }
+    }
+});
+}
 
 </script>
 
