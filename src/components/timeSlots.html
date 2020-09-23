@@ -336,12 +336,13 @@
 
         const data = ipcRenderer.sendSync('work:getByTypeRow', objProx.timeTableType);
         const rowsSet = ipcRenderer.sendSync('work:getByType', objProx.timeTableType);
+
         const maxRowsCount = Math.max.apply(Math, rowsSet.map(function(o) { return o.time; })) * 2;
 
         let tableHeader =  ' <thead><tr><th scope="col">Time</th>';
-
+        debugger;
         $.each(data, function(i, item) {
-            tableHeader += `<th scope="col" day="${item.id}">${item.day}</th>`;
+            tableHeader += `<th scope="col" day="${item.dayID}">${item.day}</th>`;
         });
 
         tableHeader += '</tr></thead>';
@@ -368,7 +369,7 @@
         }
 
         let content = `<div>
-                        <table class="table table-bordered" id="tbl_timeSlot">
+                        <table class="table table-bordered"  id="tbl_timeSlot">
                           ${tableHeader}
                           <tbody>
                             ${tBody}
@@ -387,7 +388,7 @@
                         console.log($(item).attr('day'));
 
                         const currentDayTimeSet = ipcRenderer.sendSync('timetable:getByTypeAndDay', {type : objProx.timeTableType, day: $(item).attr('day')});
-
+                        debugger;
                         $.each(currentDayTimeSet, function(n, timeVal) {
                             $("#tbl_timeSlot tbody>tr").each(function(){
                                 debugger;
@@ -401,6 +402,19 @@
                             });
                         });
 
+                    }
+                });
+
+                $('#tbl_timeSlot').find('tbody').find('tr').find('td').each(function()
+                {
+                    const $this = $(this);
+                    const index = $this.index();
+                    const txt =  $this.text();
+                    debugger;
+                    if ('' === txt)
+                    {
+                        $($this.parent().prev().children()[index]).attr('rowspan', 2);
+                        $this.hide();
                     }
                 });
             },

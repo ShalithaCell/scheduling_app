@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/home-styles.css" />
+
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">Timetables <span style="cursor: pointer" onclick="changeScheduleType()" class="badge badge-secondary" id="txtTableType">Weekend</span></h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <img src="../public/images/timetable.png" class="img-fluid" style="width: 25%; margin-left: 35%;">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card-counter primary">
+                                    <i class="fa fa-black-tie"></i>
+                                    <span class="count-name"> Timetable of a particular lecturer</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card-counter danger">
+                                    <i class="fa fa-users"></i>
+                                    <span class="count-name"> Timetable for a particular student group</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card-counter success">
+                                    <i class="fa fa-archive"></i>
+                                    <span class="count-name">Timetable for a particular room</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+    if (window.module) module = window.module;
+
+    const { navBar } = require('../siteMaster');
+
+    const { timeTableEnum } = require('../systemConst');
+    const { objProx } = require('../services/systemSessionContainer');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liTimetables').addClass('active');
+    });
+
+    function changeScheduleType(){
+        $.confirm({
+            icon: 'fa fa-calendar',
+            title: 'Select Timetable Type',
+            content: '',
+            theme: 'modern',
+            closeIcon: true,
+            animation: 'scale',
+            type: 'blue',
+            buttons: {
+                Weekday: {
+                    btnClass: 'btn btn-primary',
+                    action: function(){
+                        objProx.timeTableType = timeTableEnum.weekdays;
+                        $('#txtTableType').html('Weekday');
+                        // LoadData();
+                    }
+                },
+                Weekend: {
+                    btnClass: 'btn btn-success',
+                    action: function(){
+                        objProx.timeTableType = timeTableEnum.weekend;
+                        console.log(objProx.timeTableType);
+                        $('#txtTableType').html('Weekend');
+                        // LoadData();
+                    }
+                }
+            },
+        });
+    }
+    $(function() {
+        changeScheduleType();
+    });
+
+
+</script>
+
+</html>
