@@ -88,4 +88,6 @@ require('./services/subjectDataServices');
 require('./services/lecturerDataServices');
 require('./services/timeTableDataService');
 require('./services/notAvailableGroupsDataService');
-
+require('./services/roomTagsDataService');
+require('./services/roomSubjectsDataServices');
+require('./services/roomLecturersDataService');

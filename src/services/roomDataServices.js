@@ -11,9 +11,8 @@ global.share.ipcMain.on('room:add', async (event, values) => {
 // get all existing room list from database
 global.share.ipcMain.on('room:get', async (event, values) => {
     const rooms = await sequelize.query(
-        `select r.id, r.roomName, r.building, b.buildingName, r.tag, t.tagName, r.capacity, b.center, s.centerName from Rooms r
+        `select r.id, r.roomName, r.building, b.buildingName, r.capacity, b.center, s.centerName from Rooms r
          inner join Buildings b on b.id = r.building
-         inner join Tags t on t.id = r.tag
          inner join Centers s on s.id = b.center`,
         {
             type: sequelize.QueryTypes.SELECT
@@ -25,9 +24,8 @@ global.share.ipcMain.on('room:get', async (event, values) => {
 // get specific room by using id from the database
 global.share.ipcMain.on('room:getByID', async (event, values) => {
     const room = await sequelize.query(
-        `select r.id, r.roomName, r.building, b.buildingName, r.tag, t.tagName, r.capacity, b.center, s.centerName from Rooms r
+        `select r.id, r.roomName, r.building, b.buildingName, r.capacity, b.center, s.centerName from Rooms r
          inner join Buildings b on b.id = r.building
-         inner join Tags t on t.id = r.tag
          inner join Centers s on s.id = b.center
          where r.isActive = 1 and r.id = :id`,
         {
