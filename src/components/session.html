@@ -30,6 +30,26 @@
 
                         <button type="button" id="btnAdd" class="btn btn-success float-right mb-2" onclick="AddNewSession()">Add New</button>
 
+                        <table id="sessionTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Lecturer(s)</th>
+                                <th>Subject</th>
+                                <th>Subject code</th>
+                                <th>Tag(s)</th>
+                                <th>Group</th>
+                                <th>Sub-group</th>
+                                <th>Student count</th>
+                                <th>Duration</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+
                     </div>
                 </div>
 
@@ -70,6 +90,7 @@
     const { navBar } = require('../siteMaster');
 
     const electron = require('electron');
+    const {generateSessionDetailObjects} = require("../services/applicationServices/commonServices");
     const { ipcRenderer } = electron;
 
     $(window).on("load", function () {
@@ -81,9 +102,52 @@
     });
 
     $(function() {
-
+        LoadTable();
     });
-    // add new room method
+
+
+    function LoadTable(){
+
+        // get all room data
+        const sessionList = generateSessionDetailObjects(ipcRenderer);
+
+        var tblDatatable = $("#sessionTable"); //find the table by id
+
+        // table filling and initializing as data-table
+        tblDatatable.DataTable ({
+            "data" : sessionList,
+            "ordering": false,
+            "columns" : [
+                { "data" : "lecturerNames" },
+                { "data" : "subjectName" },
+                { "data" : "subjectCode" },
+                { "data" : "tagNames" },
+                { "data" : "groupName" },
+                { "data" : "subGroup" },
+                { "data" : "student" },
+                { "data" : "duration" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="EditSession(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="removeSession(${data.id},'${data.lecturerNames}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                    }
+                },
+            ]
+        });
+
+    }
+
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#sessionTable') ) {
+            $('#sessionTable').DataTable().destroy();
+        }
+
+        $('#sessionTable tbody').empty();
+        LoadTable();
+    }
+
     function AddNewSession(){
         const lectures = ipcRenderer.sendSync('lecturer:get', null);
         let lecturesSelection = '<select class="form-control lectures select-dropdown" required multiple="multiple">';
@@ -108,6 +172,15 @@
         });
         groupSelection += '</select>';
 
+        const subjects = ipcRenderer.sendSync('subject:get', null);
+
+        let subjectSelection = '<select class="form-control subject" required>';
+        subjectSelection += '<option value="0" selected disabled>Select subject</option>';
+        $.each(subjects, function(i, group) {
+            subjectSelection += '<option value="' + group.id + '" >' + group.subjectName + '</option>';
+        });
+        subjectSelection += '</select>';
+
         const subGroupSelection = '<select class="form-control sub-groups" required ></select>';
 
         $.confirm({
@@ -117,6 +190,8 @@
                     <div class="form-group">
                         <label>Select lecturer(s)</label>
                         ${lecturesSelection}
+                        <label>Select subject</label>
+                        ${subjectSelection}
                         <label>Select tag(s)</label>
                         ${tagsSelection}
                         <label>Select group</label>
@@ -140,13 +215,18 @@
                         let lectures = this.$content.find('.lectures').val().join(',');
                         let tags = this.$content.find('.tags').val().join(',');
                         let groups = this.$content.find('.groups').val();
-                        let subGroups = this.$content.find('.sub-groups').val();
+                        let subGroups = this.$content.find('.sub-groups option:selected').text();
                         let count = this.$content.find('.count').val();
                         let duration = this.$content.find('.duration').val();
+                        let subject = this.$content.find('.subject').val();
 
                         //check the name is not empty value
                         if (!lectures) {
                             $.alert('please select at least 1 lecturer');
+                            return false;
+                        }
+                        if (!subject) {
+                            $.alert('please select subject');
                             return false;
                         }
                         if (!tags) {
@@ -173,11 +253,12 @@
                             sgroup : groups,
                             subGroup : subGroups,
                             student : count,
-                            duration
+                            duration,
+                            subject
                         });
 
                         // reload the table
-                        // ReloadTable();
+                        ReloadTable();
 
                     }
                 },
@@ -209,6 +290,181 @@
                     },
 
                 });
+            }
+        });
+    }
+
+
+    function EditSession(sessionID){
+        const lectures = ipcRenderer.sendSync('lecturer:get', null);
+        let lecturesSelection = '<select class="form-control lectures select-dropdown" required multiple="multiple">';
+        $.each(lectures, function(i, center) {
+            lecturesSelection += '<option value="' + center.id + '">' + center.lecturerName + '</option>';
+        });
+        lecturesSelection += '</select>';
+
+        const tags = ipcRenderer.sendSync('tag:get', null);
+        let tagsSelection = '<select class="form-control tags select-dropdown" required multiple="multiple">';
+        $.each(tags, function(i, tag) {
+            tagsSelection += '<option value="' + tag.id + '">' + tag.tagName + '</option>';
+        });
+        tagsSelection += '</select>';
+
+        const groups = selectGroups();
+
+        let groupSelection = '<select class="form-control groups" required onchange="groupOnChange()">';
+        groupSelection += '<option value="0" selected disabled>Select group</option>';
+        $.each(groups, function(i, group) {
+            groupSelection += '<option value="' + group.id + '" count="' + group.group + '">' + group.name + '</option>';
+        });
+        groupSelection += '</select>';
+
+        const subjects = ipcRenderer.sendSync('subject:get', null);
+
+        let subjectSelection = '<select class="form-control subject" required>';
+        subjectSelection += '<option value="0" selected disabled>Select subject</option>';
+        $.each(subjects, function(i, group) {
+            subjectSelection += '<option value="' + group.id + '" >' + group.subjectName + '</option>';
+        });
+        subjectSelection += '</select>';
+
+        const subGroupSelection = '<select class="form-control sub-groups" required ></select>';
+
+        $.confirm({
+            title: 'New Session',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Select lecturer(s)</label>
+                        ${lecturesSelection}
+                        <label>Select subject</label>
+                        ${subjectSelection}
+                        <label>Select tag(s)</label>
+                        ${tagsSelection}
+                        <label>Select group</label>
+                        ${groupSelection}
+                        <label>Select sub-group</label>
+                        ${subGroupSelection}
+                        <label for="countNumber">Enter student count</label>
+                        <input type="number" min="1" id="countNumber" placeholder="count" class="count form-control" required />
+                        <label>Enter duration</label>
+                        <input type="number" min="1" max="2" class="duration form-control">
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Update',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let lectures = this.$content.find('.lectures').val().join(',');
+                        let tags = this.$content.find('.tags').val().join(',');
+                        let groups = this.$content.find('.groups').val();
+                        let subGroups = this.$content.find('.sub-groups option:selected').text();
+                        let count = this.$content.find('.count').val();
+                        let duration = this.$content.find('.duration').val();
+                        let subject = this.$content.find('.subject').val();
+
+                        //check the name is not empty value
+                        if (!lectures) {
+                            $.alert('please select at least 1 lecturer');
+                            return false;
+                        }
+                        if (!subject) {
+                            $.alert('please select subject');
+                            return false;
+                        }
+                        if (!tags) {
+                            $.alert('Provide a valid tag(s)');
+                            return false;
+                        }
+                        if (!groups) {
+                            $.alert('Select a valid group');
+                            return false;
+                        } else groups = Number(groups);
+                        if (!count) {
+                            $.alert('Select a valid student count');
+                            return false;
+                        } else count = Number(count);
+                        if (!duration) {
+                            $.alert('Select a valid duration');
+                            return false;
+                        } else duration = Number(duration);
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('session:update', {
+                            id : sessionID,
+                            lectures,
+                            tags,
+                            sgroup : groups,
+                            subGroup : subGroups,
+                            student : count,
+                            duration,
+                            subject
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+            },
+            onContentReady: function () {
+                $('.lectures').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select lecturer(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+
+                });
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select tag(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+
+                });
+                const sessionDetailobj = ipcRenderer.sendSync('session:getByID', sessionID);
+
+                if(sessionDetailobj.length === 0)
+                    return ;
+
+                const sessionDetail = sessionDetailobj[0];
+
+
+                $.each(sessionDetail.lectures.split(","), function(i,e){
+                    $(".lectures option[value='" + Number(e) + "']").prop("selected", true);
+                });
+
+                $(".lectures").multiselect('reload');
+
+                $.each(sessionDetail.tags.split(","), function(i,e){
+                    $(".tags option[value='" + e + "']").prop("selected", true);
+                });
+
+                $(".tags").multiselect('reload');
+
+                this.$content.find('.groups').val(sessionDetail.sgroup);
+                groupOnChange();
+                this.$content.find('.sub-groups').val(sessionDetail.subGroup);
+                this.$content.find('.count').val(sessionDetail.student);
+                this.$content.find('.duration').val(sessionDetail.duration);
+                this.$content.find('.subject').val(sessionDetail.subject);
+
             }
         });
     }
@@ -310,9 +566,34 @@
         $('.sub-groups').empty();
 
         $.each(dataForChild, function (){
-            $(".sub-groups").append($("<option     />").val(this.id).text(this.name));
+            $(".sub-groups").append($("<option     />").val(this.name).text(this.name));
         });
 
+    }
+
+    function removeSession(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('session:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
     }
 
 </script>
