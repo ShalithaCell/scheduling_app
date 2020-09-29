@@ -91,3 +91,4 @@ require('./services/notAvailableGroupsDataService');
 require('./services/roomTagsDataService');
 require('./services/roomSubjectsDataServices');
 require('./services/roomLecturersDataService');
+require('./services/sessionDataService');

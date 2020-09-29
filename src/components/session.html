@@ -137,35 +137,47 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        let roomName = this.$content.find('.roomName').val(); //get the room name
-                        let capacity = this.$content.find('.capacity').val();
-                        let center = this.$content.find('.center').val();
-                        let building = this.$content.find('.building').val();
-                        // let tag = this.$content.find('.tag').val();
+                        let lectures = this.$content.find('.lectures').val().join(',');
+                        let tags = this.$content.find('.tags').val().join(',');
+                        let groups = this.$content.find('.groups').val();
+                        let subGroups = this.$content.find('.sub-groups').val();
+                        let count = this.$content.find('.count').val();
+                        let duration = this.$content.find('.duration').val();
 
                         //check the name is not empty value
-                        if (!roomName) {
-                            $.alert('Provide a valid room name');
+                        if (!lectures) {
+                            $.alert('please select at least 1 lecturer');
                             return false;
                         }
-                        if (!capacity) {
-                            $.alert('Provide a valid capacity');
+                        if (!tags) {
+                            $.alert('Provide a valid tag(s)');
                             return false;
-                        } else capacity = Number(capacity);
-                        if (!center) {
-                            $.alert('Select a valid center name');
+                        }
+                        if (!groups) {
+                            $.alert('Select a valid group');
                             return false;
-                        } else center = Number(center);
-                        if (!building) {
-                            $.alert('Select a valid building name');
+                        } else groups = Number(groups);
+                        if (!count) {
+                            $.alert('Select a valid student count');
                             return false;
-                        } else building = Number(building);
+                        } else count = Number(count);
+                        if (!duration) {
+                            $.alert('Select a valid duration');
+                            return false;
+                        } else duration = Number(duration);
 
                         //saving room to the database
-                        ipcRenderer.sendSync('room:add', { roomName, capacity, center, building });
+                        ipcRenderer.sendSync('session:add', {
+                            lectures,
+                            tags,
+                            sgroup : groups,
+                            subGroup : subGroups,
+                            student : count,
+                            duration
+                        });
 
                         // reload the table
-                        ReloadTable();
+                        // ReloadTable();
 
                     }
                 },

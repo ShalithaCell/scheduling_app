@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   sessions.init({
     lectures: DataTypes.STRING,
     tags: DataTypes.STRING,
-    group: DataTypes.INTEGER,
+    sgroup: DataTypes.INTEGER,
     subGroup: DataTypes.STRING,
     student: DataTypes.INTEGER,
     duration: DataTypes.INTEGER,
