@@ -30,6 +30,9 @@ const navBar = `
                 <li id="liStudent">
                     <a href="./student.html"><span class="fa fa-user mr-3"></span>Student</a>
                 </li>
+                <li id="liSession">
+                    <a href="./session.html"><span class="fa fa-life-ring mr-3"></span>Session</a>
+                </li>
                 <li id="liStatics">
                     <a href="./statistics.html"><span class="fa fa-line-chart mr-3"></span>Statistics</a>
                 </li>
