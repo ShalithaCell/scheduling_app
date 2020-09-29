@@ -203,6 +203,14 @@
         });
         levelSelection += '</select>';
 
+        const building = ipcRenderer.sendSync('building:get', null);
+        let buildingSelection = '<select class="form-control building" required>';
+        buildingSelection += '<option value="0" selected disabled> Select building </option>';
+        $.each(building, function(i, build) {
+            buildingSelection += '<option value="' + build.id + '">' + build.buildingName + '</option>';
+        });
+        buildingSelection += '</select>';
+
         $.confirm({
             title: 'New Lecturer!',
             content: `
@@ -223,9 +231,7 @@
                         <label>Select center</label>
                         ${centerSelection}
                         <label>Select building</label>
-                        <select class="form-control building" required disabled>
-                            <option value="0" selected disabled> Select building </option>
-                        </select>
+                        ${buildingSelection}
                         <label>Select Rank</label>
                         ${levelSelection}
                     </div>

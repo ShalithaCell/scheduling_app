@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/custom-back.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./sessionsSettingsHome.html'">Back</button>
+
+                <h2 class="title-font-custom">Consecutive Sessions</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+                       
+                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewConsicutiveSessions()">Add New</button>
+
+                        <table id="tblConsicutiveSessions" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Year and Semester</th>
+                                <th>Programme</th>
+                                <th>Module Name With ID</th>
+                                <th>Tag 1</th>
+                                <th>Tag 2</th>
+                                <th>Tag 3</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liGeneralSettings').addClass('active');
+
+    });
+
+
+    $(function() {
+        LoadTable();
+    });
+
+    
+    function LoadTable(){
+
+        debugger;
+// get all consecutive sessions data
+const ConsicutiveSessionsList = ipcRenderer.sendSync('consecutivesessions:getAllByRow', null);
+var ConsicutiveSessionsTable = $("#tblConsicutiveSessions"); //find the table by id
+
+// table filling and initializing as data-table
+ConsicutiveSessionsTable.DataTable ({
+    "data" : ConsicutiveSessionsList,
+    "ordering": true,
+    "order": [[0, 'asc']],
+    "columns" : [
+ 
+        { "data" : "yearandsemester" },
+        { "data" : "programme" },
+        { "data" : "moduleID" },
+        { "data" : "tagID1" },
+        { "data" : "tagID2" },
+        { "data" : "tagID3" },
+        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                return `<button type="button" class="btn btn-warning btn-header" onclick="editConsicutiveSessions('${data.id}', 
+                '${data.yearandsemester}',
+                '${data.programme}',
+                '${data.moduleID}',
+                '${data.tagID1}',
+                '${data.tagID2}',
+                '${data.tagID3}')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+            }
+        },
+        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                return '<button type="button" class="btn btn-danger btn-header" onclick="deleteConsicutiveSessions(' +data.id +',\''+data.moduleID+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+            }
+        },
+    ]
+});
+
+}
+
+//reload table data
+function ReloadTable(){
+if ( $.fn.DataTable.isDataTable('#tblConsicutiveSessions') ) {
+    $('#tblConsicutiveSessions').DataTable().destroy();
+}
+
+$('#tblConsicutiveSessions tbody').empty();
+LoadTable();
+}
+
+// add new
+
+function AddNewConsicutiveSessions(){
+    
+    const yearandsemester = ipcRenderer.sendSync('academic:get', null);
+    let yearandsemesterSelection = '<select class="form-control academic" required>';
+    yearandsemesterSelection += '<option value="0" selected disabled> Select Academic year and Semester </option>';
+    $.each(yearandsemester, function(i, academic) {
+        yearandsemesterSelection += '<option value="' + academic.id + '">'+ academic.AcademicYearsandSemester+ '</option>';
+    });
+    yearandsemesterSelection += '</select>';
+
+    const programme = ipcRenderer.sendSync('programme:get', null);
+    let programmeSelection = '<select class="form-control programme" required>';
+        programmeSelection += '<option value="0" selected disabled> Select Programme </option>';
+    $.each(programme, function(i,programme) {
+        programmeSelection += '<option value="' + programme.id + '">' + programme.name + '</option>';
+    });
+    programmeSelection+= '</select>';
+
+    const moduleID = ipcRenderer.sendSync('Subject:get', null);
+    let subjectSelection1 = '<select class="form-control subject" required>';
+        subjectSelection1  += '<option value="0" selected disabled> Select Module Id </option>';
+    $.each(subjects, function(i,Subject) {
+        subjectSelection1  += '<option value="' + Subject.id + '">' + Subject.subjectName + '</option>';
+    });
+    subjectSelection1 += '</select>';
+
+ 
+    
+    const tagID1 = ipcRenderer.sendSync('tag:get', null);
+    let tagSelection1 = '<select class="form-control tag1" required>';
+        tagSelection1   += '<option value="0" selected disabled> Select Tag1 </option>';
+    $.each(tags, function(i,tag) {
+        tagSelection1   += '<option value="' + tag.id + '">' + tag.tagName+ '</option>';
+    });
+    tagSelection1 += '</select>';
+
+    const tagID2 = ipcRenderer.sendSync('tag:get', null);
+    let tagSelection2 = '<select class="form-control tag2" required>';
+        tagSelection2   += '<option value="0" selected disabled> Select Tag2 </option>';
+    $.each(tags2, function(i,tag2) {
+        tagSelection2   += '<option value="' + tag2.id + '">' + tag2.tagName+ '</option>';
+    });
+    tagSelection2  += '</select>';
+
+    const tagID3 = ipcRenderer.sendSync('tag:get', null);
+    let tagSelection3 = '<select class="form-control tag3" required>';
+        tagSelection3   += '<option value="0" selected disabled> Select Tag3 </option>';
+    $.each(tags3, function(i,tag3) {
+        tagSelection3   += '<option value="' + tag3.id + '">' + tag3.tagName+ '</option>';
+    });
+    tagSelection3  += '</select>';
+
+    $.confirm({
+        title: 'New Consicutive Sessions!',
+        content: `
+            <div>
+                <div class="form-group">
+                   
+                    <label>Select Academic Year and Semester</label>
+                    ${yearandsemesterSelection}
+
+                    <label>Select Programme</label>
+                    ${programmeSelection}
+
+                    <label>Select Module Name With Id</label>
+                    ${subjectSelection1}
+
+                    <label>Select Tag1</label>
+                    ${tagSelection1}
+
+                    <label>Select Tag2</label>
+                    ${tagSelection2}
+
+                    <label>Select Tag3</label>
+                    ${tagSelection3 }
+                </div>
+            </div>`,
+        buttons: {
+            cancel: function () {
+                //close
+            },
+            formSubmit: {
+                text: 'Submit',
+                btnClass: 'btn-blue',
+                action: function () {
+
+                   
+
+                    let yearandsemester = this.$content.find('.yearandsemester').val(); //get the lecturer name
+                    let programme = this.$content.find('.programme').val();
+                    let moduleID = this.$content.find('.moduleID').val();
+                    let tagID1= this.$content.find('.tagID1').val();
+                    let tagID2 = this.$content.find('.tagID2').val();
+                    let tagID3 = this.$content.find('.tagID3').val();
+                 
+                    //check the name is not empty value
+                 
+                    if (!yearandsemester) {
+                        $.alert('Select a valid Academic Year and Semester');
+                        return false;
+                    } else yearandsemester = Number(yearandsemester);
+                    
+                    if (!programme) {
+                        $.alert('Select a valid Programme');
+                        return false;
+                    } else programme = Number(programme);
+                    
+                    if (!moduleIDd) {
+                        $.alert('Select a valid Module Id');
+                        return false;
+                    } else moduleID = Number(moduleID);
+                    
+                   
+                    
+                    if (!tagID1) {
+                        $.alert('Select a valid Tag1');
+                        return false;
+                    } else tagID1 = Number(tagID1);
+                    
+                    if (!tagID2) {
+                        $.alert('Select a valid Tag2');
+                        return false;
+                    } else tagID2 = Number(tagID2);
+                    
+                    if (!tagID3) {
+                        $.alert('Select a valid Tag3');
+                        return false;
+                    } else tagID3 = Number(tagID3);
+
+
+                    
+                    
+
+                    //saving data to the database
+                   
+              
+                    ipcRenderer.sendSync('consecutivesessions:add', { yearandsemester, programme,moduleID, tagID1, tagID2, tagID3 });
+
+                    // reload the table
+                    ReloadTable();
+
+                }
+            },
+        },
+        onContentReady: function () {
+
+        }
+    });
+
+}
+
+
+// delete data
+function deleteConsicutiveSessions(id, moduleID){
+$.confirm({
+    title: 'Confirm!',
+    content: 'Confirm to remove "'+ moduleID + '"',
+    buttons: {
+        confirm:  {
+            text: 'confirm', // text for button
+            btnClass: 'btn-danger', // class for the button
+            action: function(){
+                ipcRenderer.sendSync('consecutivesessions:remove', id);
+
+                ReloadTable();
+            }
+        },
+        cancel: {
+            text: 'cancel', // text for button
+            btnClass: 'btn-warning', // class for the button
+            action: function(){
+
+            }
+        }
+    }
+});
+}
+
+</script>
+
+</html>

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
     <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
     <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
-
+    <link rel="stylesheet" href="../public/style/slimselect.min.css" />
 </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
@@ -35,8 +35,8 @@
                                 <th>Room</th>
                                 <th>Center</th>
                                 <th>Building</th>
-                                <th>Study Type</th>
                                 <th>Max. capacity</th>
+                                <th>Assign</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -75,6 +75,7 @@
 <script src="../public/jConfirm/jquery-confirm.min.js"></script>
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/datatable/jquery.dataTables.min.js"></script>
+<script src="../public/script/slimselect.min.js"></script>
 
 <!-- Insert this line after script imports -->
 <script>
@@ -116,8 +117,11 @@
                 { "data" : "roomName" },
                 { "data" : "centerName" },
                 { "data" : "buildingName" },
-                { "data" : "tagName" },
                 { "data" : "capacity" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-info btn-header" onclick="assignForRoom(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Assign</button>`
+                    }
+                },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
                         return `<button type="botton" class="btn btn-warning btn-header" onclick="editRoom(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
@@ -166,13 +170,13 @@
         });
         centerSelection += '</select>';
 
-        const tags = ipcRenderer.sendSync('tag:get', null);
-        let tagSelection = '<select class="form-control tag" required>';
-        tagSelection += '<option value="0" selected disabled> Select tag </option>';
-        $.each(tags, function(i, tag) {
-            tagSelection += '<option value="' + tag.id + '">' + tag.tagName + '</option>';
+        const building = ipcRenderer.sendSync('building:get', null);
+        let buildingSelection = '<select class="form-control building" required>';
+        buildingSelection += '<option value="0" selected disabled> Select building </option>';
+        $.each(building, function(i, build) {
+            buildingSelection += '<option value="' + build.id + '">' + build.buildingName + '</option>';
         });
-        tagSelection += '</select>';
+        buildingSelection += '</select>';
 
         $.confirm({
             title: 'New Room!',
@@ -188,11 +192,7 @@
                         <label>Select center</label>
                         ${centerSelection}
                         <label>Select building</label>
-                        <select class="form-control building" required disabled>
-                            <option value="0" selected disabled> Select building </option>
-                        </select>
-                        <label>Select tag</label>
-                        ${tagSelection}
+                        ${buildingSelection}
                     </div>
                 </div>`,
             buttons: {
@@ -207,7 +207,7 @@
                         let capacity = this.$content.find('.capacity').val();
                         let center = this.$content.find('.center').val();
                         let building = this.$content.find('.building').val();
-                        let tag = this.$content.find('.tag').val();
+                        // let tag = this.$content.find('.tag').val();
 
                         //check the name is not empty value
                         if (!roomName) {
@@ -226,13 +226,9 @@
                             $.alert('Select a valid building name');
                             return false;
                         } else building = Number(building);
-                        if (!tag) {
-                            $.alert('Select a valid tag name');
-                            return false;
-                        } else tag = Number(tag);
 
                         //saving room to the database
-                        ipcRenderer.sendSync('room:add', { roomName, capacity, center, building, tag });
+                        ipcRenderer.sendSync('room:add', { roomName, capacity, center, building });
 
                         // reload the table
                         ReloadTable();
@@ -247,6 +243,119 @@
 
     }
 
+    function assignForRoom(id) {
+        const tags = ipcRenderer.sendSync('tag:get', null);
+        let tagSelection = '<select class="form-control tag" multiple required>';
+        tagSelection += '<option value="0" selected disabled> Select tag </option>';
+        $.each(tags, function(i, tag) {
+            tagSelection += `<option value="${tag.id}">${tag.tagName}</option>`;
+        });
+        tagSelection += '</select>';
+
+        const subjects = ipcRenderer.sendSync('subject:get', null);
+        let subjectSelection = '<select class="form-control subject" multiple required>';
+        subjectSelection += '<option value="0" selected disabled> Select subject </option>';
+        $.each(subjects, function(i, subject) {
+            subjectSelection += `<option value="${subject.id}">${subject.subjectName}</option>`;
+        });
+        subjectSelection += '</select>';
+
+        const lecturers = ipcRenderer.sendSync('lecturer:get', null);
+        let lecturerSelection = '<select class="form-control lecturer" multiple required>';
+        lecturerSelection += '<option value="0" selected disabled> Select lecturer </option>';
+        $.each(lecturers, function(i, lecturer) {
+            lecturerSelection += `<option value="${lecturer.id}">${lecturer.lecturerName}</option>`;
+        });
+        lecturerSelection += '</select>';
+
+        $.confirm({
+            title: 'Assign to Room!',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Select tags</label>
+                        ${tagSelection}
+                    </div>
+                    <div class="form-group">
+                        <label>Select subjects</label>
+                        ${subjectSelection}
+                    </div>
+                    <div class="form-group">
+                        <label>Select lecturers</label>
+                        ${lecturerSelection}
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        const tags = this.$content.find('.tag').val(); //get the tag
+                        const subjects = this.$content.find('.subject').val();
+                        const lecturers = this.$content.find('.lecturer').val();
+
+                        //check the name is not empty value
+                        if (!tags) {
+                            $.alert('Select a valid tags');
+                            return false;
+                        }
+                        if (!subjects) {
+                            $.alert('Select a valid subjects');
+                            return false;
+                        }
+                        if (!lecturers) {
+                            $.alert('Select a valid lecturers');
+                            return false;
+                        }
+
+                        // update data
+                        const tagsSuccess = ipcRenderer.sendSync('room-tags:update', { roomId: id, tagIds: tags });
+                        const subjectsSuccess = ipcRenderer.sendSync('room-subjects:update', { roomId: id, subjectIds: subjects });
+                        const lecturersSuccess = ipcRenderer.sendSync('room-lecturers:update', { roomId: id, lecturerIds: lecturers });
+
+                        if(tagsSuccess && subjectsSuccess && lecturersSuccess){
+                            ReloadTable();
+                        }
+                    }
+                },
+            },
+            onContentReady: function () {
+                const roomTagsData = ipcRenderer.sendSync('room-tags:getByRoom', id);
+                const roomSubjectsData = ipcRenderer.sendSync('room-subjects:getByRoom', id);
+                const roomLecturersData = ipcRenderer.sendSync('room-lecturers:getByRoom', id);
+
+                const tagList = [];
+                $.each(roomTagsData, function(i, tag) {
+                    tagList.push(tag.tagId);
+                });
+                const subjectList = [];
+                $.each(roomSubjectsData, function(i, subject) {
+                    subjectList.push(subject.subjectId);
+                });
+                const lecturerList = [];
+                $.each(roomLecturersData, function(i, lecturer) {
+                    lecturerList.push(lecturer.lecturerId);
+                });
+
+                const tagsDropdown = new SlimSelect({
+                    select: '.tag'
+                });
+                const subjectsDropdown = new SlimSelect({
+                    select: '.subject'
+                });
+                const lecturersDropdown = new SlimSelect({
+                    select: '.lecturer'
+                });
+                tagsDropdown.set(tagList);
+                subjectsDropdown.set(subjectList);
+                lecturersDropdown.set(lecturerList);
+            }
+        });
+    }
+
     //edit room data
     function editRoom(id){
         const centers = ipcRenderer.sendSync('center:get', null);
@@ -256,14 +365,6 @@
             centerSelection += '<option value="' + center.id + '">' + center.centerName + '</option>';
         });
         centerSelection += '</select>';
-
-        const tags = ipcRenderer.sendSync('tag:get', null);
-        let tagSelection = '<select class="form-control tag" required>';
-        tagSelection += '<option value="0" selected disabled> Select tag </option>';
-        $.each(tags, function(i, tag) {
-            tagSelection += '<option value="' + tag.id + '">' + tag.tagName + '</option>';
-        });
-        tagSelection += '</select>';
 
         $.confirm({
             title: 'Edit Room!',
@@ -282,8 +383,6 @@
                         <select class="form-control building" required disabled>
                             <option value="0" selected disabled> Select building </option>
                         </select>
-                        <label>Select tag</label>
-                        ${tagSelection}
                     </div>
                 </div>`,
             buttons: {
@@ -298,7 +397,6 @@
                         let capacity = this.$content.find('.capacity').val();
                         let center = this.$content.find('.center').val();
                         let building = this.$content.find('.building').val();
-                        let tag = this.$content.find('.tag').val();
 
                         //check the name is not empty value
                         if (!roomName) {
@@ -317,13 +415,9 @@
                             $.alert('Select a valid building name');
                             return false;
                         } else building = Number(building);
-                        if (!tag) {
-                            $.alert('Select a valid tag name');
-                            return false;
-                        } else tag = Number(tag);
 
                         // update data
-                        const success = ipcRenderer.sendSync('room:update', { id, roomName, capacity, center, building, tag });
+                        const success = ipcRenderer.sendSync('room:update', { id, roomName, capacity, center, building });
 
                         if(success){
                             ReloadTable();
@@ -338,7 +432,6 @@
                 this.$content.find('.center').val(roomData[0].center);
                 updateBuildings();
                 this.$content.find('.building').val(roomData[0].building);
-                this.$content.find('.tag').val(roomData[0].tag);
             }
         });
     }

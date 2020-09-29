@@ -213,8 +213,9 @@
             onContentReady: function () {
                 //console.log(id)
                 const tagData = ipcRenderer.sendSync('day:getByID', id);
+                debugger;
                 //console.log(tagData);
-                this.$content.find('.name').val(tagData[0].tagName);
+                this.$content.find('.name').val(tagData[0].day);
             }
         });
     }

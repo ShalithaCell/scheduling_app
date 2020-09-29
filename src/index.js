@@ -14,7 +14,7 @@ const createWindow = () => {
     height: 600,
     webPreferences:
         {
-          devTools : false,
+          //devTools : false,
           nodeIntegration: true,
         }
   });
@@ -87,3 +87,8 @@ require('./services/extendSubGroupHoldDataService');
 require('./services/subjectDataServices');
 require('./services/lecturerDataServices');
 require('./services/timeTableDataService');
+require('./services/notAvailableGroupsDataService');
+require('./services/roomTagsDataService');
+require('./services/roomSubjectsDataServices');
+require('./services/roomLecturersDataService');
+require('./services/sessionDataService');

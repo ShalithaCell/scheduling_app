@@ -23,3 +23,32 @@ iii. TEXT
 
 for further details refer - https://sequelize.org/master/manual/migrations.html
 
+-------------------------------------------------------------------------------------------------------
+To change column name in database
+
+This may help you, follow this steps
+
+Step 1: npm install -g sequelize-cli To install sequelize command line tool
+
+Step 2: sequelize migration:create --name rename-column-tour_title-to-tour_name-in-tabelname
+
+Step 3: Open newly created migration file and add below code
+
+'use strict';
+
+module.exports = {
+  up: (queryInterface, Sequelize) => {
+    return queryInterface.renameColumn('tableName', 'tour_title', 'tour_name');
+  },
+
+  down: (queryInterface, Sequelize) => {
+    return queryInterface.renameColumn('tableName', 'tour_name', 'tour_title');
+  }
+};
+
+Step 4: in command line run this below command
+
+sequelize db:migrate
+Now your column name changed successfully.
+
+---------------------------------------------------------------------------------------------------------

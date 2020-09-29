@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/generalsettinghome.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+    <style>
+        .my-card
+        {
+            position:absolute;
+            left:40%;
+            top:-20px;
+            border-radius:50%;
+        }
+    </style>
+
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom">
+                <h2 class="title-font-custom">General Settings</h2>
+            </div>
+            <!-- Page Body -->
+            <div>
+                <div class="section-block-grey">
+                    <div class="container">
+                       
+                        <div class="row mt-60">
+                            <div class="col-md-4 col-sm-12 col-12"  style="cursor: pointer; min-height: 500px;" onclick="window.location.href='notAvailableHome.html'">
+                                <div class="serv-section-2">
+                                    <div class="serv-section-2-icon">  <i class="fa fa-calendar"></i>  </div>
+                                    <div class="serv-section-desc">
+                                        <h4>Not Available Times</h4>
+                                    </br>
+                                        <h5>Lecturers</h5>
+                                        <h5>Sessions</h5> 
+                                        <h5>Groups</h5>
+                                        <h5>Sub-Groups</h5></div>
+                                </br>
+                                </div>
+                            </div>
+                     
+                            <div class="row mt-20"></div>
+                            <div class="col-md-4 col-sm-12 col-12" style="cursor: pointer; min-height: 500px;" onclick="window.location.href='sessionsSettingsHome.html'" >
+                                <div class="serv-section-2 serv-section-2-act">
+                                    <div class="serv-section-2-icon serv-section-2-icon-act"> <i class="fa fa-list"></i> </div>
+                                    <div class="serv-section-desc">
+                                        <h4>Sessions Management</h4>
+                                    </br>
+                                        <h5>Consecutive Sessions</h5>
+                                </br>
+                                        <h5>Parallel Sessions</h5> 
+                                    </br>
+                                        <h5>Not Overlap Sessions</h5> 
+                                        </div>
+                                        </div>
+                                
+                                   
+                                </div>
+                            </div>
+                          
+                        </div>
+                    
+                        
+                            
+                        </div>
+                    </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+<script src="../public/Chart.min.js"></script>
+
+
+
+
+
+
+
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liGeneralSettings').addClass('active');
+
+    });
+
+</script>
+
+</html>

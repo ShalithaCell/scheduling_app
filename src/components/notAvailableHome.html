@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/notavailablehome.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+    <style>
+        .my-card
+        {
+            position:absolute;
+            left:40%;
+            top:-20px;
+            border-radius:50%;
+        }
+    </style>
+
+
+</head>
+
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./generalSettings.html'">Back</button>
+
+                <h2 class="title-font-custom">Not Available Times</h2>
+            </div>
+           
+            
+            <!-- Page Body -->
+            <div>
+            </br>
+        </br>
+    </br>
+                <div class="container">
+                    <div class="row">
+                    
+                    
+                    
+                    <!--team-1-->
+                    <div class="col-lg-4" style="cursor: pointer" onclick="window.location.href='notAvailableLectures.html'">
+                    <div class="our-team-main">
+                    
+                    <div class="team-front">
+                    <img src="http://placehold.it/110x110/336699/fff?text=Lecturers"  class="img-fluid" />
+                    <h3>Not available time of</h3>
+                    <p>Lecturers</p>
+                    </div>
+                    
+                    <div class="team-back">
+                    <span>
+                        Lecturers do not give any lectures during this allotted time.
+                        This is because in some cases they have to prepare  before the lecture so they spend this time on such activities.
+                        No time was allotted for any of their lectures in the schedules during this period.
+                        </span>
+                    </div>
+                    
+                    </div>
+                    </div>
+                    <!--team-1-->
+                    <div class="row mt-150"></div>
+               
+                    <!--team-2-->
+                    <div class="col-lg-4" style="cursor: pointer" onclick="window.location.href='notAvailableSessions.html'">
+                    <div class="our-team-main">
+                    
+                    <div class="team-front">
+                    <img src="http://placehold.it/110x110/607d8b/fff?text=Sessions" class="img-fluid" />
+                    <h3>Not available time of</h3>
+                    <p>Sessions</p>
+                    </div>
+                  
+                    <div class="team-back">
+                    <span>
+                        This sessions do not have in this time period because of reasonable reasons.
+                        Schedule times are not set for this session within the allotted time periods.
+                    </span>
+                    </div>
+                    
+                    </div>
+                    </div>
+                    <!--team-2-->
+                    
+                    
+                    <div class="row mt-bottom"></div>
+
+                    <!--team-3-->
+                    <div class="col-lg-4" style="cursor: pointer" onclick="window.location.href='notAvailableGroups.html'">
+                    <div class="our-team-main">
+                    
+                    <div class="team-front">
+                    <img src="http://placehold.it/110x110/e91e63/fff?text=Groups" class="img-fluid" />
+                    <h3>Not available time of</h3>
+                    <p>Groups</p>
+                    </div>
+                    
+                    <div class="team-back">
+                    <span>
+                        There is no any lectures for this group during this allotted period.
+                        This period may have been reserved for something special for this group or it may have been given to them as a free period.
+                    </span>
+                    </div>
+                    
+                    </div>
+                    </div>
+                    <!--team-3-->
+                    <div class="row mt-150"></div>
+                    <!--team-4-->
+                    <div class="col-lg-4" style="cursor: pointer" onclick="window.location.href='notAvailableSubGroups.html'">
+                    <div class="our-team-main">
+                    
+                    <div class="team-front">
+                    <img src="http://placehold.it/110x110/2196f3/fff?text=Sup Groups" class="img-fluid" />
+                    <h3>Not available time of</h3>
+                    <p>Sup Groups</p>
+                    </div>
+                    
+                    <div class="team-back">
+                        <span>
+                            There is no any lectures for this sub group during this allotted period.
+                            This period may have been reserved for something special for this sub group or it may have been given to them as a free period.
+                        </span>
+                    </div>
+                    
+                    </div>
+                    </div>
+                    <!--team-4-->
+                    
+                    
+                    
+                    </div>
+                    </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+<script src="../public/Chart.min.js"></script>
+
+
+
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liGeneralSettings').addClass('active');
+
+    });
+
+</script>
+
+</html>
