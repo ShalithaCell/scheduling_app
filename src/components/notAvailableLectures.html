@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="../public/style/back-button-custom.css" />
     <link rel="stylesheet" href="../public/style/custom-back.css" />
+    <link rel="stylesheet" href="../public/timepicker/jquery.timepicker.min.css" />
+    <link rel="stylesheet" href="../public/mutiselect/jquery.multiselect.css" />
 
 </head>
 <body>
@@ -31,9 +33,9 @@
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewNotAvailableLecturer()">Add New</button>
+                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNew()">Add New</button>
 
-                        <table id="tblnotavailabletimelecturers" class="display" style="width:100%">
+                        <table id="tblNotAvailableLectures" class="display" style="width:100%">
                             <thead>
                             <tr>
                                 <th>Lecturer ID</th>
@@ -79,6 +81,8 @@
 <script src="../public/jConfirm/jquery-confirm.min.js"></script>
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/datatable/jquery.dataTables.min.js"></script>
+<script src="../public/timepicker/jquery.timepicker.min.js"></script>
+<script src="../public/mutiselect/jquery.multiselect.js"></script>
 
 <!-- Insert this line after script imports -->
 <script>
@@ -87,6 +91,7 @@
     const { navBar } = require('../siteMaster');
 
     const electron = require('electron');
+    const {generateNotAvailableLectureObjects} = require("../services/applicationServices/commonServices");
     const { ipcRenderer } = electron;
 
     $(window).on("load", function () {
@@ -101,6 +106,298 @@
     $(function() {
         LoadTable();
     });
+
+    function AddNew(){
+        const lectures = ipcRenderer.sendSync('lecturer:get', null);
+        let lecturesSelection = '<select class="form-control lectures" required>';
+        $.each(lectures, function(i, center) {
+            lecturesSelection += '<option value="' + center.id + '">' + center.lecturerName + '</option>';
+        });
+        lecturesSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+
+        $.confirm({
+            title: 'Add new not available times',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Select lecturer</label>
+                        ${lecturesSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        const lecturer = this.$content.find('.lectures').val();
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+                        if (!lecturer) {
+                            $.alert('please select at lecturer');
+                            return false;
+                        }
+
+                        if (!daysSelected) {
+                            $.alert('please select day(s)');
+                            return false;
+                        }
+
+                        if (!fromTime) {
+                            $.alert('please select from time');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('please select to time');
+                            return false;
+                        }
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('notAvailableLecturer:add', {
+                            lecID:lecturer,
+                            dayIDs:daysSelected,
+                            timeFrom : fromTime,
+                            timeTo : toTime
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+            }
+        });
+    }
+
+    function editNotAvailableLecturerTime(id){
+        const lectures = ipcRenderer.sendSync('lecturer:get', null);
+        let lecturesSelection = '<select class="form-control lectures" required>';
+        $.each(lectures, function(i, center) {
+            lecturesSelection += '<option value="' + center.id + '">' + center.lecturerName + '</option>';
+        });
+        lecturesSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+
+        $.confirm({
+            title: 'Edit not available times',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Select lecturer</label>
+                        ${lecturesSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        const lecturer = this.$content.find('.lectures').val();
+                        const daysSelected = this.$content.find('.days').val().join(',');
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+                        if (!lecturer) {
+                            $.alert('please select at lecturer');
+                            return false;
+                        }
+
+                        if (!daysSelected) {
+                            $.alert('please select day(s)');
+                            return false;
+                        }
+
+                        if (!fromTime) {
+                            $.alert('please select from time');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('please select to time');
+                            return false;
+                        }
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('notAvailableLecturer:update', {
+                            id,
+                            lecID:lecturer,
+                            dayIDs:daysSelected,
+                            timeFrom : fromTime,
+                            timeTo : toTime
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+
+                const dataSet = ipcRenderer.sendSync('notAvailableLecturer:getByID', id);
+
+                const dataDetail = dataSet[0];
+
+                this.$content.find('.lectures').val(dataDetail.lecID);
+
+                $.each(dataDetail.dayIDs.split(","), function(i,e){
+                    $(".days option[value='" + Number(e) + "']").prop("selected", true);
+                });
+
+                $(".days").multiselect('reload');
+
+                this.$content.find('.fromTime').val(dataDetail.timeFrom);
+                this.$content.find('.toTime').val(dataDetail.timeTo);
+
+            }
+        });
+    }
+
+    function removeNotAvailableTimes(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('notAvailableLecturer:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+
+    function LoadTable(){
+        const notAvailableLecData = generateNotAvailableLectureObjects(ipcRenderer);
+
+        // table filling and initializing as data-table
+        $("#tblNotAvailableLectures").DataTable ({
+            "data" : notAvailableLecData,
+            "ordering": true,
+            "order": [[0, 'asc']],
+            "columns" : [
+                { "data" : "empId" },
+                { "data" : "lecturerName" },
+                { "data" : "dayNames" },
+                { "data" : "timeFrom" },
+                { "data" : "timeTo" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editNotAvailableLecturerTime(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="removeNotAvailableTimes(' +data.id +',\''+data.lecturerName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+    }
+
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tblNotAvailableLectures') ) {
+            $('#tblNotAvailableLectures').DataTable().destroy();
+        }
+
+        $('#tblNotAvailableLectures tbody').empty();
+        LoadTable();
+    }
 
     
 

@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="../public/style/back-button-custom.css" />
     <link rel="stylesheet" href="../public/style/custom-back.css" />
+    <link rel="stylesheet" href="../public/timepicker/jquery.timepicker.min.css" />
+    <link rel="stylesheet" href="../public/mutiselect/jquery.multiselect.css" />
+
 
 </head>
 <body>
@@ -33,7 +36,7 @@
 
                         <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewNotAvailableSession()">Add New</button>
 
-                        <table id="tblnotavailabelsessions" class="display" style="width:100%">
+                        <table id="tblNotAvailableSessions" class="display" style="width:100%">
                             <thead>
                             <tr>
                                 <th>Lecturer Name</th>
@@ -82,6 +85,8 @@
 <script src="../public/jConfirm/jquery-confirm.min.js"></script>
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/datatable/jquery.dataTables.min.js"></script>
+<script src="../public/timepicker/jquery.timepicker.min.js"></script>
+<script src="../public/mutiselect/jquery.multiselect.js"></script>
 
 <!-- Insert this line after script imports -->
 <script>
@@ -90,7 +95,9 @@
     const { navBar } = require('../siteMaster');
 
     const electron = require('electron');
-    const { ipcRenderer } = electron;
+    const { ipcRenderer, remote  } = electron;
+
+    const {generateSessionDetailObjects} = require("../services/applicationServices/commonServices");
 
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
@@ -104,6 +111,224 @@
     $(function() {
         LoadTable();
     });
+
+    function LoadSessionTable(){
+        $.confirm({
+            title: 'Select Session',
+            columnClass: 'col-md-12',
+            content: `
+                <div>
+                    <table id="sessionTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Lecturer(s)</th>
+                                <th>Subject</th>
+                                <th>Subject code</th>
+                                <th>Tag(s)</th>
+                                <th>Group</th>
+                                <th>Sub-group</th>
+                                <th>Student count</th>
+                                <th>Duration</th>
+                                <th>Select</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                       </table>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'OK',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let selectedSession = '';
+                        $('.checkbox-c').each(function (){
+                            const checkChecked = this.checked;
+                            if(!checkChecked){
+                                selectedSession = { id : $(this).attr('session'), name : $(this).attr('disp') };
+                            }
+
+
+                        });
+                        if(selectedSession !== ''){
+                            $('#lblSelectedSession').html(selectedSession.name);
+                            $('#lblSelectedSession').attr('sessionsID', selectedSession.id);
+
+                        }
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                // get all room data
+                const sessionList = generateSessionDetailObjects(ipcRenderer);
+
+                var tblDatatable = $("#sessionTable"); //find the table by id
+
+                // table filling and initializing as data-table
+                tblDatatable.DataTable ({
+                    "data" : sessionList,
+                    "ordering": false,
+                    "columns" : [
+                        { "data" : "lecturerNames" },
+                        { "data" : "subjectName" },
+                        { "data" : "subjectCode" },
+                        { "data" : "tagNames" },
+                        { "data" : "groupName" },
+                        { "data" : "subGroup" },
+                        { "data" : "student" },
+                        { "data" : "duration" },
+                        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                                return `<input type="checkbox" session="${data.id}" disp="${data.lecturerNames}-${data.subjectName}-${data.groupName}" style="width: 1vw;height: 3vh;" class="checkbox-c"/>`
+                            }
+                        }
+                    ]
+                });
+
+                $(".checkbox-c").change(function() {
+                    disableStatus();
+                });
+
+                function disableStatus(){
+
+                    let counter = 0;
+                    $('.checkbox-c').each(function (){
+                        const checkChecked = this.checked;
+                        if(checkChecked)
+                            counter++;
+
+                    });
+
+                    if(counter > 0){
+                        $('.checkbox-c').each(function (){
+                            const checkChecked = this.checked;
+                            if(!checkChecked)
+                                $(this).prop('disabled', true);
+
+                        });
+                    }else{
+                        $('.checkbox-c').each(function (){
+                            $(this).prop('disabled', false);
+
+                        });
+                    }
+                }
+
+
+            }
+        });
+    }
+
+    function AddNewNotAvailableSession(){
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+
+        $.confirm({
+            title: 'Add new not available times',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label id="lblSelectedSession" sessionsID="" style="color: rebeccapurple">no session selected</label>
+                        <button type="button" id="btnSelectSession" class="btn btn-primary btn-lg btn-block">Select session</button>
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        debugger;
+                        const session = this.$content.find('#lblSelectedSession').attr('sessionsID');
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+                        if (session === '') {
+                            $.alert('please select session');
+                            return false;
+                        }
+
+                        if (!daysSelected) {
+                            $.alert('please select day(s)');
+                            return false;
+                        }
+
+                        if (!fromTime) {
+                            $.alert('please select from time');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('please select to time');
+                            return false;
+                        }
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('notAvailableSession:add', {
+                            sessionID:session,
+                            dayIDs:daysSelected,
+                            timeFrom : fromTime,
+                            timeTo : toTime
+                        });
+
+                        // reload the table
+                        // ReloadTable();
+
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+
+                this.$content.find('#btnSelectSession').on('click', function (){
+                    ipcRenderer.send( "setMyGlobalVariable", '' );
+                    $('#lblSelectedSession').html('no session selected');
+                    LoadSessionTable();
+                });
+            }
+        });
+    }
 
     
 
