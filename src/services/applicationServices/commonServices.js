@@ -115,6 +115,22 @@ const generateNotAvailableLectureObjects = (ipcRenderer) =>
     return returnDataObj;
 }
 
+const generateNotAvailableRoomObjects = (ipcRenderer) =>
+{
+    const dataSet = ipcRenderer.sendSync('notAvailableRoom:get', null);
+
+    const returnDataObj = [];
+
+    dataSet.forEach((item, index)=>{
+        const dayNames = generateDayArray(ipcRenderer, item.dayIDs);
+
+        const obj = { ...item, dayNames : dayNames.join(', ') }
+        returnDataObj.push(obj);
+    });
+
+    return returnDataObj;
+}
+
 const validateString = (char) =>
 {
     let regx = new RegExp(/^[A-Za-z]{1}$/g);
@@ -129,4 +145,4 @@ const isNumber = (string) => {
     return string - 0 === string * 1
 }
 
-module.exports = { jsonHasKeyValFoRDays,generateLecturerArray, generateTagArray, generateSessionDetailObjects, generateDayArray, generateNotAvailableLectureObjects, validateString, isNumber  }
+module.exports = { jsonHasKeyValFoRDays,generateLecturerArray, generateTagArray, generateSessionDetailObjects, generateDayArray, generateNotAvailableLectureObjects, generateNotAvailableRoomObjects, validateString, isNumber  }
