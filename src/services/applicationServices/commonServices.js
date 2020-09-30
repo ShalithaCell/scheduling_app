@@ -115,6 +115,29 @@ const generateNotAvailableLectureObjects = (ipcRenderer) =>
     return returnDataObj;
 }
 
+const generateNotAvailableSessionObjects = (ipcRenderer) =>
+{
+    const notAvailableSessionDataSet = ipcRenderer.sendSync('notAvailableSession:get', null);
+    const sessionsDetails = generateSessionDetailObjects(ipcRenderer);
+
+    const returnDataObj = [];
+
+    notAvailableSessionDataSet.forEach((item, index)=>{
+        const dayNames = generateDayArray(ipcRenderer, item.dayIDs);
+        const session = sessionsDetails.filter((s) => s.id === item.sessionID);
+
+        const obj = {...item, dayNames:dayNames.join(', '),
+            lecturerNames : session[0].lecturerNames,
+            subjectCode : session[0].subjectCode,
+            subjectName : session[0].subjectName,
+            tagNames : session[0].tagNames,
+            groupName : session[0].groupName,
+        }
+        returnDataObj.push(obj);
+    });
+    return returnDataObj;
+}
+
 const validateString = (char) =>
 {
     let regx = new RegExp(/^[A-Za-z]{1}$/g);
@@ -129,4 +152,14 @@ const isNumber = (string) => {
     return string - 0 === string * 1
 }
 
-module.exports = { jsonHasKeyValFoRDays,generateLecturerArray, generateTagArray, generateSessionDetailObjects, generateDayArray, generateNotAvailableLectureObjects, validateString, isNumber  }
+module.exports = {
+    jsonHasKeyValFoRDays,
+    generateLecturerArray,
+    generateTagArray,
+    generateSessionDetailObjects,
+    generateDayArray,
+    generateNotAvailableLectureObjects,
+    generateNotAvailableSessionObjects,
+    validateString,
+    isNumber
+}

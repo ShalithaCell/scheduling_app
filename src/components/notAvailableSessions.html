@@ -97,7 +97,7 @@
     const electron = require('electron');
     const { ipcRenderer, remote  } = electron;
 
-    const {generateSessionDetailObjects} = require("../services/applicationServices/commonServices");
+    const {generateSessionDetailObjects, generateNotAvailableSessionObjects} = require("../services/applicationServices/commonServices");
 
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
@@ -109,6 +109,7 @@
 
 
     $(function() {
+
         LoadTable();
     });
 
@@ -187,6 +188,17 @@
                         }
                     ]
                 });
+
+                if($('#lblSelectedSession').attr('sessionsID') !== ''){
+                    $('.checkbox-c').each(function (){
+                        const sessionID = $(this).attr('session');
+                        const checkID = $('#lblSelectedSession').attr('sessionsID');
+                        if(sessionID === checkID){
+                            $(this).prop('checked', true);
+                        }
+                        disableStatus();
+                    });
+                }
 
                 $(".checkbox-c").change(function() {
                     disableStatus();
@@ -328,6 +340,198 @@
                 });
             }
         });
+    }
+
+    function editNotAvailableSessionTime(id){
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+
+        $.confirm({
+            title: 'Add new not available times',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label id="lblSelectedSession" sessionsID="" style="color: rebeccapurple">no session selected</label>
+                        <button type="button" id="btnSelectSession" class="btn btn-primary btn-lg btn-block">Select session</button>
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        const session = this.$content.find('#lblSelectedSession').attr('sessionsID');
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+                        if (session === '') {
+                            $.alert('please select session');
+                            return false;
+                        }
+
+                        if (!daysSelected) {
+                            $.alert('please select day(s)');
+                            return false;
+                        }
+
+                        if (!fromTime) {
+                            $.alert('please select from time');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('please select to time');
+                            return false;
+                        }
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('notAvailableSession:update', {
+                            id,
+                            sessionID:session,
+                            dayIDs:daysSelected,
+                            timeFrom : fromTime,
+                            timeTo : toTime
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+
+                this.$content.find('#btnSelectSession').on('click', function (){
+                    LoadSessionTable();
+                });
+
+                const notAvailableSessionDataSet = ipcRenderer.sendSync('notAvailableSession:getByID', id);
+
+                const dataDetail = notAvailableSessionDataSet[0];
+
+                this.$content.find('#lblSelectedSession').attr('sessionsID', dataDetail.sessionID);
+
+                const fullSessions = generateSessionDetailObjects(ipcRenderer);
+                const currentSession = fullSessions.filter((s) => s.id === dataDetail.sessionID)[0];
+
+                this.$content.find('#lblSelectedSession').html(`${currentSession.lecturerNames}-${currentSession.subjectName}-${currentSession.groupName}`);
+
+                $.each(dataDetail.dayIDs.split(","), function(i,e){
+                    $(".days option[value='" + Number(e) + "']").prop("selected", true);
+                });
+
+                $(".days").multiselect('reload');
+
+                this.$content.find('.fromTime').val(dataDetail.timeFrom);
+                this.$content.find('.toTime').val(dataDetail.timeTo);
+
+            }
+        });
+    }
+
+    function removeNotAvailableTimes(id, sessionID){
+        const fullSessions = generateSessionDetailObjects(ipcRenderer);
+        const currentSession = fullSessions.filter((s) => s.id === Number(sessionID))[0];
+
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ `${currentSession.lecturerNames}-${currentSession.subjectName}-${currentSession.groupName}` + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('notAvailableSession:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+    function LoadTable(){
+        const notAvailableLecData = generateNotAvailableSessionObjects(ipcRenderer);
+
+        // table filling and initializing as data-table
+        $("#tblNotAvailableSessions").DataTable ({
+            "data" : notAvailableLecData,
+            "ordering": true,
+            "order": [[0, 'asc']],
+            "columns" : [
+                { "data" : "lecturerNames" },
+                { "data" : "subjectCode" },
+                { "data" : "subjectName" },
+                { "data" : "tagNames" },
+                { "data" : "groupName" },
+                { "data" : "dayNames" },
+                { "data" : "timeFrom" },
+                { "data" : "timeTo" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick=editNotAvailableSessionTime("${data.id}")><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="removeNotAvailableTimes(' +data.id +',\''+data.sessionID+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+    }
+
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tblNotAvailableSessions') ) {
+            $('#tblNotAvailableSessions').DataTable().destroy();
+        }
+
+        $('#tblNotAvailableSessions tbody').empty();
+        LoadTable();
     }
 
     

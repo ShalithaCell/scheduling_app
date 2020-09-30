@@ -1,51 +1,49 @@
-// all theNotAvailableGroups database operations are initialized in here
+const { NotAvailableGroupTime, sequelize } = require('../models/index'); //import the tag model
 
-const { notAvailableGroups, sequelize } = require('../models/index'); //import the lecturer model
-
-// add new NotAvailableGroups
-global.share.ipcMain.on('NotAvailableGroups:add', async (event, values) => {
-    const NotAvailableGroups = new notAvailableGroups({ ...values, isActive: 1}).save(); //save to database
+global.share.ipcMain.on('notAvailableGroup:add', async (event, values) => {
+    new NotAvailableGroupTime({ ...values }).save(); //save to database
     event.returnValue = true;
 });
 
-// get all existing NotAvailableGroups list from database
-global.share.ipcMain.on('NotAvailableGroups:get', async (event, values) => {
-    const NotAvailableGroups = await sequelize.query(
-        `select g.id as 'notID', d.groupName,g.groupid,f.day as 'fday',g.day,g.fromt,g.tot 
-         from notAvailableGroups g
-         inner join Groups d on d.id = g.groupid
-         inner join Days f on f.id = g.day`,
+global.share.ipcMain.on('notAvailableGroup:get', async (event, values) => {
+    const lecturers = await sequelize.query(
+        `SELECT N.*, G.groupName
+            FROM NotAvailableGroupTimes N
+            inner join Groups G on N.groupID = G.id`,
         {
             type: sequelize.QueryTypes.SELECT
         }
     );
-    event.returnValue = NotAvailableGroups;
+    event.returnValue = lecturers;
 });
 
-// get specific NotAvailableGroups by using id from the database
-global.share.ipcMain.on('NotAvailableGroups:getByID', async (event, values) => {
-    const NotAvailableGroups = await sequelize.query(
-        `select d.groupName,g.groupid,f.day as 'fday',g.day,g.fromt,g.tot 
-        from notAvailableGroups g
-        inner join Groups d on d.id = g.groupid
-        inner join Days f on f.id = g.day
-         where g.isActive = 1 and g.id = :id`,
+global.share.ipcMain.on('notAvailableGroup:getByID', async (event, values) => {
+    const lecturers = await sequelize.query(
+        `SELECT N.*, G.groupName
+            FROM NotAvailableGroupTimes N
+            inner join Groups G on N.groupID = G.id
+            where N.id = :id`,
         {
             replacements: { id: values },
             type: sequelize.QueryTypes.SELECT
         }
     );
-    event.returnValue = NotAvailableGroups;
+    event.returnValue = lecturers;
 });
 
-// update existing data by using id
-global.share.ipcMain.on('NotAvailableGroups:update', async (event, values) => {
+global.share.ipcMain.on('notAvailableGroup:update', async (event, values) => {
 
-    await notAvailableGroups.findOne({where: {id: values.id}})
-        .then( NotAvailableGroups => {
+    await NotAvailableGroupTime.findOne({where: {id: values.id}})
+        .then( session => {
             // Check if record exists in db
-            delete values.id;
-            NotAvailableGroups.update({groupid:values.groupid,day:values.day,fromt:values.fromt,tot:values.tot}).then( updatedRecord => {
+            session.update(
+                {
+                    groupID : values.groupID,
+                    subGroup: values.subGroup,
+                    dayIDs : values.dayIDs,
+                    timeFrom : values.timeFrom,
+                    timeTo : values.timeTo
+                }).then( updatedRecord => {
                 console.log(`updated record ${JSON.stringify(updatedRecord,null,2)}`)
                 // login into your DB and confirm update
             })
@@ -53,10 +51,8 @@ global.share.ipcMain.on('NotAvailableGroups:update', async (event, values) => {
     event.returnValue = true;
 });
 
-
-// remove lecturer data from the database
-global.share.ipcMain.on('NotAvailableGroups:remove', async (event, values) => {
-    notAvailableGroups.destroy({
+global.share.ipcMain.on('notAvailableGroup:remove', async (event, values) => {
+    NotAvailableGroupTime.destroy({
         where: {
             id: values
         }
