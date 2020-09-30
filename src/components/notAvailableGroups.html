@@ -541,7 +541,6 @@
                     btnClass: 'btn-danger', // class for the button
                     action: function () {
                         ipcRenderer.sendSync('notAvailableGroup:remove', id);
-
                         ReloadTable();
                     }
                 },
