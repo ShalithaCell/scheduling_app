@@ -82,3 +82,8 @@ require('./services/notAvailableSessionTimeDataService');
 require('./services/notAvailableSubGroupDataService');
 require('./services/notAvailableRoomTimeDataService');
 require('./services/roomSessionsDataServices');
+require('./services/consecutiveSessionsDataService');
+require('./services/parallelSessionDataService');
+require('./services/notOverlapSessionsService');
+require('./services/roomConsecutiveSessionDataService');
+require('./services/roomSubGroupsDataService');

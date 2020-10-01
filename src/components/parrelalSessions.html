@@ -31,16 +31,18 @@
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewParallelSessions()">Add New</button>
+                        <button type="button" class="btn btn-success float-right mb-2" onclick="LoadSessionTable(null)">Add New</button>
 
                         <table id="tblParallelSessions" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Year and Semester</th>
                                 <th>Programme</th>
-                                <th>Module 1</th>
-                                <th>Module 2</th>
-                                <th>Module 3</th>
+                                <th>Session 1</th>
+                                <th>Session 2</th>
+                                <th>Session 3</th>
+                                <th>Session 4</th>
+                                <th>Session 5</th>
+                                <th>Session 6</th>
                                 <th>Edit</th>
                                 <th>Delete</th>
                             </tr>
@@ -89,6 +91,11 @@
     const electron = require('electron');
     const { ipcRenderer } = electron;
 
+    const {generateSessionDetailObjects,
+        generateNotAvailableSessionObjects,
+        generateParallelSessions
+    } = require("../services/applicationServices/commonServices");
+
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
 
@@ -102,7 +109,249 @@
         LoadTable();
     });
 
-    
+    function LoadTable(){
+        const dataSet = generateParallelSessions(ipcRenderer);
+
+        // table filling and initializing as data-table
+        $("#tblParallelSessions").DataTable ({
+            "data" : dataSet,
+            "ordering": true,
+            "order": [[0, 'asc']],
+            "columns" : [
+                { "data" : "program" },
+                { "data" : "Session1Name" },
+                { "data" : "Session2Name" },
+                { "data" : "Session3Name" },
+                { "data" : "Session4Name" },
+                { "data" : "Session5Name" },
+                { "data" : "Session6Name" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick=LoadSessionTable("${data.id}")><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="removeConSession(' +data.id +',\''+data.program+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+    }
+
+    function LoadSessionTable(id){
+        $.confirm({
+            title: 'Select Session (can select maximum 3)',
+            columnClass: 'col-md-12',
+            content: `
+                <div>
+                    <table id="sessionTable" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Lecturer(s)</th>
+                                <th>Subject</th>
+                                <th>Subject code</th>
+                                <th>Tag(s)</th>
+                                <th>program</th>
+                                <th>group</th>
+                                <th>sub group</th>
+                                <th>Student count</th>
+                                <th>Duration</th>
+                                <th>Select</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                       </table>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        let selectedSession = [];
+                        $('.checkbox-c').each(function (){
+                            const checkChecked = this.checked;
+                            if(checkChecked){
+                                selectedSession.push({ id : $(this).attr('session'), name : $(this).attr('program') });
+                            }
+
+                        });
+                        if(selectedSession.length < 2){
+                            $.alert('select at least 2 sessions');
+                            return false;
+                        }
+                        const programArray = [];
+                        $.each(selectedSession, function(i, item) {
+                            programArray.push(item.name);
+                        });
+
+                        if(!programArray.every((val, i, arr) => val === arr[0])){
+                            $.alert('please select same program sessions');
+                            return false;
+                        }
+
+                        const sessionIDs = [0,0,0,0,0,0];
+                        $.each(selectedSession, function(i, item) {
+                            sessionIDs[i] = item.id;
+                        });
+                        if(id === null){
+                            ipcRenderer.sendSync('parallelSession:add', {
+                                session1ID:sessionIDs[0],
+                                session2ID:sessionIDs[1],
+                                session3ID : sessionIDs[2],
+                                session4ID : sessionIDs[3],
+                                session5ID : sessionIDs[4],
+                                session6ID : sessionIDs[5],
+                            });
+                        }else{
+                            ipcRenderer.sendSync('parallelSession:update', {
+                                id,
+                                session1ID:sessionIDs[0],
+                                session2ID:sessionIDs[1],
+                                session3ID : sessionIDs[2],
+                                session4ID : sessionIDs[3],
+                                session5ID : sessionIDs[4],
+                                session6ID : sessionIDs[5],
+                            });
+                        }
+
+
+                        ReloadTable();
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                // get all room data
+                const sessionList = generateSessionDetailObjects(ipcRenderer);
+
+                var tblDatatable = $("#sessionTable"); //find the table by id
+
+                // table filling and initializing as data-table
+                tblDatatable.DataTable ({
+                    "data" : sessionList,
+                    "ordering": false,
+                    "columns" : [
+                        { "data" : "lecturerNames" },
+                        { "data" : "subjectName" },
+                        { "data" : "subjectCode" },
+                        { "data" : "tagNames" },
+                        { "data" : "groupName" },
+                        { "data" : "subGroup" },
+                        { "data" : "subSubGroup" },
+                        { "data" : "student" },
+                        { "data" : "duration" },
+                        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                                return `<input type="checkbox" session="${data.id}" program="${data.groupName}" style="width: 1vw;height: 3vh;" class="checkbox-c"/>`
+                            }
+                        }
+                    ]
+                });
+
+                if($('#lblSelectedSession').attr('sessionsID') !== ''){
+                    $('.checkbox-c').each(function (){
+                        const sessionID = $(this).attr('session');
+                        const checkID = $('#lblSelectedSession').attr('sessionsID');
+                        if(sessionID === checkID){
+                            $(this).prop('checked', true);
+                        }
+                        disableStatus();
+                    });
+                }
+
+                $(".checkbox-c").change(function() {
+                    disableStatus();
+                });
+
+                function disableStatus(){
+
+                    let counter = 0;
+                    $('.checkbox-c').each(function (){
+                        const checkChecked = this.checked;
+                        if(checkChecked)
+                            counter++;
+
+                    });
+
+                    if(counter >= 6){
+                        $('.checkbox-c').each(function (){
+                            const checkChecked = this.checked;
+                            if(!checkChecked)
+                                $(this).prop('disabled', true);
+
+                        });
+                    }else{
+                        $('.checkbox-c').each(function (){
+                            $(this).prop('disabled', false);
+
+                        });
+                    }
+                }
+
+                if(id !== null){
+                    const session = ipcRenderer.sendSync('parallelSession:getByID', id);
+
+                    if(session.length === 0)
+                        return ;
+
+                    $('.checkbox-c').each(function (){
+                        const sessionID = Number($(this).attr('session'));
+                        if(sessionID === session[0].session1ID ||
+                            sessionID === session[0].session2ID ||
+                            sessionID === session[0].session3ID ||
+                            sessionID === session[0].session4ID ||
+                            sessionID === session[0].session5ID ||
+                            sessionID === session[0].session6ID
+                        ){
+                            $(this).prop('checked', true);
+                        }
+
+
+                    });
+                    disableStatus();
+                }
+
+
+            }
+        });
+    }
+
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tblParallelSessions') ) {
+            $('#tblParallelSessions').DataTable().destroy();
+        }
+
+        $('#tblParallelSessions tbody').empty();
+        LoadTable();
+    }
+
+    function removeConSession(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('parallelSession:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
 </script>
 
 </html>

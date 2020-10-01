@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class sessions extends Model {
+  class NotOverlapSessions extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,19 +13,16 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   };
-  sessions.init({
-    lectures: DataTypes.STRING,
-    tags: DataTypes.STRING,
-    sgroup: DataTypes.INTEGER,
-    subGroup: DataTypes.STRING,
-    student: DataTypes.INTEGER,
-    duration: DataTypes.INTEGER,
-    isActive: DataTypes.INTEGER,
-    subject : DataTypes.INTEGER,
-    subSubGroup : DataTypes.STRING,
+  NotOverlapSessions.init({
+    session1ID: DataTypes.INTEGER,
+    session2ID: DataTypes.INTEGER,
+    session3ID: DataTypes.INTEGER,
+    session4ID: DataTypes.INTEGER,
+    session5ID: DataTypes.INTEGER,
+    session6ID: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'sessions',
+    modelName: 'NotOverlapSessions',
   });
-  return sessions;
+  return NotOverlapSessions;
 };
