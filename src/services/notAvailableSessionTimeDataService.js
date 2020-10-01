@@ -7,9 +7,8 @@ global.share.ipcMain.on('notAvailableSession:add', async (event, values) => {
 
 global.share.ipcMain.on('notAvailableSession:get', async (event, values) => {
     const lecturers = await sequelize.query(
-        `SELECT N.*, L.lecturerName, L.empId
-        FROM NotAvailableLecturerTimes N
-        inner join Lecturers L on N.lecID = L.id`,
+        `SELECT N.*
+        FROM NotAvailableSessionTimes N`,
         {
             type: sequelize.QueryTypes.SELECT
         }
@@ -19,9 +18,8 @@ global.share.ipcMain.on('notAvailableSession:get', async (event, values) => {
 
 global.share.ipcMain.on('notAvailableSession:getByID', async (event, values) => {
     const lecturers = await sequelize.query(
-        `SELECT N.*, L.lecturerName, L.empId
-        FROM NotAvailableLecturerTimes N
-        inner join Lecturers L on N.lecID = L.id
+        `SELECT N.*
+        FROM NotAvailableSessionTimes N
         WHERE N.id = :id`,
         {
             replacements: { id: values },
@@ -38,7 +36,7 @@ global.share.ipcMain.on('notAvailableSession:update', async (event, values) => {
             // Check if record exists in db
             session.update(
                 {
-                    lecID : values.lecID,
+                    sessionID : values.lecID,
                     dayIDs : values.dayIDs,
                     timeFrom : values.timeFrom,
                     timeTo : values.timeTo

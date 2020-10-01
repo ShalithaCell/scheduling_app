@@ -1,45 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title>Schedule App</title>
-    <link rel="stylesheet" href="../index.css" />
-    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="../public/style/slider-custom.css" />
-    <link rel="stylesheet" href="../public/style/timepicker.css" />
-    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
-    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
-    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
-    <link rel="stylesheet" href="../public/style/custom-back.css" />
-  
+    <link href="../index.css" rel="stylesheet"/>
+    <link href="../public/boostrap/bootstrap.min.css" rel="stylesheet"/>
+    <link href="../public/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="../public/style/slider-custom.css" rel="stylesheet"/>
+    <link href="../public/style/timepicker.css" rel="stylesheet"/>
+    <link href="../public/jConfirm/jquery-confirm.min.css" rel="stylesheet"/>
+    <link href="../public/jtoaster/jquery.toast.min.css" rel="stylesheet"/>
+    <link href="../public/datatable/jquery.dataTables.min.css" rel="stylesheet"/>
+    <link href="../public/style/back-button-custom.css" rel="stylesheet"/>
+    <link href="../public/style/custom-back.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="../public/timepicker/jquery.timepicker.min.css" />
+    <link rel="stylesheet" href="../public/mutiselect/jquery.multiselect.css" />
+
 
     <style>
         .ui-timepicker-standard {
-    font-family: Verdana,Arial,sans-serif;
-    font-size: 1.1em;
-    background-color: #FFF;
-    border: 1px solid #AAA;
-    color: #222;
-    margin: 0;
-    padding: 2px;
-    z-index: 99999999999999 !important;
-}
+            font-family: Verdana, Arial, sans-serif;
+            font-size: 1.1em;
+            background-color: #FFF;
+            border: 1px solid #AAA;
+            color: #222;
+            margin: 0;
+            padding: 2px;
+            z-index: 99999999999999 !important;
+        }
     </style>
- 
+
 
 </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
 
-    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+    <div class="wrapper d-flex align-items-stretch" id="navBarID" style="height: 100%">
 
 
         <!-- Page Content  -->
         <div class="w-100">
             <div class="w-100 title-custom form-inline">
-                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./notAvailableHome.html'">Back</button>
+                <button class="btn btn-warning btn-arrow-left" onclick="window.location.href='./notAvailableHome.html'" style="margin-left: 6%;"
+                        type="button">Back
+                </button>
 
                 <h2 class="title-font-custom">Not Available Time of Groups</h2>
             </div>
@@ -47,9 +51,11 @@
                 <div class="card margin-1-custom">
                     <div class="card-body">
 
-                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewNotAvailableGroup()">Add New</button>
+                        <button class="btn btn-success float-right mb-2" onclick="AddNewNotAvailableGroup()"
+                                type="button">Add New
+                        </button>
 
-                        <table id="tblnotavailablegroups" class="display" style="width:100%">
+                        <table class="display" id="tblNotAvailableGroups" style="width:100%">
                             <thead>
                             <tr>
                                 <th>Group ID</th>
@@ -75,7 +81,6 @@
 </div>
 
 
-
 </body>
 
 <!-- Insert this line above script imports  -->
@@ -94,20 +99,18 @@
 <script src="../public/jConfirm/jquery-confirm.min.js"></script>
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/datatable/jquery.dataTables.min.js"></script>
-
-
-<!--jquery time picker-->
-<script src="../public/script/timepicker.js"></script>
+<script src="../public/mutiselect/jquery.multiselect.js"></script>
+<script src="../public/timepicker/jquery.timepicker.min.js"></script>
 
 
 <!-- Insert this line after script imports -->
 <script>
 
     if (window.module) module = window.module;
-    const { navBar } = require('../siteMaster');
+    const {navBar} = require('../siteMaster');
 
     const electron = require('electron');
-    const { ipcRenderer } = electron;
+    const {ipcRenderer} = electron;
 
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
@@ -118,302 +121,439 @@
     });
 
 
-    $(function() {
+    $(function () {
         LoadTable();
     });
 
-    function LoadTable(){
+    function selectGroups(){
+        const academicList = ipcRenderer.sendSync('academic:get', null);
+        const programList = ipcRenderer.sendSync('programme:getAllByRow', null);
 
-// get all NotAvailableGroups data
-const NotAvailableGroupsList = ipcRenderer.sendSync('NotAvailableGroups:get', null);
-var tblDatatable = $("#tblnotavailablegroups"); //find the table by id
+        let generatedData = [];
 
-// table filling and initializing as data-table
-tblDatatable.DataTable ({
-    "data" : NotAvailableGroupsList,
-    "ordering": false,
-    "columns" : [
-        { "data" : "groupName" },
-        { "data" : "fday" },
-        { "data" : "fromt" },
-        { "data" : "tot" },
-        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                return `<button type="botton" class="btn btn-warning btn-header" onclick="editNotAvailableGroups(${data.notID})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
-            }
-        },
-        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteNotAvailableGroups(${data.notID},'${data.groupName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
-            }
-        },
-    ]
-});
+        $.each(programList, function(i, program) {
 
-}
+            const start = program.startYearText;
+            const end = program.endYearText;
 
-//reload table data
-function ReloadTable(){
-if ( $.fn.DataTable.isDataTable('#tblnotavailablegroups') ) {
-    $('#tblnotavailablegroups').DataTable().destroy();
-}
+            const startYear = Number(start.split('.')[0].match(/\d+/));
+            const startSem = Number(start.split('.')[1].match(/\d+/));
 
-$('#tblnotavailablegroups tbody').empty();
-LoadTable();
-}
+            const endYear = Number(end.split('.')[0].match(/\d+/));
+            const endSem = Number(end.split('.')[1].match(/\d+/));
 
-// add new notavailablegroups method
-function AddNewNotAvailableGroup(){
-   
-const groupName = ipcRenderer.sendSync('group:get', null);
-let groupNameSelection = '<select class="form-control Groups" required>';
-    groupNameSelection += '<option value="0" selected disabled> Select Group ID </option>';
-$.each(groupName , function(i, Groups) {
-    groupNameSelection += '<option value="' + Groups.id + '">' + Groups.groupName + '</option>';
-});
-groupNameSelection  += '</select>';
+            $.each(academicList, function(i, years) {
 
-const day = ipcRenderer.sendSync('day:get', null);
-let daySelection = '<select class="form-control Days" required>';
-    daySelection += '<option value="0" selected disabled> Select Day </option>';
-$.each(day, function(i,  Days) {
-    daySelection += '<option value="' +  Days.id + '">' +  Days.day + '</option>';
-});
-daySelection += '</select>';
+                const YearAC = Number(years.AcademicYearsandSemesters.split('.')[0].match(/\d+/));
+                const SemAC = Number(years.AcademicYearsandSemesters.split('.')[1].match(/\d+/));
 
+                if((startYear <= YearAC) && (endYear >=  YearAC)){
 
-$.confirm({
-    title: 'New Time for Not Available Groups!',
-    content: `
-        <div>
-       
-                <label>Select Group ID</label>
-                ${groupNameSelection}
+                    let isAllowed = false;
 
-                <label>Select  Day</label>
-                ${daySelection}
+                    if(YearAC < endYear){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === startYear) && (startSem <= SemAC)){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === endYear) && (endSem >= SemAC)){
+                        //ok
+                        isAllowed = true;
+                    }
 
-                
+                    if(isAllowed){
+                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
 
-                <label>Enter From</label>
-                <input type="text" name="timepicker" class="timepicker timeFrom" required >
+                        const holdData = ipcRenderer.sendSync('hold-group:getByName', displayData);
 
-                </br>
+                        if(holdData.length == 0){
+                            const existsData = ipcRenderer.sendSync('group:getByName', displayData);
 
-                <label>Enter To</label>
-                <input type="text" name="timepicker" class="timepicker timeTo" required >
-                
-            </div>
-        </div>`,
-    buttons: {
-        cancel: function () {
-            //close
-        },
-        formSubmit: {
-            text: 'Submit',
-            btnClass: 'btn-blue',
-            action: function () {
-            
-                let Groups = this.$content.find('.Groups').val();
-                let Days = this.$content.find('.Days').val();
-                let fromt = $('.timeFrom').val();
-                let tot = $('.timeTo').val();
-                //check the name is not empty value
-        
-           
-                if (!Groups) {
-                    $.alert('Select a valid Groups ID');
-                    return false;
-                } else Groups = Number(Groups);
+                            let groupCal = 0;
+                            let studentCal = 0;
+
+                            if(existsData.length > 0){
+                                groupCal = existsData[0].groupCount;
+                                studentCal = existsData[0].studentCount;
+                            }
+
+                            generatedData.push({id: years.id, name : displayData, group : groupCal, students : studentCal});
+                        }
 
 
-                if (!Days) {
-                    $.alert('Select a valid Days');
-                    return false;
-                } else Days = Number(Days);
-
-                
-                if (!fromt) {
-                    $.alert('Enter time for from ');
-                    return false;
+                    }
                 }
 
-                if (!tot ) {
-                    $.alert('Enter time for to');
-                    return false;
-                } 
-               
+            });
 
-                //saving notavailablegroups to the database
-                debugger;
-                ipcRenderer.sendSync('NotAvailableGroups:add', {groupid:Groups,day:Days,fromt:fromt,tot:tot });
-                    
-                // reload the table
-                ReloadTable();
+        });
 
+        return generatedData;
+    }
+
+    function groupOnChange(){
+        const groupCount = $('.groups option:selected').attr('count');
+        if(groupCount === 'undefined'){
+            $('.sub-groups').empty();
+        }
+
+        let dataForChild = [];
+        for(let x = 0; x < groupCount; x++){
+
+            const groupNameSub =$('.groups option:selected').text() + '.'+ (x+1);
+
+            const holdData = ipcRenderer.sendSync('hold-sub-group:getByName', groupNameSub);
+
+            if(holdData.length == 0){
+                const dataSub = ipcRenderer.sendSync('sub-group:getByName', groupNameSub);
+
+                let count = 0;
+
+                if(dataSub.length > 0){
+                    count = dataSub[0].studentCount;
+                }
+
+                dataForChild.push({id : x, name : groupNameSub, no: count });
             }
-        },
-    },
-    onContentReady: function () {
-        $('.timepicker').timepicker({
-            timeFormat: 'h:mm p',
-            interval: 30,
-            minTime: '8.30 AM',
-            maxTime: '8:30 PM',
-            startTime: '8:30 AM',
-            dynamic: false,
-            dropdown: true,
-            scrollbar: true
+        }
+
+        $('.sub-groups').empty();
+
+        $.each(dataForChild, function (){
+            $(".sub-groups").append($("<option     />").val(this.name).text(this.name));
         });
 
     }
-});
-}
 
-//edit NotAvailableGroups data
-function editNotAvailableGroups(id){
-    const groupName = ipcRenderer.sendSync('group:get', null);
-let groupNameSelection = '<select class="form-control Groups" required>';
-    groupNameSelection += '<option value="0" selected disabled> Select Group ID </option>';
-$.each(groupName , function(i, Groups) {
-    groupNameSelection += '<option value="' + Groups.id + '">' + Groups.groupName + '</option>';
-});
-groupNameSelection  += '</select>';
+    function LoadTable() {
 
-const day = ipcRenderer.sendSync('day:get', null);
-let daySelection = '<select class="form-control Days" required>';
-    daySelection += '<option value="0" selected disabled> Select Day </option>';
-$.each(day, function(i,  Days) {
-    daySelection += '<option value="' +  Days.id + '">' +  Days.day + '</option>';
-});
-daySelection += '</select>';
+        const NotAvailableGroupsList = ipcRenderer.sendSync('notAvailableGroup:get', null);
+        const tblDatatable = $("#tblNotAvailableGroups"); //find the table by id
 
 
-$.confirm({
-    title: 'New Time for Not Available Groups!',
-    content: `
-        <div>
-       
-                <label>Select Group ID</label>
-                ${groupNameSelection}
+        tblDatatable.DataTable({
+            "data": NotAvailableGroupsList,
+            "ordering": false,
+            "columns": [
+                {"data": "subGroup"},
+                {"data": "timeFrom"},
+                {"data": "timeTo"},
+                {"data": "timeTo"},
+                {
+                    'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-warning btn-header" onclick="editNotAvailableGroups(${data.id})"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                    }
+                },
+                {
+                    'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return `<button type="botton" class="btn btn-danger btn-header" onclick="deleteNotAvailableGroups(${data.id},'${data.groupName}')"><i class="fa fa-pencil" aria-hidden="true"></i> Delete</button>`
+                    }
+                },
+            ]
+        });
 
-                <label>Select  Day</label>
-                ${daySelection}
+    }
 
-                
+    //reload table data
+    function ReloadTable() {
+        if ($.fn.DataTable.isDataTable('#tblNotAvailableGroups')) {
+            $('#tblNotAvailableGroups').DataTable().destroy();
+        }
 
-                <label>Enter From</label>
-                <input type="text" name="timepicker" class="timepicker timeFrom" required >
+        $('#tblNotAvailableGroups tbody').empty();
+        LoadTable();
+    }
 
-                </br>
+    // add new nonavailability method
+    function AddNewNotAvailableGroup() {
 
-                <label>Enter To</label>
-                <input type="text" name="timepicker" class="timepicker timeTo" required >
-                
-            </div>
-        </div>`,
+        const groups = selectGroups();
+
+        let groupSelection = '<select class="form-control groups" required onchange="groupOnChange()">';
+        groupSelection += '<option value="0" selected disabled>Select group</option>';
+        $.each(groups, function(i, group) {
+            groupSelection += '<option value="' + group.id + '" count="' + group.group + '">' + group.name + '</option>';
+        });
+        groupSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+        const subGroupSelection = '<select class="form-control sub-groups" required ></select>';
+
+        $.confirm({
+            title: 'New Time for Not Available Groups!',
+            content: `<div>
+                    <div class="form-group">
+                        <label>Select program</label>
+                        ${groupSelection}
+                        <label>Select group</label>
+                        ${subGroupSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
             buttons: {
                 cancel: function () {
                     //close
                 },
                 formSubmit: {
-                    text: 'Save',
+                    text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
 
-                      
-                     
-                let Groups = this.$content.find('.Groups').val();
-                let Days = this.$content.find('.Days').val();
-                let fromt = $('.timeFrom').val();
-                let tot = $('.timeTo').val();
-
-                //check the name is not empty value
-        
-           
-                if (!Groups) {
-                    $.alert('Select a valid Groups ID');
-                    return false;
-                } else Groups = Number(Groups);
+                        const Groups = this.$content.find('.groups').val();
+                        const subGroups = this.$content.find('.sub-groups option:selected').text();
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+                        //check the name is not empty value
 
 
-                if (!Days) {
-                    $.alert('Select a valid Days');
-                    return false;
-                } else Days = Number(Days);
-
-                
-                if (!fromt) {
-                    $.alert('Enter time for from ');
-                    return false;
-                }
-
-                if (!tot ) {
-                    $.alert('Enter time for to');
-                    return false;
-                } 
-            
-               
-                        // update data
-                        debugger;
-                        const success = ipcRenderer.sendSync('NotAvailableGroups:update', {id:id, groupid:Groups,day:Days,fromt:fromt,tot:tot });
-
-                        if(success){
-                            ReloadTable();
+                        if (!Groups) {
+                            $.alert('Select a valid Group');
+                            return false;
+                        }
+                        if (!subGroups) {
+                            $.alert('Select a valid sub group');
+                            return false;
                         }
 
+                        if (!daysSelected) {
+                            $.alert('Select a valid Days');
+                            return false;
+                        };
+
+
+                        if (!fromTime) {
+                            $.alert('Enter time for from ');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('Enter time for to');
+                            return false;
+                        }
+
+                        ipcRenderer.sendSync('notAvailableGroup:add', {
+                            groupID: Groups,
+                            subGroup : subGroups,
+                            dayIDs: daysSelected,
+                            timeFrom: fromTime,
+                            timeTo: toTime
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+
             }
-        },
-    },
-    onContentReady: function () {
-        $('.timepicker').timepicker({
-            timeFormat: 'h:mm p',
-            interval: 30,
-            minTime: '8.30 AM',
-            maxTime: '8:30 PM',
-            startTime: '8:30 AM',
-            dynamic: false,
-            dropdown: true,
-            scrollbar: true
         });
-
-                  debugger;    
-                const NotAvailableGroupsData = ipcRenderer.sendSync('NotAvailableGroups:getByID', id);
-              
-                this.$content.find('.Groups').val(NotAvailableGroupsData[0].groupid);
-                this.$content.find('.Days').val(NotAvailableGroupsData[0].day);
-                this.$content.find('.timeFrom').val(NotAvailableGroupsData[0].fromt);
-                this.$content.find('.timeTo').val(NotAvailableGroupsData[0].tot);
-
     }
-});
-}
+
+    //edit NotAvailableGroups data
+    function editNotAvailableGroups(id) {
+        const groups = selectGroups();
+
+        let groupSelection = '<select class="form-control groups" required onchange="groupOnChange()">';
+        groupSelection += '<option value="0" selected disabled>Select group</option>';
+        $.each(groups, function(i, group) {
+            groupSelection += '<option value="' + group.id + '" count="' + group.group + '">' + group.name + '</option>';
+        });
+        groupSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+        const subGroupSelection = '<select class="form-control sub-groups" required ></select>';
+
+        $.confirm({
+            title: 'New Time for Not Available Groups!',
+            content: `<div>
+                    <div class="form-group">
+                        <label>Select program</label>
+                        ${groupSelection}
+                        <label>Select group</label>
+                        ${subGroupSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
+            buttons: {
+                cancel: function () {
+                    //close
+                },
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+
+                        const Groups = this.$content.find('.groups').val();
+                        const subGroups = this.$content.find('.sub-groups option:selected').text();
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+                        //check the name is not empty value
 
 
-// delete data
-function deleteNotAvailableGroups(id, groupid){
-$.confirm({
-    title: 'Confirm!',
-    content: 'Confirm to remove "'+ groupid + '"',
-    buttons: {
-        confirm:  {
-            text: 'confirm', // text for button
-            btnClass: 'btn-danger', // class for the button
-            action: function(){
-                debugger;
-                ipcRenderer.sendSync('NotAvailableGroups:remove', id);
+                        if (!Groups) {
+                            $.alert('Select a valid Group');
+                            return false;
+                        }
+                        if (!subGroups) {
+                            $.alert('Select a valid sub group');
+                            return false;
+                        }
 
-                ReloadTable();
+                        if (!daysSelected) {
+                            $.alert('Select a valid Days');
+                            return false;
+                        };
+
+
+                        if (!fromTime) {
+                            $.alert('Enter time for from ');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('Enter time for to');
+                            return false;
+                        }
+
+                        ipcRenderer.sendSync('notAvailableGroup:update', {
+                            id,
+                            groupID: Groups,
+                            subGroup : subGroups,
+                            dayIDs: daysSelected,
+                            timeFrom: fromTime,
+                            timeTo: toTime
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+                const groupDetailObj = ipcRenderer.sendSync('notAvailableGroup:getByID', id);
+
+                if(groupDetailObj.length === 0)
+                    return ;
+
+                const groupDetail = groupDetailObj[0];
+
+                this.$content.find('.groups').val(groupDetail.groupID);
+                groupOnChange();
+                this.$content.find('.sub-groups').val(groupDetail.subGroup);
+                this.$content.find('.fromTime').val(groupDetail.timeFrom);
+                this.$content.find('.toTime').val(groupDetail.timeTo);
+
+                $.each(groupDetail.dayIDs.split(","), function(i,e){
+                    $(".days option[value='" + Number(e) + "']").prop("selected", true);
+                });
+
+                $(".days").multiselect('reload');
+
             }
-        },
-        cancel: {
-            text: 'cancel', // text for button
-            btnClass: 'btn-warning', // class for the button
-            action: function(){
-
-            }
-        }
+        });
     }
-});
-}
+
+
+    // delete data
+    function deleteNotAvailableGroups(id, groupName) {
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "' + groupName + '"',
+            buttons: {
+                confirm: {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function () {
+                        ipcRenderer.sendSync('notAvailableGroup:remove', id);
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function () {
+
+                    }
+                }
+            }
+        });
+    }
 
 </script>
 
