@@ -170,6 +170,66 @@ const generateNotAvailableRoomObjects = (ipcRenderer) =>
     return returnDataObj;
 }
 
+const generateConsecutiveSessions = (ipcRenderer) =>
+{
+    const dataSet = ipcRenderer.sendSync('consecutiveSessions:get', null);
+
+    const sessionData = generateSessionDetailObjects(ipcRenderer);
+
+    const returnDataObj = [];
+
+    dataSet.forEach((item, index)=>{
+        debugger;
+        const currentSession1 = item.session1ID !== null && item.session1ID !== '' ?sessionData.filter((i) => i.id === Number(item.session1ID)) : null;
+        const currentSession2 = item.session2ID !== null && item.session2ID !== '' ?sessionData.filter((i) => i.id === Number(item.session2ID)) : null;
+        const currentSession3 = item.session3ID !== null && item.session3ID !== '' ?sessionData.filter((i) => i.id === Number(item.session3ID)) : null;
+
+        const obj = {
+            ...item,
+            program: currentSession1[0].groupName,
+            Session1Name : currentSession1.length !== 0 ? `${currentSession1[0].subGroup}-${currentSession1[0].subjectName}-${currentSession1[0].lecturerNames}` : '',
+            Session2Name : currentSession2.length !== 0 ? `${currentSession2[0].subGroup}-${currentSession2[0].subjectName}-${currentSession2[0].lecturerNames}` : '',
+            Session3Name : currentSession3.length !== 0 ? `${currentSession3[0].subGroup}-${currentSession3[0].subjectName}-${currentSession3[0].lecturerNames}` : '',
+        }
+
+        returnDataObj.push(obj);
+    });
+    return returnDataObj;
+}
+
+const generateParallelSessions = (ipcRenderer) =>
+{
+    const dataSet = ipcRenderer.sendSync('parallelSession:get', null);
+
+    const sessionData = generateSessionDetailObjects(ipcRenderer);
+
+    const returnDataObj = [];
+
+    dataSet.forEach((item, index)=>{
+
+        const currentSession1 = item.session1ID !== null && item.session1ID !== '' ?sessionData.filter((i) => i.id === Number(item.session1ID)) : null;
+        const currentSession2 = item.session2ID !== null && item.session2ID !== '' ?sessionData.filter((i) => i.id === Number(item.session2ID)) : null;
+        const currentSession3 = item.session3ID !== null && item.session3ID !== '' ?sessionData.filter((i) => i.id === Number(item.session3ID)) : null;
+        const currentSession4 = item.session4ID !== null && item.session4ID !== '' ?sessionData.filter((i) => i.id === Number(item.session4ID)) : null;
+        const currentSession5 = item.session5ID !== null && item.session5ID !== '' ?sessionData.filter((i) => i.id === Number(item.session5ID)) : null;
+        const currentSession6 = item.session6ID !== null && item.session6ID !== '' ?sessionData.filter((i) => i.id === Number(item.session6ID)) : null;
+
+        const obj = {
+            ...item,
+            program: currentSession1[0].groupName,
+            Session1Name : currentSession1.length !== 0 ? `${currentSession1[0].subGroup}-${currentSession1[0].subjectName}-${currentSession1[0].lecturerNames}` : '',
+            Session2Name : currentSession2.length !== 0 ? `${currentSession2[0].subGroup}-${currentSession2[0].subjectName}-${currentSession2[0].lecturerNames}` : '',
+            Session3Name : currentSession3.length !== 0 ? `${currentSession3[0].subGroup}-${currentSession3[0].subjectName}-${currentSession3[0].lecturerNames}` : '',
+            Session4Name : currentSession4.length !== 0 ? `${currentSession4[0].subGroup}-${currentSession4[0].subjectName}-${currentSession4[0].lecturerNames}` : '',
+            Session5Name : currentSession5.length !== 0 ? `${currentSession5[0].subGroup}-${currentSession5[0].subjectName}-${currentSession5[0].lecturerNames}` : '',
+            Session6Name : currentSession6.length !== 0 ? `${currentSession6[0].subGroup}-${currentSession6[0].subjectName}-${currentSession6[0].lecturerNames}` : '',
+        }
+
+        returnDataObj.push(obj);
+    });
+    return returnDataObj;
+}
+
 const validateString = (char) =>
 {
     let regx = new RegExp(/^[A-Za-z]{1}$/g);
@@ -194,6 +254,8 @@ module.exports = {
     generateNotAvailableSessionObjects,
     generateNotAvailableSubGroupsObjects,
     generateNotAvailableRoomObjects,
+    generateConsecutiveSessions,
+    generateParallelSessions,
     validateString,
     isNumber
 }
