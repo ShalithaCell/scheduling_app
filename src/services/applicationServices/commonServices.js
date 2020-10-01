@@ -179,7 +179,6 @@ const generateConsecutiveSessions = (ipcRenderer) =>
     const returnDataObj = [];
 
     dataSet.forEach((item, index)=>{
-        debugger;
         const currentSession1 = item.session1ID !== null && item.session1ID !== '' ?sessionData.filter((i) => i.id === Number(item.session1ID)) : null;
         const currentSession2 = item.session2ID !== null && item.session2ID !== '' ?sessionData.filter((i) => i.id === Number(item.session2ID)) : null;
         const currentSession3 = item.session3ID !== null && item.session3ID !== '' ?sessionData.filter((i) => i.id === Number(item.session3ID)) : null;
