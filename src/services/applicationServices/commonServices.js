@@ -60,6 +60,28 @@ const generateTagArray = (ipcRenderer, tagIDs) =>
     return  returnArray;
 }
 
+const generateDayArray = (ipcRenderer, dayIDs) =>
+{
+    const returnArray = [];
+
+    if(dayIDs === null){
+        return  returnArray;
+    }
+
+    const dayIDsArray = dayIDs.split(',');
+
+    const days = ipcRenderer.sendSync('day:get', null);
+
+    dayIDsArray.forEach((item, index)=>{
+        const day = days.filter((l) => l.id === Number(item));
+        if(day.length !== 0){
+            returnArray.push(day[0].day);
+        }
+    });
+
+    return  returnArray;
+}
+
 const generateSessionDetailObjects = (ipcRenderer) =>
 {
     const sessionList = ipcRenderer.sendSync('session:get', null);
@@ -77,4 +99,101 @@ const generateSessionDetailObjects = (ipcRenderer) =>
     return returnObj;
 }
 
-module.exports = { jsonHasKeyValFoRDays,generateLecturerArray, generateTagArray, generateSessionDetailObjects }
+const generateNotAvailableLectureObjects = (ipcRenderer) =>
+{
+    const dataSet = ipcRenderer.sendSync('notAvailableLecturer:get', null);
+
+    const returnDataObj = [];
+
+    dataSet.forEach((item, index)=>{
+        const dayNames = generateDayArray(ipcRenderer, item.dayIDs);
+
+        const obj = { ...item, dayNames : dayNames.join(', ') }
+        returnDataObj.push(obj);
+    });
+
+    return returnDataObj;
+}
+
+const generateNotAvailableSessionObjects = (ipcRenderer) =>
+{
+    const notAvailableSessionDataSet = ipcRenderer.sendSync('notAvailableSession:get', null);
+    const sessionsDetails = generateSessionDetailObjects(ipcRenderer);
+
+    const returnDataObj = [];
+
+    notAvailableSessionDataSet.forEach((item, index)=>{
+        const dayNames = generateDayArray(ipcRenderer, item.dayIDs);
+        const session = sessionsDetails.filter((s) => s.id === item.sessionID);
+
+        const obj = {...item, dayNames:dayNames.join(', '),
+            lecturerNames : session[0].lecturerNames,
+            subjectCode : session[0].subjectCode,
+            subjectName : session[0].subjectName,
+            tagNames : session[0].tagNames,
+            groupName : session[0].groupName,
+        }
+        returnDataObj.push(obj);
+    });
+    return returnDataObj;
+}
+
+const generateNotAvailableSubGroupsObjects = (ipcRenderer) =>
+{
+    const dataSet = ipcRenderer.sendSync('notAvailableSubGroup:get', null);
+
+    const returnDataObj = [];
+
+    dataSet.forEach((item, index)=>{
+        const dayNames = generateDayArray(ipcRenderer, item.dayIDs);
+
+        const obj = { ...item, dayNames : dayNames.join(', ') }
+        returnDataObj.push(obj);
+    });
+
+    return returnDataObj;
+}
+
+const generateNotAvailableRoomObjects = (ipcRenderer) =>
+{
+    const dataSet = ipcRenderer.sendSync('notAvailableRoom:get', null);
+
+    const returnDataObj = [];
+
+    dataSet.forEach((item, index)=>{
+        const dayNames = generateDayArray(ipcRenderer, item.dayIDs);
+
+        const obj = { ...item, dayNames : dayNames.join(', ') }
+        returnDataObj.push(obj);
+    });
+
+    return returnDataObj;
+}
+
+const validateString = (char) =>
+{
+    let regx = new RegExp(/^[A-Za-z]{1}$/g);
+    return regx.test(char);
+}
+
+const isNumber = (string) => {
+    //it has whitespace
+    if(string.trim() === ''){
+        return false
+    }
+    return string - 0 === string * 1
+}
+
+module.exports = {
+    jsonHasKeyValFoRDays,
+    generateLecturerArray,
+    generateTagArray,
+    generateSessionDetailObjects,
+    generateDayArray,
+    generateNotAvailableLectureObjects,
+    generateNotAvailableSessionObjects,
+    generateNotAvailableSubGroupsObjects,
+    generateNotAvailableRoomObjects,
+    validateString,
+    isNumber
+}

@@ -59,4 +59,15 @@ tr.shown td.details-control {
     visibility: hidden;
 }
 
+.ui-timepicker-standard {
+    font-family: Verdana,Arial,sans-serif;
+    font-size: 1.1em;
+    background-color: #FFF;
+    border: 1px solid #AAA;
+    color: #222;
+    margin: 0;
+    padding: 2px;
+    z-index: 9999999999999 !important;
+}
+
 

@@ -27,7 +27,7 @@
             <div class="w-100 title-custom form-inline">
                 <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./notAvailableHome.html'">Back</button>
 
-                <h2 class="title-font-custom">Not Available Time of Lecturers</h2>
+                <h2 class="title-font-custom">Not Available Time of Rooms</h2>
             </div>
             <div>
                 <div class="card margin-1-custom">
@@ -35,11 +35,11 @@
 
                         <button type="button" class="btn btn-success float-right mb-2" onclick="AddNew()">Add New</button>
 
-                        <table id="tblNotAvailableLectures" class="display" style="width:100%">
+                        <table id="tblNotAvailableRooms" class="display" style="width:100%">
                             <thead>
                             <tr>
-                                <th>Lecturer ID</th>
-                                <th>Lecturer Name</th>
+                                <th>Room ID</th>
+                                <th>Room Name</th>
                                 <th>Day</th>
                                 <th>From</th>
                                 <th>To</th>
@@ -91,7 +91,7 @@
     const { navBar } = require('../siteMaster');
 
     const electron = require('electron');
-    const {generateNotAvailableLectureObjects} = require("../services/applicationServices/commonServices");
+    const {generateNotAvailableRoomObjects} = require("../services/applicationServices/commonServices");
     const { ipcRenderer } = electron;
 
     $(window).on("load", function () {
@@ -108,12 +108,12 @@
     });
 
     function AddNew(){
-        const lectures = ipcRenderer.sendSync('lecturer:get', null);
-        let lecturesSelection = '<select class="form-control lectures" required>';
-        $.each(lectures, function(i, center) {
-            lecturesSelection += '<option value="' + center.id + '">' + center.lecturerName + '</option>';
+        const rooms = ipcRenderer.sendSync('room:get', null);
+        let roomsSelection = '<select class="form-control rooms" required>';
+        $.each(rooms, function(i, center) {
+            roomsSelection += '<option value="' + center.id + '">' + center.roomName + '</option>';
         });
-        lecturesSelection += '</select>';
+        roomsSelection += '</select>';
 
         const days = ipcRenderer.sendSync('day:get', null);
         let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
@@ -128,8 +128,8 @@
             content: `
                 <div>
                     <div class="form-group">
-                        <label>Select lecturer</label>
-                        ${lecturesSelection}
+                        <label>Select room</label>
+                        ${roomsSelection}
                         <label>Select days</label>
                         ${daysSelection}
                         <label for="countNumber">From</label>
@@ -143,13 +143,13 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        const lecturer = this.$content.find('.lectures').val();
+                        const room = this.$content.find('.rooms').val();
                         const daysSelected = this.$content.find('.days').val().join(',')
                         const fromTime = this.$content.find('.fromTime').val();
                         const toTime = this.$content.find('.toTime').val();
 
-                        if (!lecturer) {
-                            $.alert('please select at lecturer');
+                        if (!room) {
+                            $.alert('please select at room');
                             return false;
                         }
 
@@ -169,8 +169,8 @@
                         }
 
                         //saving room to the database
-                        ipcRenderer.sendSync('notAvailableLecturer:add', {
-                            lecID:lecturer,
+                        ipcRenderer.sendSync('notAvailableRoom:add', {
+                            roomID:room,
                             dayIDs:daysSelected,
                             timeFrom : fromTime,
                             timeTo : toTime
@@ -214,13 +214,13 @@
         });
     }
 
-    function editNotAvailableLecturerTime(id){
-        const lectures = ipcRenderer.sendSync('lecturer:get', null);
-        let lecturesSelection = '<select class="form-control lectures" required>';
-        $.each(lectures, function(i, center) {
-            lecturesSelection += '<option value="' + center.id + '">' + center.lecturerName + '</option>';
+    function editNotAvailableRoomTime(id){
+        const rooms = ipcRenderer.sendSync('room:get', null);
+        let roomsSelection = '<select class="form-control rooms" required>';
+        $.each(rooms, function(i, center) {
+            roomsSelection += '<option value="' + center.id + '">' + center.roomName + '</option>';
         });
-        lecturesSelection += '</select>';
+        roomsSelection += '</select>';
 
         const days = ipcRenderer.sendSync('day:get', null);
         let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
@@ -235,8 +235,8 @@
             content: `
                 <div>
                     <div class="form-group">
-                        <label>Select lecturer</label>
-                        ${lecturesSelection}
+                        <label>Select room</label>
+                        ${roomsSelection}
                         <label>Select days</label>
                         ${daysSelection}
                         <label for="countNumber">From</label>
@@ -250,13 +250,13 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        const lecturer = this.$content.find('.lectures').val();
+                        const room = this.$content.find('.rooms').val();
                         const daysSelected = this.$content.find('.days').val().join(',');
                         const fromTime = this.$content.find('.fromTime').val();
                         const toTime = this.$content.find('.toTime').val();
 
-                        if (!lecturer) {
-                            $.alert('please select at lecturer');
+                        if (!room) {
+                            $.alert('please select at room');
                             return false;
                         }
 
@@ -276,9 +276,9 @@
                         }
 
                         //saving room to the database
-                        ipcRenderer.sendSync('notAvailableLecturer:update', {
+                        ipcRenderer.sendSync('notAvailableRoom:update', {
                             id,
-                            lecID:lecturer,
+                            roomID:room,
                             dayIDs:daysSelected,
                             timeFrom : fromTime,
                             timeTo : toTime
@@ -319,11 +319,11 @@
                     scrollbar: true
                 });
 
-                const dataSet = ipcRenderer.sendSync('notAvailableLecturer:getByID', id);
+                const dataSet = ipcRenderer.sendSync('notAvailableRoom:getByID', id);
 
                 const dataDetail = dataSet[0];
 
-                this.$content.find('.lectures').val(dataDetail.lecID);
+                this.$content.find('.rooms').val(dataDetail.roomID);
 
                 $.each(dataDetail.dayIDs.split(","), function(i,e){
                     $(".days option[value='" + Number(e) + "']").prop("selected", true);
@@ -347,7 +347,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('notAvailableLecturer:remove', id);
+                        ipcRenderer.sendSync('notAvailableRoom:remove', id);
 
                         ReloadTable();
                     }
@@ -365,25 +365,25 @@
 
 
     function LoadTable(){
-        const notAvailableLecData = generateNotAvailableLectureObjects(ipcRenderer);
+        const notAvailableLecData = generateNotAvailableRoomObjects(ipcRenderer);
 
         // table filling and initializing as data-table
-        $("#tblNotAvailableLectures").DataTable ({
+        $("#tblNotAvailableRooms").DataTable ({
             "data" : notAvailableLecData,
             "ordering": true,
             "order": [[0, 'asc']],
             "columns" : [
-                { "data" : "empId" },
-                { "data" : "lecturerName" },
+                { "data" : "roomID" },
+                { "data" : "roomName" },
                 { "data" : "dayNames" },
                 { "data" : "timeFrom" },
                 { "data" : "timeTo" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editNotAvailableLecturerTime(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editNotAvailableRoomTime(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="botton" class="btn btn-danger btn-header" onclick="removeNotAvailableTimes(' +data.id +',\''+data.lecturerName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="removeNotAvailableTimes(' +data.id +',\''+data.roomName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
                     }
                 },
             ]
@@ -391,15 +391,15 @@
     }
 
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#tblNotAvailableLectures') ) {
-            $('#tblNotAvailableLectures').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#tblNotAvailableRooms') ) {
+            $('#tblNotAvailableRooms').DataTable().destroy();
         }
 
-        $('#tblNotAvailableLectures tbody').empty();
+        $('#tblNotAvailableRooms tbody').empty();
         LoadTable();
     }
 
-    
+
 
 </script>
 

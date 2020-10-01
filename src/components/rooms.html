@@ -86,6 +86,8 @@
     const electron = require('electron');
     const { ipcRenderer } = electron;
 
+    const {generateSessionDetailObjects} = require("../services/applicationServices/commonServices");
+
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
 
@@ -246,7 +248,6 @@
     function assignForRoom(id) {
         const tags = ipcRenderer.sendSync('tag:get', null);
         let tagSelection = '<select class="form-control tag" multiple required>';
-        tagSelection += '<option value="0" selected disabled> Select tag </option>';
         $.each(tags, function(i, tag) {
             tagSelection += `<option value="${tag.id}">${tag.tagName}</option>`;
         });
@@ -254,7 +255,6 @@
 
         const subjects = ipcRenderer.sendSync('subject:get', null);
         let subjectSelection = '<select class="form-control subject" multiple required>';
-        subjectSelection += '<option value="0" selected disabled> Select subject </option>';
         $.each(subjects, function(i, subject) {
             subjectSelection += `<option value="${subject.id}">${subject.subjectName}</option>`;
         });
@@ -262,11 +262,17 @@
 
         const lecturers = ipcRenderer.sendSync('lecturer:get', null);
         let lecturerSelection = '<select class="form-control lecturer" multiple required>';
-        lecturerSelection += '<option value="0" selected disabled> Select lecturer </option>';
         $.each(lecturers, function(i, lecturer) {
             lecturerSelection += `<option value="${lecturer.id}">${lecturer.lecturerName}</option>`;
         });
         lecturerSelection += '</select>';
+
+        const fullSessions = generateSessionDetailObjects(ipcRenderer);
+        let sessionSelection = '<select class="form-control session" multiple required>';
+        $.each(fullSessions, function(i, session) {
+            sessionSelection += `<option value="${session.id}">${session.lecturerNames}-${session.subjectName}-${session.groupName}</option>`;
+        });
+        sessionSelection += '</select>';
 
         $.confirm({
             title: 'Assign to Room!',
@@ -284,6 +290,10 @@
                         <label>Select lecturers</label>
                         ${lecturerSelection}
                     </div>
+                    <div class="form-group">
+                        <label>Select sessions</label>
+                        ${sessionSelection}
+                    </div>
                 </div>`,
             buttons: {
                 cancel: function () {
@@ -296,6 +306,7 @@
                         const tags = this.$content.find('.tag').val(); //get the tag
                         const subjects = this.$content.find('.subject').val();
                         const lecturers = this.$content.find('.lecturer').val();
+                        const sessions = this.$content.find('.session').val();
 
                         //check the name is not empty value
                         if (!tags) {
@@ -310,13 +321,18 @@
                             $.alert('Select a valid lecturers');
                             return false;
                         }
+                        if (!sessions) {
+                            $.alert('Select a valid sessions');
+                            return false;
+                        }
 
                         // update data
                         const tagsSuccess = ipcRenderer.sendSync('room-tags:update', { roomId: id, tagIds: tags });
                         const subjectsSuccess = ipcRenderer.sendSync('room-subjects:update', { roomId: id, subjectIds: subjects });
                         const lecturersSuccess = ipcRenderer.sendSync('room-lecturers:update', { roomId: id, lecturerIds: lecturers });
+                        const sessionsSuccess = ipcRenderer.sendSync('room-sessions:update', { roomId: id, sessionIds: sessions });
 
-                        if(tagsSuccess && subjectsSuccess && lecturersSuccess){
+                        if(tagsSuccess && subjectsSuccess && lecturersSuccess && sessionsSuccess){
                             ReloadTable();
                         }
                     }
@@ -326,6 +342,7 @@
                 const roomTagsData = ipcRenderer.sendSync('room-tags:getByRoom', id);
                 const roomSubjectsData = ipcRenderer.sendSync('room-subjects:getByRoom', id);
                 const roomLecturersData = ipcRenderer.sendSync('room-lecturers:getByRoom', id);
+                const roomSessionsData = ipcRenderer.sendSync('room-sessions:getByRoom', id);
 
                 const tagList = [];
                 $.each(roomTagsData, function(i, tag) {
@@ -339,6 +356,10 @@
                 $.each(roomLecturersData, function(i, lecturer) {
                     lecturerList.push(lecturer.lecturerId);
                 });
+                const sessionList = [];
+                $.each(roomSessionsData, function(i, session) {
+                    sessionList.push(session.sessionId);
+                });
 
                 const tagsDropdown = new SlimSelect({
                     select: '.tag'
@@ -349,9 +370,13 @@
                 const lecturersDropdown = new SlimSelect({
                     select: '.lecturer'
                 });
+                const sessionsDropdown = new SlimSelect({
+                    select: '.session'
+                });
                 tagsDropdown.set(tagList);
                 subjectsDropdown.set(subjectList);
                 lecturersDropdown.set(lecturerList);
+                sessionsDropdown.set(sessionList);
             }
         });
     }

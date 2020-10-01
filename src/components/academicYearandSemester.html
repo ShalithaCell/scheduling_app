@@ -83,6 +83,7 @@
     const { navBar } = require('../siteMaster');
 
     const electron = require('electron');
+    const {validateString, isNumber} = require("../services/applicationServices/commonServices");
     const { ipcRenderer } = electron;
 
     $(window).on("load", function () {
@@ -135,6 +136,7 @@
         LoadTable();
     }
 
+
     // add new  Academic Year and Semeseter method
     function AddNewAcademicYearSemeseter(){
 
@@ -143,8 +145,8 @@
             content: '' +
                 '<div>' +
                 '<div class="form-group">' +
-                '<label>Enter Academic Year and Semeseter</label>' +
-                '<input type="text" placeholder="Academic Year and Semeseter" class="name form-control" required />' +
+                '<label>Enter Academic Year and Semester(ex:Y1.S1)</label>' +
+                '<input type="text" placeholder="Academic Year and Semester" class="name form-control" required />' +
                 '</div>' +
                 '</div>',
             buttons: {
@@ -157,6 +159,22 @@
                         //check the name is not empty value
                         if (!name) {
                             $.alert('provide a valid Academic Year and Semeseter');
+                            return false;
+                        }
+
+                        const splitVal = name.split('.');
+                        if(splitVal.length !== 2){
+                            $.alert('wrong format ! use format like \n Y1.S1 ');
+                            return false;
+                        }
+
+                        if(splitVal[0].length !== 2 && splitVal[1].length !==2){
+                            $.alert('wrong format ! use format like \n Y1.S1 ');
+                            return false;
+                        }
+
+                        if(!validateString(splitVal[0].charAt(0)) || !isNumber(splitVal[0].charAt(1)) || !validateString(splitVal[1].charAt(0)) || !isNumber(splitVal[1].charAt(1))){
+                            $.alert('wrong format ! use format like \n Y1.S1 ');
                             return false;
                         }
 
@@ -201,6 +219,22 @@
                         var name = this.$content.find('.name').val();
                         if (!name) {
                             $.alert('provide a Academic Year and Semeseter');
+                            return false;
+                        }
+
+                        const splitVal = name.split('.');
+                        if(splitVal.length !== 2){
+                            $.alert('wrong format ! use format like \n Y1.S1 ');
+                            return false;
+                        }
+
+                        if(splitVal[0].length !== 2 && splitVal[1].length !==2){
+                            $.alert('wrong format ! use format like \n Y1.S1 ');
+                            return false;
+                        }
+
+                        if(!validateString(splitVal[0].charAt(0)) || !isNumber(splitVal[0].charAt(1)) || !validateString(splitVal[1].charAt(0)) || !isNumber(splitVal[1].charAt(1))){
+                            $.alert('wrong format ! use format like \n Y1.S1 ');
                             return false;
                         }
                         // update data

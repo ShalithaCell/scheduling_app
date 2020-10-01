@@ -50,24 +50,9 @@ app.on('activate', () => {
   }
 });
 
-//const tag = new Tags({ tagName: "sdsdsd", isActive: 1}).save();
-//console.log(tag);
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-
-/*ipcMain.on('tag:add', async (event, values) => {
-  const tag = new Tags({ tagName: values, isActive: 1}).save();
-  console.log(tag);
-  event.returnValue = true;
-})*/
-
-
 // database operations
 require('./services/tagDataService');
-
 require('./services/academicyearDataService');
-
 require('./services/dayDataService');
 require('./services/workingDaysDataService');
 require('./services/facilityDataServices');
@@ -92,3 +77,8 @@ require('./services/roomTagsDataService');
 require('./services/roomSubjectsDataServices');
 require('./services/roomLecturersDataService');
 require('./services/sessionDataService');
+require('./services/notAvailableLecturerTimeDataService');
+require('./services/notAvailableSessionTimeDataService');
+require('./services/notAvailableSubGroupDataService');
+require('./services/notAvailableRoomTimeDataService');
+require('./services/roomSessionsDataServices');
