@@ -80,3 +80,5 @@ require('./services/sessionDataService');
 require('./services/notAvailableLecturerTimeDataService');
 require('./services/notAvailableSessionTimeDataService');
 require('./services/notAvailableSubGroupDataService');
+require('./services/notAvailableRoomTimeDataService');
+require('./services/roomSessionsDataServices');

@@ -154,6 +154,22 @@ const generateNotAvailableSubGroupsObjects = (ipcRenderer) =>
     return returnDataObj;
 }
 
+const generateNotAvailableRoomObjects = (ipcRenderer) =>
+{
+    const dataSet = ipcRenderer.sendSync('notAvailableRoom:get', null);
+
+    const returnDataObj = [];
+
+    dataSet.forEach((item, index)=>{
+        const dayNames = generateDayArray(ipcRenderer, item.dayIDs);
+
+        const obj = { ...item, dayNames : dayNames.join(', ') }
+        returnDataObj.push(obj);
+    });
+
+    return returnDataObj;
+}
+
 const validateString = (char) =>
 {
     let regx = new RegExp(/^[A-Za-z]{1}$/g);
@@ -177,6 +193,7 @@ module.exports = {
     generateNotAvailableLectureObjects,
     generateNotAvailableSessionObjects,
     generateNotAvailableSubGroupsObjects,
+    generateNotAvailableRoomObjects,
     validateString,
     isNumber
 }
