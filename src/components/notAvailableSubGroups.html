@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="../public/style/back-button-custom.css" />
     <link rel="stylesheet" href="../public/style/custom-back.css" />
-
+    <link rel="stylesheet" href="../public/timepicker/jquery.timepicker.min.css" />
+    <link rel="stylesheet" href="../public/mutiselect/jquery.multiselect.css" />
 </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
@@ -33,7 +34,7 @@
 
                         <button type="button" class="btn btn-success float-right mb-2" onclick="AddNewNotAvailableSubGroup()">Add New</button>
 
-                        <table id="tblnotavailablesubgroups" class="display" style="width:100%">
+                        <table id="tblNotAvailableSubgroups" class="display" style="width:100%">
                             <thead>
                             <tr>
                                 <th>Sub Group ID</th>
@@ -78,6 +79,8 @@
 <script src="../public/jConfirm/jquery-confirm.min.js"></script>
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/datatable/jquery.dataTables.min.js"></script>
+<script src="../public/mutiselect/jquery.multiselect.js"></script>
+<script src="../public/timepicker/jquery.timepicker.min.js"></script>
 
 <!-- Insert this line after script imports -->
 <script>
@@ -86,6 +89,7 @@
     const { navBar } = require('../siteMaster');
 
     const electron = require('electron');
+    const {generateNotAvailableSubGroupsObjects} = require("../services/applicationServices/commonServices");
     const { ipcRenderer } = electron;
 
     $(window).on("load", function () {
@@ -101,27 +105,164 @@
         LoadTable();
     });
 
+    function selectSubGroup(){
+        const group = $('.sub-groups').val();
+         if(!group){
+             return ;
+         }
+         
+        const academicList = ipcRenderer.sendSync('extend-group:getByName', group);
+        const counter = academicList.length > 0 ? academicList[0].groupCount : 0;
+        const dataForChild = [];
+
+        for(let x = 0; x < counter; x++){
+            const groupNameSub = group + '.'+ (x+1);
+
+            const holdData = ipcRenderer.sendSync('extend-hold-sub-group:getByName', groupNameSub);
+
+            if(holdData.length == 0){
+                const dataSub = ipcRenderer.sendSync('extend-sub-group:getByName', groupNameSub);
+
+                let count = 0;
+
+                if(dataSub.length > 0){
+                    count = dataSub[0].studentCount;
+                }
+
+                dataForChild.push({id : x, name : groupNameSub, no: count });
+            }
+        }
+        $('.sub-sub-groups').empty();
+
+        $.each(dataForChild, function (){
+            $(".sub-sub-groups").append($("<option     />").val(this.name).text(this.name));
+        });
+
+    }
+
+    function selectGroups(){
+        const academicList = ipcRenderer.sendSync('academic:get', null);
+        const programList = ipcRenderer.sendSync('programme:getAllByRow', null);
+
+        let generatedData = [];
+
+        $.each(programList, function(i, program) {
+
+            const start = program.startYearText;
+            const end = program.endYearText;
+
+            const startYear = Number(start.split('.')[0].match(/\d+/));
+            const startSem = Number(start.split('.')[1].match(/\d+/));
+
+            const endYear = Number(end.split('.')[0].match(/\d+/));
+            const endSem = Number(end.split('.')[1].match(/\d+/));
+
+            $.each(academicList, function(i, years) {
+
+                const YearAC = Number(years.AcademicYearsandSemesters.split('.')[0].match(/\d+/));
+                const SemAC = Number(years.AcademicYearsandSemesters.split('.')[1].match(/\d+/));
+
+                if((startYear <= YearAC) && (endYear >=  YearAC)){
+
+                    let isAllowed = false;
+
+                    if(YearAC < endYear){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === startYear) && (startSem <= SemAC)){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === endYear) && (endSem >= SemAC)){
+                        //ok
+                        isAllowed = true;
+                    }
+
+                    if(isAllowed){
+                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
+
+                        const holdData = ipcRenderer.sendSync('hold-group:getByName', displayData);
+
+                        if(holdData.length == 0){
+                            const existsData = ipcRenderer.sendSync('group:getByName', displayData);
+
+                            let groupCal = 0;
+                            let studentCal = 0;
+
+                            if(existsData.length > 0){
+                                groupCal = existsData[0].groupCount;
+                                studentCal = existsData[0].studentCount;
+                            }
+
+                            generatedData.push({id: years.id, name : displayData, group : groupCal, students : studentCal});
+                        }
+
+
+                    }
+                }
+
+            });
+
+        });
+
+        return generatedData;
+    }
+
+    function groupOnChange(){
+        const groupCount = $('.groups option:selected').attr('count');
+        if(groupCount === 'undefined'){
+            $('.sub-groups').empty();
+        }
+
+        let dataForChild = [];
+        for(let x = 0; x < groupCount; x++){
+
+            const groupNameSub =$('.groups option:selected').text() + '.'+ (x+1);
+
+            const holdData = ipcRenderer.sendSync('hold-sub-group:getByName', groupNameSub);
+
+            if(holdData.length == 0){
+                const dataSub = ipcRenderer.sendSync('sub-group:getByName', groupNameSub);
+
+                let count = 0;
+
+                if(dataSub.length > 0){
+                    count = dataSub[0].studentCount;
+                }
+
+                dataForChild.push({id : x, name : groupNameSub, no: count });
+            }
+        }
+
+        $('.sub-groups').empty();
+
+        $.each(dataForChild, function (){
+            $(".sub-groups").append($("<option     />").val(this.name).text(this.name));
+        });
+        selectSubGroup();
+    }
+
     function LoadTable(){
 
         // get all programme data
-        const programmeList = ipcRenderer.sendSync('programme:getAllByRow', null);
-        var prgrammeTable = $("#tblProgramme"); //find the table by id
+        const dataList = generateNotAvailableSubGroupsObjects(ipcRenderer);
+        var dataTable = $("#tblNotAvailableSubgroups"); //find the table by id
 
         // table filling and initializing as data-table
-        prgrammeTable .DataTable ({
-            "data" : programmeList,
+        dataTable .DataTable ({
+            "data" : dataList,
             "ordering": true,
             "order": [[0, 'asc']],
             "columns" : [
-                { "data" : "name" },
-                { "data" : "startYearText" },
-                { "data" : "endYearText" },
+                { "data" : "extendSubGroup" },
+                { "data" : "dayNames" },
+                { "data" : "timeFrom" },
+                { "data" : "timeTo" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return `<button type="button" class="btn btn-warning btn-header" onclick="editProgramme('${data.id}', '${data.name}','${data.startYear}','${data.endYear}')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
+                        return `<button type="button" class="btn btn-warning btn-header" onclick="editNotAvailableSubGroups('${data.id}')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>`
                     }
                 },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
-                        return '<button type="button" class="btn btn-danger btn-header" onclick="deleteProgramme(' +data.id +',\''+data.name+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                        return '<button type="button" class="btn btn-danger btn-header" onclick="deleteNotAvailableSubGroup(' +data.id +',\''+data.extendSubGroup+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
                     }
                 },
             ]
@@ -131,51 +272,54 @@
 
     //reload table data
     function ReloadTable(){
-        if ( $.fn.DataTable.isDataTable('#tblProgramme') ) {
-            $('#tblProgramme').DataTable().destroy();
+        if ( $.fn.DataTable.isDataTable('#tblNotAvailableSubgroups') ) {
+            $('#tblNotAvailableSubgroups').DataTable().destroy();
         }
 
-        $('#tblProgramme tbody').empty();
+        $('#tblNotAvailableSubgroups tbody').empty();
         LoadTable();
     }
 
     // add new
-    function AddNewProgramme(){
+    function AddNewNotAvailableSubGroup(){
+        const groups = selectGroups();
 
-        const academicYears = ipcRenderer.sendSync('academic:get', null);
-
-        let ddl = '<select id="ddlSatrtYear" class="form-control">';
-        ddl += '<option value="0"> Select academic years </option>';
-
-        let ddlEnd = '<select id="ddlEndYear" class="form-control">';
-        ddlEnd += '<option value="0"> Select academic years </option>';
-
-
-        $.each(academicYears, function(i, item) {
-
-            ddl += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
-            ddlEnd += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
+        let groupSelection = '<select class="form-control groups" required onchange="groupOnChange()">';
+        groupSelection += '<option value="0" selected disabled>Select group</option>';
+        $.each(groups, function(i, group) {
+            groupSelection += '<option value="' + group.id + '" count="' + group.group + '">' + group.name + '</option>';
         });
-        ddl += '</select>';
-        ddlEnd += '</select>';
+        groupSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+        const subGroupSelection = '<select class="form-control sub-groups" required onchange="selectSubGroup()"></select>';
+
+        const subSubGroupSelection = '<select class="form-control sub-sub-groups" required"></select>';
 
         $.confirm({
-            title: 'New Programme',
-            content: '' +
-                '<div>' +
-                '<div class="form-group">' +
-                '<label>Enter Programme</label>' +
-                '<input type="text" placeholder="Programme" class="name form-control" required />' +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>Start Academic Year and semester</label>' +
-                 ddl +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>End Academic Year and semester</label>' +
-                 ddlEnd +
-                '</div>' +
-                '</div>',
+            title: 'New Time for Not Available Groups!',
+            content: `<div>
+                    <div class="form-group">
+                        <label>Select program</label>
+                        ${groupSelection}
+                        <label>Select group</label>
+                        ${subGroupSelection}
+                        <label>Select sub group</label>
+                        ${subSubGroupSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
             buttons: {
                 cancel: function () {
                     //close
@@ -184,29 +328,52 @@
                     text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        let name = this.$content.find('.name').val();
 
-                        //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid Programme name');
+                        const Groups = this.$content.find('.groups').val();
+                        const subGroups = this.$content.find('.sub-groups option:selected').text();
+                        const subSubGroups = this.$content.find('.sub-sub-groups option:selected').text();
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+
+                        if (!Groups) {
+                            $.alert('Select a valid program');
+                            return false;
+                        }
+                        if (!subGroups) {
+                            $.alert('Select a valid group');
                             return false;
                         }
 
-                        let startYear = this.$content.find('#ddlSatrtYear').val();
-                        let endYear = this.$content.find('#ddlEndYear').val();
-
-                        if(!startYear){
-                            $.alert('provide a valid Start academic year');
+                        if (!subSubGroups) {
+                            $.alert('Select a valid sub group');
                             return false;
                         }
 
-                        if(!endYear){
-                            $.alert('provide a valid End academic year');
+                        if (!daysSelected) {
+                            $.alert('Select a valid Days');
+                            return false;
+                        };
+
+
+                        if (!fromTime) {
+                            $.alert('Enter time for from ');
                             return false;
                         }
 
-                        //saving
-                        ipcRenderer.sendSync('programme:add', { name: name , startYear: startYear, endYear:endYear});
+                        if (!toTime) {
+                            $.alert('Enter time for to');
+                            return false;
+                        }
+                        ipcRenderer.sendSync('notAvailableSubGroup:add', {
+                            groupID: Groups,
+                            subGroupID : subGroups,
+                            extendSubGroup : subSubGroups,
+                            dayIDs: daysSelected,
+                            timeFrom: fromTime,
+                            timeTo: toTime
+                        });
 
                         // reload the table
                         ReloadTable();
@@ -215,96 +382,190 @@
                 },
             },
             onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
 
             }
         });
-
     }
 
     //edit  Academic Year and Semeseter data
-    function editProgramme(id, name, start, end){
+    function editNotAvailableSubGroups(id){
 
-        const academicYears = ipcRenderer.sendSync('academic:get', null);
+        const groups = selectGroups();
 
-        let ddl = '<select id="ddlSatrtYear" class="form-control">';
-        ddl += '<option value="0"> Select academic years </option>';
-
-        let ddlEnd = '<select id="ddlEndYear" class="form-control">';
-        ddlEnd += '<option value="0"> Select academic years </option>';
-
-
-        $.each(academicYears, function(i, item) {
-
-            ddl += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
-            ddlEnd += '<option value="' + item.id + '">' + item.AcademicYearsandSemesters + '</option>';
+        let groupSelection = '<select class="form-control groups" required onchange="groupOnChange()">';
+        groupSelection += '<option value="0" selected disabled>Select group</option>';
+        $.each(groups, function(i, group) {
+            groupSelection += '<option value="' + group.id + '" count="' + group.group + '">' + group.name + '</option>';
         });
-        ddl += '</select>';
-        ddlEnd += '</select>';
+        groupSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+        const subGroupSelection = '<select class="form-control sub-groups" required onchange="selectSubGroup()"></select>';
+
+        const subSubGroupSelection = '<select class="form-control sub-sub-groups" required"></select>';
 
         $.confirm({
-            title: 'Edit Programme',
-            content: '' +
-                '<div>' +
-                '<div class="form-group">' +
-                '<label>Enter Programme</label>' +
-                '<input type="text" placeholder="Programme" class="name form-control" required value="'+ name +'" />' +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>Start Academic Year and semester</label>' +
-                ddl +
-                '</div>' +
-                '<div class="form-group">' +
-                '<label>End Academic Year and semester</label>' +
-                ddlEnd +
-                '</div>' +
-                '</div>',
+            title: 'New Time for Not Available Groups!',
+            content: `<div>
+                    <div class="form-group">
+                        <label>Select program</label>
+                        ${groupSelection}
+                        <label>Select group</label>
+                        ${subGroupSelection}
+                        <label>Select sub group</label>
+                        ${subSubGroupSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
             buttons: {
                 cancel: function () {
                     //close
                 },
                 formSubmit: {
-                    text: 'Save',
+                    text: 'Submit',
                     btnClass: 'btn-blue',
                     action: function () {
-                        let name = this.$content.find('.name').val();
 
-                        //check the name is not empty value
-                        if (!name) {
-                            $.alert('provide a valid Programme name');
+                        const Groups = this.$content.find('.groups').val();
+                        const subGroups = this.$content.find('.sub-groups').val();
+                        const subSubGroups = this.$content.find('.sub-sub-groups').text();
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+
+                        if (!Groups) {
+                            $.alert('Select a valid program');
+                            return false;
+                        }
+                        if (!subGroups) {
+                            $.alert('Select a valid group');
                             return false;
                         }
 
-                        let startYear = this.$content.find('#ddlSatrtYear').val();
-                        let endYear = this.$content.find('#ddlEndYear').val();
-
-                        if(!startYear){
-                            $.alert('provide a valid Start academic year');
+                        if (!subSubGroups) {
+                            $.alert('Select a valid sub group');
                             return false;
                         }
 
-                        if(!endYear){
-                            $.alert('provide a valid End academic year');
+                        if (!daysSelected) {
+                            $.alert('Select a valid Days');
+                            return false;
+                        };
+
+
+                        if (!fromTime) {
+                            $.alert('Enter time for from ');
                             return false;
                         }
 
-                        //saving
-                        ipcRenderer.sendSync('programme:update', { id: id, name: name , startYear: startYear, endYear: endYear});
+                        if (!toTime) {
+                            $.alert('Enter time for to');
+                            return false;
+                        }
+
+                        ipcRenderer.sendSync('notAvailableSubGroup:update', {
+                            id,
+                            groupID: Groups,
+                            subGroupID : subGroups,
+                            extendSubGroup : subSubGroups,
+                            dayIDs: daysSelected,
+                            timeFrom: fromTime,
+                            timeTo: toTime
+                        });
 
                         // reload the table
                         ReloadTable();
+
                     }
                 },
             },
             onContentReady: function () {
-                //console.log(academicData);
-                this.$content.find('#ddlSatrtYear').val(start);
-                this.$content.find('#ddlEndYear').val(end);
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+
+                const dataSet = ipcRenderer.sendSync('notAvailableSubGroup:getByID', id);
+
+                const dataDetail = dataSet[0];
+                debugger;
+                this.$content.find('.groups').val(dataDetail.groupID);
+                groupOnChange();
+                this.$content.find('.sub-groups').val(dataDetail.subGroupID);
+                selectSubGroup();
+                this.$content.find('.sub-sub-groups').val(dataDetail.extendSubGroup);
+
+                $.each(dataDetail.dayIDs.split(","), function(i,e){
+                    $(".days option[value='" + Number(e) + "']").prop("selected", true);
+                });
+
+                $(".days").multiselect('reload');
+
+                this.$content.find('.fromTime').val(dataDetail.timeFrom);
+                this.$content.find('.toTime').val(dataDetail.timeTo);
+
             }
         });
     }
 
     // delete data
-    function deleteProgramme(id, name){
+    function deleteNotAvailableSubGroup(id, name){
         $.confirm({
             title: 'Confirm!',
             content: 'Confirm to remove "'+ name + '"',
@@ -313,7 +574,7 @@
                     text: 'confirm', // text for button
                     btnClass: 'btn-danger', // class for the button
                     action: function(){
-                        ipcRenderer.sendSync('programme:remove', id);
+                        ipcRenderer.sendSync('notAvailableSubGroup:remove', id);
 
                         ReloadTable();
                     }
