@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/custom-back.css" />
+    <link rel="stylesheet" href="../public/timepicker/jquery.timepicker.min.css" />
+    <link rel="stylesheet" href="../public/mutiselect/jquery.multiselect.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./notAvailableHome.html'">Back</button>
+
+                <h2 class="title-font-custom">Not Available Time of Rooms</h2>
+            </div>
+            <div>
+                <div class="card margin-1-custom">
+                    <div class="card-body">
+
+                        <button type="button" class="btn btn-success float-right mb-2" onclick="AddNew()">Add New</button>
+
+                        <table id="tblNotAvailableRooms" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Room ID</th>
+                                <th>Room Name</th>
+                                <th>Day</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/datatable/jquery.dataTables.min.js"></script>
+<script src="../public/timepicker/jquery.timepicker.min.js"></script>
+<script src="../public/mutiselect/jquery.multiselect.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+
+    const electron = require('electron');
+    const {generateNotAvailableRoomObjects} = require("../services/applicationServices/commonServices");
+    const { ipcRenderer } = electron;
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liGeneralSettings').addClass('active');
+
+    });
+
+
+    $(function() {
+        LoadTable();
+    });
+
+    function AddNew(){
+        const rooms = ipcRenderer.sendSync('room:get', null);
+        let roomsSelection = '<select class="form-control rooms" required>';
+        $.each(rooms, function(i, center) {
+            roomsSelection += '<option value="' + center.id + '">' + center.roomName + '</option>';
+        });
+        roomsSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+
+        $.confirm({
+            title: 'Add new not available times',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Select room</label>
+                        ${roomsSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        const room = this.$content.find('.rooms').val();
+                        const daysSelected = this.$content.find('.days').val().join(',')
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+                        if (!room) {
+                            $.alert('please select at room');
+                            return false;
+                        }
+
+                        if (!daysSelected) {
+                            $.alert('please select day(s)');
+                            return false;
+                        }
+
+                        if (!fromTime) {
+                            $.alert('please select from time');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('please select to time');
+                            return false;
+                        }
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('notAvailableRoom:add', {
+                            roomID:room,
+                            dayIDs:daysSelected,
+                            timeFrom : fromTime,
+                            timeTo : toTime
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+            }
+        });
+    }
+
+    function editNotAvailableRoomTime(id){
+        const rooms = ipcRenderer.sendSync('room:get', null);
+        let roomsSelection = '<select class="form-control rooms" required>';
+        $.each(rooms, function(i, center) {
+            roomsSelection += '<option value="' + center.id + '">' + center.roomName + '</option>';
+        });
+        roomsSelection += '</select>';
+
+        const days = ipcRenderer.sendSync('day:get', null);
+        let daysSelection = '<select class="form-control days select-dropdown" required multiple="multiple">';
+        $.each(days, function(i, day) {
+            daysSelection += '<option value="' + day.id + '">' + day.day + '</option>';
+        });
+        daysSelection += '</select>';
+
+
+        $.confirm({
+            title: 'Edit not available times',
+            content: `
+                <div>
+                    <div class="form-group">
+                        <label>Select room</label>
+                        ${roomsSelection}
+                        <label>Select days</label>
+                        ${daysSelection}
+                        <label for="countNumber">From</label>
+                        <input type="text" class="fromTime form-control timepicker" required />
+                        <label>To</label>
+                        <input type="text" class="toTime form-control timepicker" required />
+                    </div>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Submit',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        const room = this.$content.find('.rooms').val();
+                        const daysSelected = this.$content.find('.days').val().join(',');
+                        const fromTime = this.$content.find('.fromTime').val();
+                        const toTime = this.$content.find('.toTime').val();
+
+                        if (!room) {
+                            $.alert('please select at room');
+                            return false;
+                        }
+
+                        if (!daysSelected) {
+                            $.alert('please select day(s)');
+                            return false;
+                        }
+
+                        if (!fromTime) {
+                            $.alert('please select from time');
+                            return false;
+                        }
+
+                        if (!toTime) {
+                            $.alert('please select to time');
+                            return false;
+                        }
+
+                        //saving room to the database
+                        ipcRenderer.sendSync('notAvailableRoom:update', {
+                            id,
+                            roomID:room,
+                            dayIDs:daysSelected,
+                            timeFrom : fromTime,
+                            timeTo : toTime
+                        });
+
+                        // reload the table
+                        ReloadTable();
+
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select day(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
+                $('.timepicker').timepicker({
+                    timeFormat: 'h:mm p',
+                    interval: 30,
+                    minTime: '8:00am',
+                    maxTime: '8:00pm',
+                    defaultTime: '8.30am',
+                    startTime: '8.30am',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+
+                const dataSet = ipcRenderer.sendSync('notAvailableRoom:getByID', id);
+
+                const dataDetail = dataSet[0];
+
+                this.$content.find('.rooms').val(dataDetail.roomID);
+
+                $.each(dataDetail.dayIDs.split(","), function(i,e){
+                    $(".days option[value='" + Number(e) + "']").prop("selected", true);
+                });
+
+                $(".days").multiselect('reload');
+
+                this.$content.find('.fromTime').val(dataDetail.timeFrom);
+                this.$content.find('.toTime').val(dataDetail.timeTo);
+
+            }
+        });
+    }
+
+    function removeNotAvailableTimes(id, name){
+        $.confirm({
+            title: 'Confirm!',
+            content: 'Confirm to remove "'+ name + '"',
+            buttons: {
+                confirm:  {
+                    text: 'confirm', // text for button
+                    btnClass: 'btn-danger', // class for the button
+                    action: function(){
+                        ipcRenderer.sendSync('notAvailableRoom:remove', id);
+
+                        ReloadTable();
+                    }
+                },
+                cancel: {
+                    text: 'cancel', // text for button
+                    btnClass: 'btn-warning', // class for the button
+                    action: function(){
+
+                    }
+                }
+            }
+        });
+    }
+
+
+    function LoadTable(){
+        const notAvailableLecData = generateNotAvailableRoomObjects(ipcRenderer);
+
+        // table filling and initializing as data-table
+        $("#tblNotAvailableRooms").DataTable ({
+            "data" : notAvailableLecData,
+            "ordering": true,
+            "order": [[0, 'asc']],
+            "columns" : [
+                { "data" : "roomID" },
+                { "data" : "roomName" },
+                { "data" : "dayNames" },
+                { "data" : "timeFrom" },
+                { "data" : "timeTo" },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-warning btn-header" onclick="editNotAvailableRoomTime(' +data.id + ')"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>'
+                    }
+                },
+                { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                        return '<button type="botton" class="btn btn-danger btn-header" onclick="removeNotAvailableTimes(' +data.id +',\''+data.roomName+'\')"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>'
+                    }
+                },
+            ]
+        });
+    }
+
+    function ReloadTable(){
+        if ( $.fn.DataTable.isDataTable('#tblNotAvailableRooms') ) {
+            $('#tblNotAvailableRooms').DataTable().destroy();
+        }
+
+        $('#tblNotAvailableRooms tbody').empty();
+        LoadTable();
+    }
+
+
+
+</script>
+
+</html>
