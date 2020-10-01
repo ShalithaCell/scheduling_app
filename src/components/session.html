@@ -37,8 +37,9 @@
                                 <th>Subject</th>
                                 <th>Subject code</th>
                                 <th>Tag(s)</th>
-                                <th>Group</th>
-                                <th>Sub-group</th>
+                                <th>program</th>
+                                <th>group</th>
+                                <th>sub-group</th>
                                 <th>Student count</th>
                                 <th>Duration</th>
                                 <th>Edit</th>
@@ -124,6 +125,7 @@
                 { "data" : "tagNames" },
                 { "data" : "groupName" },
                 { "data" : "subGroup" },
+                { "data" : "subSubGroup" },
                 { "data" : "student" },
                 { "data" : "duration" },
                 { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
@@ -181,7 +183,9 @@
         });
         subjectSelection += '</select>';
 
-        const subGroupSelection = '<select class="form-control sub-groups" required ></select>';
+        const subGroupSelection = '<select class="form-control sub-groups" required onchange="selectSubGroup()"></select>';
+
+        const subSubGroupSelection = '<select class="form-control sub-sub-groups" required"></select>';
 
         $.confirm({
             title: 'New Session',
@@ -194,10 +198,12 @@
                         ${subjectSelection}
                         <label>Select tag(s)</label>
                         ${tagsSelection}
-                        <label>Select group</label>
+                        <label>Select program</label>
                         ${groupSelection}
-                        <label>Select sub-group</label>
+                        <label>Select group</label>
                         ${subGroupSelection}
+                        <label>Select sub group</label>
+                        ${subSubGroupSelection}
                         <label for="countNumber">Enter student count</label>
                         <input type="number" min="1" id="countNumber" placeholder="count" class="count form-control" required />
                         <label>Enter duration</label>
@@ -219,6 +225,7 @@
                         let count = this.$content.find('.count').val();
                         let duration = this.$content.find('.duration').val();
                         let subject = this.$content.find('.subject').val();
+                        let subSubGroups = this.$content.find('.sub-sub-groups option:selected').text();
 
                         //check the name is not empty value
                         if (!lectures) {
@@ -254,7 +261,8 @@
                             subGroup : subGroups,
                             student : count,
                             duration,
-                            subject
+                            subject,
+                            subSubGroup : subSubGroups
                         });
 
                         // reload the table
@@ -313,7 +321,7 @@
         const groups = selectGroups();
 
         let groupSelection = '<select class="form-control groups" required onchange="groupOnChange()">';
-        groupSelection += '<option value="0" selected disabled>Select group</option>';
+        groupSelection += '<option value="0" selected disabled>Select program</option>';
         $.each(groups, function(i, group) {
             groupSelection += '<option value="' + group.id + '" count="' + group.group + '">' + group.name + '</option>';
         });
@@ -328,7 +336,9 @@
         });
         subjectSelection += '</select>';
 
-        const subGroupSelection = '<select class="form-control sub-groups" required ></select>';
+        const subGroupSelection = '<select class="form-control sub-groups" required onchange="selectSubGroup()"></select>';
+
+        const subSubGroupSelection = '<select class="form-control sub-sub-groups" required"></select>';
 
         $.confirm({
             title: 'New Session',
@@ -341,10 +351,12 @@
                         ${subjectSelection}
                         <label>Select tag(s)</label>
                         ${tagsSelection}
-                        <label>Select group</label>
+                        <label>Select program</label>
                         ${groupSelection}
-                        <label>Select sub-group</label>
+                        <label>Select group</label>
                         ${subGroupSelection}
+                        <label>Select sub group</label>
+                        ${subSubGroupSelection}
                         <label for="countNumber">Enter student count</label>
                         <input type="number" min="1" id="countNumber" placeholder="count" class="count form-control" required />
                         <label>Enter duration</label>
@@ -366,6 +378,7 @@
                         let count = this.$content.find('.count').val();
                         let duration = this.$content.find('.duration').val();
                         let subject = this.$content.find('.subject').val();
+                        let subSubGroups = this.$content.find('.sub-groups option:selected').text();
 
                         //check the name is not empty value
                         if (!lectures) {
@@ -402,7 +415,8 @@
                             subGroup : subGroups,
                             student : count,
                             duration,
-                            subject
+                            subject,
+                            subSubGroup : subSubGroups
                         });
 
                         // reload the table
@@ -461,6 +475,8 @@
                 this.$content.find('.groups').val(sessionDetail.sgroup);
                 groupOnChange();
                 this.$content.find('.sub-groups').val(sessionDetail.subGroup);
+                selectSubGroup();
+                this.$content.find('.sub-sub-groups').val(sessionDetail.subSubGroup);
                 this.$content.find('.count').val(sessionDetail.student);
                 this.$content.find('.duration').val(sessionDetail.duration);
                 this.$content.find('.subject').val(sessionDetail.subject);
@@ -567,6 +583,41 @@
 
         $.each(dataForChild, function (){
             $(".sub-groups").append($("<option     />").val(this.name).text(this.name));
+        });
+        selectSubGroup();
+    }
+
+    function selectSubGroup(){
+        const group = $('.sub-groups').val();
+        if(!group){
+            return ;
+        }
+
+        const academicList = ipcRenderer.sendSync('extend-group:getByName', group);
+        const counter = academicList.length > 0 ? academicList[0].groupCount : 0;
+        const dataForChild = [];
+
+        for(let x = 0; x < counter; x++){
+            const groupNameSub = group + '.'+ (x+1);
+
+            const holdData = ipcRenderer.sendSync('extend-hold-sub-group:getByName', groupNameSub);
+
+            if(holdData.length == 0){
+                const dataSub = ipcRenderer.sendSync('extend-sub-group:getByName', groupNameSub);
+
+                let count = 0;
+
+                if(dataSub.length > 0){
+                    count = dataSub[0].studentCount;
+                }
+
+                dataForChild.push({id : x, name : groupNameSub, no: count });
+            }
+        }
+        $('.sub-sub-groups').empty();
+
+        $.each(dataForChild, function (){
+            $(".sub-sub-groups").append($("<option     />").val(this.name).text(this.name));
         });
 
     }

@@ -21,7 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     student: DataTypes.INTEGER,
     duration: DataTypes.INTEGER,
     isActive: DataTypes.INTEGER,
-    subject : DataTypes.INTEGER
+    subject : DataTypes.INTEGER,
+    subSubGroup : DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'sessions',
