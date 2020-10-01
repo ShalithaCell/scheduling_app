@@ -4,7 +4,7 @@ const { TimeTableSlots } = require('../models/index'); //import the tag model
 
 // add new tag
 global.share.ipcMain.on('timetable:add', async (event, values) => {
-    const data = new TimeTableSlots({ type: values.type, slot: values.slot, day : values.day}).save(); //save to database
+    const data = new TimeTableSlots({ type: values.type, slot: values.slot, day : values.day, period: values.period}).save(); //save to database
     event.returnValue = true;
 });
 

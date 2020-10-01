@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
   TimeTableSlots.init({
     type: DataTypes.INTEGER,
     day: DataTypes.INTEGER,
-    slot: DataTypes.STRING
+    slot: DataTypes.STRING,
+    period : DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'TimeTableSlots',
