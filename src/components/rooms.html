@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
     <link rel="stylesheet" href="../public/datatable/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="../public/style/slimselect.min.css" />
+    <link rel="stylesheet" href="../public/mutiselect/jquery.multiselect.css" />
 </head>
 <body>
 <div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
@@ -76,6 +77,7 @@
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/datatable/jquery.dataTables.min.js"></script>
 <script src="../public/script/slimselect.min.js"></script>
+<script src="../public/mutiselect/jquery.multiselect.js"></script>
 
 <!-- Insert this line after script imports -->
 <script>
@@ -86,7 +88,7 @@
     const electron = require('electron');
     const { ipcRenderer } = electron;
 
-    const {generateSessionDetailObjects} = require("../services/applicationServices/commonServices");
+    const {generateSessionDetailObjects, generateConsecutiveSessions} = require("../services/applicationServices/commonServices");
 
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
@@ -245,6 +247,212 @@
 
     }
 
+    function LoadConsecutiveSessionTable(id){
+        $.confirm({
+            title: 'Select Consecutive Sessions',
+            columnClass: 'col-md-12',
+            content: `
+                <div>
+                    <table id="tblConsecutiveSessions" class="display" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Programme</th>
+                                <th>Session 1</th>
+                                <th>Session 2</th>
+                                <th>Session 3</th>
+                                <th>Select</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                </div>`,
+            buttons: {
+                formSubmit: {
+                    text: 'Save',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        ipcRenderer.sendSync('room-consecutive-sessions:remove', id);
+                        $('.checkbox-c').each(function (){
+                            const checkChecked = this.checked;
+                            if(checkChecked){
+                                ipcRenderer.sendSync('room-consecutive-sessions:add', { roomID: id, conSessionID: Number($(this).attr('session')) });
+                            }
+
+                        });
+                    }
+                },
+                cancel: function () {
+                    //close
+                },
+            },
+            onContentReady: function () {
+                // get all room data
+                const dataSet = generateConsecutiveSessions(ipcRenderer);
+
+                // table filling and initializing as data-table
+                $("#tblConsecutiveSessions").DataTable ({
+                    "data" : dataSet,
+                    "ordering": true,
+                    "order": [[0, 'asc']],
+                    "columns" : [
+                        { "data" : "program" },
+                        { "data" : "Session1Name" },
+                        { "data" : "Session2Name" },
+                        { "data" : "Session3Name" },
+                        { 'data': null, className: 'text-center no-sort', 'render': function (data, type, row) {
+                                return `<input type="checkbox" session="${data.id}" style="width: 1vw;height: 3vh;" class="checkbox-c"/>`
+                            }
+                        }
+                    ]
+                });
+
+                if(id !== null){
+                    const session = ipcRenderer.sendSync('room-consecutive-sessions:getByRoom', id);
+
+                    if(session.length === 0)
+                        return ;
+
+                    $('.checkbox-c').each(function (){
+                        const sessionID = Number($(this).attr('session'));
+                        if(sessionID === session[0].conSessionID){
+                            $(this).prop('checked', true);
+                        }
+                    });
+                }
+
+
+            }
+        });
+    }
+
+    function selectSubGroup(text){
+        const group = text;
+        if(!group){
+            return ;
+        }
+
+        const academicList = ipcRenderer.sendSync('extend-group:getByName', group);
+        const counter = academicList.length > 0 ? academicList[0].groupCount : 0;
+        const dataForChild = [];
+
+        for(let x = 0; x < counter; x++){
+            const groupNameSub = group + '.'+ (x+1);
+
+            const holdData = ipcRenderer.sendSync('extend-hold-sub-group:getByName', groupNameSub);
+
+            if(holdData.length == 0){
+                const dataSub = ipcRenderer.sendSync('extend-sub-group:getByName', groupNameSub);
+
+                let count = 0;
+
+                if(dataSub.length > 0){
+                    count = dataSub[0].studentCount;
+                }
+
+                dataForChild.push({id : x, name : groupNameSub, no: count });
+            }
+        }
+        return dataForChild;
+
+    }
+
+    function selectGroups(){
+        const academicList = ipcRenderer.sendSync('academic:get', null);
+        const programList = ipcRenderer.sendSync('programme:getAllByRow', null);
+
+        let generatedData = [];
+
+        $.each(programList, function(i, program) {
+
+            const start = program.startYearText;
+            const end = program.endYearText;
+
+            const startYear = Number(start.split('.')[0].match(/\d+/));
+            const startSem = Number(start.split('.')[1].match(/\d+/));
+
+            const endYear = Number(end.split('.')[0].match(/\d+/));
+            const endSem = Number(end.split('.')[1].match(/\d+/));
+
+            $.each(academicList, function(i, years) {
+
+                const YearAC = Number(years.AcademicYearsandSemesters.split('.')[0].match(/\d+/));
+                const SemAC = Number(years.AcademicYearsandSemesters.split('.')[1].match(/\d+/));
+
+                if((startYear <= YearAC) && (endYear >=  YearAC)){
+
+                    let isAllowed = false;
+
+                    if(YearAC < endYear){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === startYear) && (startSem <= SemAC)){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === endYear) && (endSem >= SemAC)){
+                        //ok
+                        isAllowed = true;
+                    }
+
+                    if(isAllowed){
+                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
+
+                        const holdData = ipcRenderer.sendSync('hold-group:getByName', displayData);
+
+                        if(holdData.length == 0){
+                            const existsData = ipcRenderer.sendSync('group:getByName', displayData);
+
+                            let groupCal = 0;
+                            let studentCal = 0;
+
+                            if(existsData.length > 0){
+                                groupCal = existsData[0].groupCount;
+                                studentCal = existsData[0].studentCount;
+                            }
+
+                            generatedData.push({id: years.id, name : displayData, group : groupCal, students : studentCal});
+                        }
+
+
+                    }
+                }
+
+            });
+
+        });
+
+        return generatedData;
+    }
+
+    function groupOnChange(text, count){
+        const groupCount = count
+        if(groupCount === 'undefined'){
+            $('.sub-groups').empty();
+        }
+
+        let dataForChild = [];
+        for(let x = 0; x < groupCount; x++){
+
+            const groupNameSub =text + '.'+ (x+1);
+
+            const holdData = ipcRenderer.sendSync('hold-sub-group:getByName', groupNameSub);
+
+            if(holdData.length == 0){
+                const dataSub = ipcRenderer.sendSync('sub-group:getByName', groupNameSub);
+
+                let count = 0;
+
+                if(dataSub.length > 0){
+                    count = dataSub[0].studentCount;
+                }
+
+                dataForChild.push({id : x, name : groupNameSub, no: count });
+            }
+        }
+        return dataForChild;
+    }
+
     function assignForRoom(id) {
         const tags = ipcRenderer.sendSync('tag:get', null);
         let tagSelection = '<select class="form-control tag" multiple required>';
@@ -274,6 +482,25 @@
         });
         sessionSelection += '</select>';
 
+        const groups = selectGroups();
+        const subGroupList = [];
+        $.each(groups, function(i, group) {
+            const subGroups = groupOnChange(group.name,group.group);
+            $.each(subGroups, function (x, sub){
+                const subSubGroup = selectSubGroup(sub.name);
+                $.each(subSubGroup, function (z, subSub){
+                    subGroupList.push(subSub.name);
+                });
+            });
+        });
+
+
+        let groupSelection = '<select class="form-control groups select-dropdown" required onchange="groupOnChange()" multiple="multiple">';
+        $.each(subGroupList, function(i, group) {
+            groupSelection += '<option value="' + group + '">' + group + '</option>';
+        });
+        groupSelection += '</select>';
+
         $.confirm({
             title: 'Assign to Room!',
             content: `
@@ -294,6 +521,18 @@
                         <label>Select sessions</label>
                         ${sessionSelection}
                     </div>
+                    <div class="form-group">
+                        <label>consecutive sessions</label>
+                        <button type="button" class="btn btn-secondary" onclick="LoadConsecutiveSessionTable(id)">set consecutive sessions</button>
+                    </div>
+                     <label>groups</label>
+                    <div class="form-group border">
+                         <div class="form-group m-1">
+                             <label>Select sub group(s)</label>
+                            ${groupSelection}
+                          </div>
+
+                    </div>
                 </div>`,
             buttons: {
                 cancel: function () {
@@ -307,7 +546,7 @@
                         const subjects = this.$content.find('.subject').val();
                         const lecturers = this.$content.find('.lecturer').val();
                         const sessions = this.$content.find('.session').val();
-
+                        const subSubGroups = this.$content.find('.groups').val().join(',');
                         //check the name is not empty value
                         if (!tags) {
                             $.alert('Select a valid tags');
@@ -332,6 +571,9 @@
                         const lecturersSuccess = ipcRenderer.sendSync('room-lecturers:update', { roomId: id, lecturerIds: lecturers });
                         const sessionsSuccess = ipcRenderer.sendSync('room-sessions:update', { roomId: id, sessionIds: sessions });
 
+                        ipcRenderer.sendSync('room-subGroup-sessions:remove', { roomId: id});
+                        ipcRenderer.sendSync('room-subGroup-sessions:add', { roomId: id, SubGroups: subSubGroups});
+
                         if(tagsSuccess && subjectsSuccess && lecturersSuccess && sessionsSuccess){
                             ReloadTable();
                         }
@@ -339,6 +581,20 @@
                 },
             },
             onContentReady: function () {
+
+                $('.select-dropdown').multiselect({
+                    search :true,
+                    selectAll :true,
+                    texts: {
+                        placeholder    :'Select sub-group(s)',
+                        search         :'Search',
+                        selectedOptions:' selected',
+                        selectAll      :'Select all',
+                        unselectAll    :'Unselect all',
+                        noneSelected   :'None Selected'
+                    },
+                });
+
                 const roomTagsData = ipcRenderer.sendSync('room-tags:getByRoom', id);
                 const roomSubjectsData = ipcRenderer.sendSync('room-subjects:getByRoom', id);
                 const roomLecturersData = ipcRenderer.sendSync('room-lecturers:getByRoom', id);
@@ -377,6 +633,15 @@
                 subjectsDropdown.set(subjectList);
                 lecturersDropdown.set(lecturerList);
                 sessionsDropdown.set(sessionList);
+
+                const roomGroups = ipcRenderer.sendSync('room-subGroup-sessions:getByRoom', id);
+                if(roomGroups.length > 0){
+                    $.each(roomGroups[0].SubGroups.split(','), function(i, group) {
+                        $(".groups option[value='" + group + "']").prop("selected", true);
+                    });
+                    $(".groups").multiselect('reload');
+                }
+
             }
         });
     }
