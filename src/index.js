@@ -84,3 +84,4 @@ require('./services/notAvailableRoomTimeDataService');
 require('./services/roomSessionsDataServices');
 require('./services/consecutiveSessionsDataService');
 require('./services/parallelSessionDataService');
+require('./services/notOverlapSessionsService');
