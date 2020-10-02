@@ -183,7 +183,7 @@
 
             $.each(data, function(i, itemDay) {
                 let content = `<tr>
-                            <td timeat="${itemDay.slot}" class="cls-time-cus">${itemDay.slot}</td>
+                            <td timeat="${itemDay.slot}" period="${itemDay.period}" class="cls-time-cus">${itemDay.slot}</td>
                             <td></td>
                             <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
                         </tr>`;
@@ -243,7 +243,7 @@
         debugger;
         if(rowCount === 0){
             content = `<tr>
-                            <td timeat="8.30" class="cls-time-cus">8.30</td>
+                            <td timeat="8.30" period="30" class="cls-time-cus">8.30</td>
                             <td></td>
                             <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
                         </tr>`;
@@ -255,7 +255,7 @@
             var newTime = moment(time,'h:mm').add(30, 'minutes').format('h:mm');
 
             content = `<tr>
-                            <td timeat="${newTime}" class="cls-time-cus">${newTime}</td>
+                            <td timeat="${newTime}" period="30" class="cls-time-cus">${newTime}</td>
                             <td></td>
                             <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
                         </tr>`;
@@ -274,7 +274,7 @@
         let content;
         if(rowCount === 0){
             content = `<tr>
-                            <td timeat="8.30" class="cls-time-cus">8.30</td>
+                            <td timeat="8.30" period="60" class="cls-time-cus">8.30</td>
                             <td></td>
                             <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
                         </tr>`;
@@ -283,7 +283,7 @@
             var newTime = moment(time,'h:mm').add(60, 'minutes').format('h:mm');
 
             content = `<tr>
-                            <td timeat="${newTime}" class="cls-time-cus">${newTime}</td>
+                            <td timeat="${newTime}" period="60" class="cls-time-cus">${newTime}</td>
                             <td ></td>
                             <td ><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
                         </tr>`;
@@ -317,9 +317,9 @@
 
         $('#timeTable').find('tbody').find('tr').each(function (i, row) {
             const time = $(this).find('.cls-time-cus').attr('timeat');
-
+            const period = $(this).find('.cls-time-cus').attr('period');
             if(time){
-                ipcRenderer.sendSync('timetable:add', { day : currentDay, type : objProx.timeTableType, slot :time });
+                ipcRenderer.sendSync('timetable:add', { day : currentDay, type : objProx.timeTableType, slot :time, period });
             }
 
         });

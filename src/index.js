@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const printer = require("./services/applicationServices/print");
 const path = require('path');
 global.share= {ipcMain};
 
@@ -7,9 +8,12 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit();
 }
 
+let mainWindow ;
+let printerWindow;
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences:
@@ -26,6 +30,11 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  printerWindow = new BrowserWindow({
+    show: false
+  });
+  printerWindow.loadFile(path.join(__dirname, 'components/print.html'));
 };
 
 // This method will be called when Electron has finished
@@ -47,6 +56,14 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+
+global.share.ipcMain.on('print-data', async (event, data) => {
+  if (printerWindow) {
+    printerWindow.hide();
+    printer.print(data, printerWindow);
   }
 });
 
@@ -87,3 +104,4 @@ require('./services/parallelSessionDataService');
 require('./services/notOverlapSessionsService');
 require('./services/roomConsecutiveSessionDataService');
 require('./services/roomSubGroupsDataService');
+

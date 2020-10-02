@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+</head>
+
+<body>
+
+<pre id="pre"></pre>
+
+<script>
+    const ipcRenderer = require('electron').ipcRenderer;
+
+    function addHtml(html) {
+        const container = document.getElementById('pre');
+        container.innerHTML = html;
+    }
+
+    ipcRenderer.on('on-print', (event, data) => {
+        addHtml(data['html']);
+        ipcRenderer.send('open-print', data)
+    })
+</script>
+
+</body>
+
+</html>
