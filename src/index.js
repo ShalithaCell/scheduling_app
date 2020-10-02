@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const printer = require("./services/applicationServices/print");
 const path = require('path');
 global.share= {ipcMain};
 
@@ -7,25 +8,28 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit();
 }
 
+let mainWindow ;
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences:
         {
-          //devTools : false,
+          devTools : false,
           nodeIntegration: true,
         }
   });
 
   mainWindow.maximize();
-
+  mainWindow.setMenu(null);
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'components/index.html'));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
+
 };
 
 // This method will be called when Electron has finished
@@ -48,6 +52,11 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+
+global.share.ipcMain.on('print-data', async (event, data) => {
+
 });
 
 // database operations
@@ -87,3 +96,4 @@ require('./services/parallelSessionDataService');
 require('./services/notOverlapSessionsService');
 require('./services/roomConsecutiveSessionDataService');
 require('./services/roomSubGroupsDataService');
+
