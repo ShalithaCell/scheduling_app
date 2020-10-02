@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/hours-custom.css" />
+    <link rel="stylesheet" href="../public/style/material-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/custom-back.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./timetables.html'">Back</button>
+                <h2 class="title-font-custom">Timetables</h2>
+                <div class="pull-right" style="margin-left: 56%;}">
+                    <button type="button" class="btn btn-success" onclick="PrintElem('setElement')">Print</button>
+                </div>
+            </div>
+            <div>
+                <div class="margin-1-custom">
+                    <div class="card-body setElement">
+
+                    </div>
+                </div>
+
+
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/moment.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+    const { timeTableEnum } = require('../systemConst');
+    const { objProx } = require('../services/systemSessionContainer');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    const { generateParallelSessions,
+        generateNotAvailableSessionObjects,
+        generateNotAvailableLectureObjects
+    } = require("../services/applicationServices/commonServices");
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liTimetables').addClass('active');
+
+    });
+
+
+    $(function() {
+        generateTimeTables();
+    });
+    function selectGroups(){
+        const academicList = ipcRenderer.sendSync('academic:get', null);
+        const programList = ipcRenderer.sendSync('programme:getAllByRow', null);
+
+        let generatedData = [];
+
+        $.each(programList, function(i, program) {
+
+            const start = program.startYearText;
+            const end = program.endYearText;
+
+            const startYear = Number(start.split('.')[0].match(/\d+/));
+            const startSem = Number(start.split('.')[1].match(/\d+/));
+
+            const endYear = Number(end.split('.')[0].match(/\d+/));
+            const endSem = Number(end.split('.')[1].match(/\d+/));
+
+            $.each(academicList, function(i, years) {
+
+                const YearAC = Number(years.AcademicYearsandSemesters.split('.')[0].match(/\d+/));
+                const SemAC = Number(years.AcademicYearsandSemesters.split('.')[1].match(/\d+/));
+
+                if((startYear <= YearAC) && (endYear >=  YearAC)){
+
+                    let isAllowed = false;
+
+                    if(YearAC < endYear){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === startYear) && (startSem <= SemAC)){
+                        // ok
+                        isAllowed = true;
+                    }else if((YearAC === endYear) && (endSem >= SemAC)){
+                        //ok
+                        isAllowed = true;
+                    }
+
+                    if(isAllowed){
+                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
+
+                        const holdData = ipcRenderer.sendSync('hold-group:getByName', displayData);
+
+                        if(holdData.length == 0){
+                            const existsData = ipcRenderer.sendSync('group:getByName', displayData);
+
+                            let groupCal = 0;
+                            let studentCal = 0;
+
+                            if(existsData.length > 0){
+                                groupCal = existsData[0].groupCount;
+                                studentCal = existsData[0].studentCount;
+                            }
+                            const timestamp = existsData.length > 0 ? existsData[0].id : Date.now();
+                            generatedData.push({id: timestamp, name : displayData, group : groupCal, students : studentCal});
+                        }
+
+
+                    }
+                }
+
+            });
+
+        });
+
+        return generatedData;
+    }
+
+    function PrintElem(elem)
+    {
+        ipcRenderer.send('print-data', 'sdsdsd');
+    }
+
+    function ViewTemplate(groupName, id){
+
+        const data = ipcRenderer.sendSync('work:getByTypeRow', objProx.timeTableType);
+        const rowsSet = ipcRenderer.sendSync('work:getByType', objProx.timeTableType);
+
+        const maxRowsCount = Math.max.apply(Math, rowsSet.map(function(o) { return o.time; })) * 2;
+
+        let tableHeader =  ' <thead><tr><th scope="col">Time</th>';
+        // debugger;
+        $.each(data, function(i, item) {
+            tableHeader += `<th scope="col" day="${item.dayID}">${item.day}</th>`;
+        });
+
+        tableHeader += '</tr></thead>';
+
+        let tBody = '';
+
+        let currentTime = '8.30';
+
+        for(let r = 0; r < maxRowsCount; r++)
+        {
+            let tr = '<tr>';
+            for (let c = 0; c < (data.length+1); c++)
+            {
+                if(c === 0){
+                    tr += `<td time="${currentTime}">${currentTime}</td>`;
+                }
+                else{
+                    tr += `<td time="${currentTime}"></td>`;
+                }
+            }
+            currentTime = moment(currentTime,'h:mm').add(30, 'minutes').format('h:mm');
+
+            tBody += tr;
+        }
+
+        let content = `<div class="mt-4">
+                        <h4>${groupName}</h4>
+                        <table class="table table-bordered"  id="tbl_timeSlot_${id}" groupName="${groupName}" groupID="${id}">
+                          ${tableHeader}
+                          <tbody>
+                            ${tBody}
+                          </tbody>
+                        </table>
+                        </div>`;
+
+        $('.setElement').append(content);
+
+        $('#tbl_timeSlot_'+id).find('thead').find('th').each(function (i, item){
+            if(i !== 0){
+                const currentDayTimeSet = ipcRenderer.sendSync('timetable:getByTypeAndDay', {type : objProx.timeTableType, day: $(item).attr('day')});
+
+                $.each(currentDayTimeSet, function(n, timeVal) {
+                    $(`#tbl_timeSlot_${id} tbody>tr`).each(function(){
+                        let th = $(`#tbl_timeSlot_${id} th`).eq(i).html();
+                        const cellTime = $(this).find("td:eq(" + i + ")").attr('time');
+
+                        if(cellTime === timeVal.slot){
+                            $(this).find("td:eq(" + i + ")").text('-').attr('period', timeVal.period).addClass(`day_${$(item).attr('day')}`);
+                        }
+
+                    });
+                });
+
+            }
+        });
+
+        $(`#tbl_timeSlot_${id}`).find('tbody').find('tr').find('td').each(function()
+        {
+            const $this = $(this);
+            const index = $this.index();
+            const txt =  $this.text();
+            // debugger;
+            if ('' === txt)
+            {
+                $($this.parent().prev().children()[index]).attr('rowspan', 2);
+                $this.hide().attr('hdn', 1).removeClass (function (index, className) {
+                    return (className.match (/\bday_\S+/g) || []).join(' ');
+                });
+            }
+        });
+
+        const dayIds = [];
+        $(`#tbl_timeSlot_${id}`).find('thead').find('th').each(function (){
+            const has = $(this).attr('day');
+            if (typeof has !== typeof undefined && has !== false) {
+                dayIds.push(has);
+            }
+        });
+
+        const parallelSessions = generateParallelSessions(ipcRenderer);
+        const notAvailableSessions = generateNotAvailableSessionObjects(ipcRenderer);
+        const allNotAvailableLectures = generateNotAvailableLectureObjects(ipcRenderer);
+        const filteredParallelSessions = parallelSessions.filter((i) => i.program === groupName);
+
+        const sessionIDs = [];
+        debugger;
+        $.each(filteredParallelSessions, function (i,v){
+            if(v.session1ID !== 0)
+                sessionIDs.push(v.session1ID);
+            if(v.session2ID !== 0)
+                sessionIDs.push(v.session2ID);
+            if(v.session3ID !== 0)
+                sessionIDs.push(v.session3ID);
+            if(v.session4ID !== 0)
+                sessionIDs.push(v.session4ID);
+            if(v.session5ID !== 0)
+                sessionIDs.push(v.session5ID);
+            if(v.session6ID !== 0)
+                sessionIDs.push(v.session6ID);
+
+            const sessionsIDs = [];
+            const notAvailableLecturerForSession = [];
+
+            let maxDuration = 0;
+
+            const allSessions = ipcRenderer.sendSync('session:get', null);
+            $.each(sessionIDs, function (x, val){
+                // debugger;
+                const currentSession = allSessions.filter((s) => s.id === Number(val));
+                if(currentSession.length > 0){
+                    const lec = currentSession[0].lectures.split(',');
+                    sessionsIDs.push(currentSession[0]);
+
+                    if(maxDuration < currentSession[0].duration){
+                        maxDuration = currentSession[0].duration;
+                    }
+
+                    $.each(lec, function (y, lecID){
+                        const notAvailableLec = allNotAvailableLectures.filter((l) => l.lecID === Number(lecID));
+                        if(notAvailableLec.length > 0){
+                            notAvailableLecturerForSession.push({lecID,
+                                fromTime: notAvailableLec[0].timeFrom ,
+                                toTime:notAvailableLec[0].timeTo,
+                                fromTimeStamp : moment(notAvailableLec[0].timeFrom, "h:mm a").toDate(),
+                                toTimeStamp : moment(notAvailableLec[0].timeTo, "h:mm a").toDate(),
+                            });
+                        }
+                    });
+                }
+            });
+
+            $.each(dayIds, function (index,value){
+
+                let counter = 0;
+                let nowValue = 0;
+                let success = false;
+
+                let okToFit = false;
+
+                $(`#tbl_timeSlot_${id}`).find(`.day_${value}`).each(function (){
+
+                    const isBooked = $(this).attr('booked');
+
+                    if (typeof isBooked === typeof undefined || isBooked === false) {
+                        const currentPeriod = $(this).attr('period');
+                        nowValue += Number(currentPeriod)/60;
+                        counter++;
+                        if(nowValue >= maxDuration){
+                            success = true;
+                            return false;
+                        }
+                    }
+
+
+                });
+                if(success){
+                    $(`#tbl_timeSlot_${id}`).find(`.day_${value}`).each(function (x,val){
+                        if((x+1) <= counter){
+
+                            let divContent = `<div>`;
+
+                            $.each(sessionsIDs, function (c, item_x){
+                                divContent += `${item_x.subjectCode}-${item_x.subjectName}`;
+                                divContent += `</br>`;
+                                divContent += `${item_x.subGroup}`;
+                                divContent += `</br>`;
+                            });
+                            divContent += `</div>`
+
+                            $(val).html(divContent).attr('booked',1);
+                        }
+                        if((x+1) === counter){
+                            okToFit = true;
+                            return false;
+                        }
+                    });
+                }
+
+                if(okToFit)
+                    return false;
+            });
+        });
+    }
+
+
+    function generateTimeTables(){
+        const groups = selectGroups();
+        $.each(groups, function (i,v){
+            ViewTemplate(v.name, v.id);
+        });
+    }
+
+
+</script>
+
+</html>

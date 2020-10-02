@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Schedule App</title>
+    <link rel="stylesheet" href="../index.css" />
+    <link rel="stylesheet" href="../public/boostrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="../public/font-awesome-4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="../public/style/slider-custom.css" />
+    <link rel="stylesheet" href="../public/style/hours-custom.css" />
+    <link rel="stylesheet" href="../public/style/material-custom.css" />
+    <link rel="stylesheet" href="../public/jConfirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="../public/jtoaster/jquery.toast.min.css" />
+    <link rel="stylesheet" href="../public/style/back-button-custom.css" />
+    <link rel="stylesheet" href="../public/style/custom-back.css" />
+
+</head>
+<body>
+<div class="row" style="position: relative;width: calc(100vw - 2px);height: 100%;">
+
+    <div id="navBarID" class="wrapper d-flex align-items-stretch" style="height: 100%">
+
+
+        <!-- Page Content  -->
+        <div class="w-100">
+            <div class="w-100 title-custom form-inline">
+                <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./timetables.html'">Back</button>
+                <h2 class="title-font-custom">Timetable for Lecturer</h2>
+                <div class="pull-right" style="margin-left: 56%;}">
+                    <select class="form-control lectures select-dropdown">
+                    </select>
+                </div>
+            </div>
+            <div>
+                <div class="margin-1-custom">
+                    <div class="card-body">
+                        <div id="divTimeTable">
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+<!-- Insert this line above script imports  -->
+<script>
+    if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+    }
+</script>
+
+<!-- normal script imports etc  -->
+<script src="../public/jquery.min.js"></script>
+<script src="../public/popper.min.js"></script>
+<script src="../public/boostrap/bootstrap.min.js"></script>
+<script src="../public/script/slider-custom.js"></script>
+<script src="../public/jConfirm/jquery-confirm.min.js"></script>
+<script src="../public/jtoaster/jquery.toast.min.js"></script>
+<script src="../public/moment.js"></script>
+
+<!-- Insert this line after script imports -->
+<script>
+
+    if (window.module) module = window.module;
+    const { navBar } = require('../siteMaster');
+    const { timeTableEnum } = require('../systemConst');
+    const { objProx } = require('../services/systemSessionContainer');
+
+    const electron = require('electron');
+    const { ipcRenderer } = electron;
+
+    const {
+        generateNotAvailableSessionObjects,
+        generateNotAvailableLectureObjects
+    } = require("../services/applicationServices/commonServices");
+
+    $(window).on("load", function () {
+        $("#navBarID").prepend(navBar);
+
+        // highlight page
+        $('#liTimetables').addClass('active');
+
+    });
+
+
+    $(function() {
+        ViewTemplate();
+
+        const roomList = ipcRenderer.sendSync('room:get', null);
+        $.each(roomList, function(i, center) {
+            $('.lectures').append($("<option />").val(center.id).text(center.roomName));
+        });
+    });
+
+
+    function ViewTemplate(){
+
+        const data = ipcRenderer.sendSync('work:getByTypeRow', objProx.timeTableType);
+        const rowsSet = ipcRenderer.sendSync('work:getByType', objProx.timeTableType);
+
+        const maxRowsCount = Math.max.apply(Math, rowsSet.map(function(o) { return o.time; })) * 2;
+
+        let tableHeader =  ' <thead><tr><th scope="col">Time</th>';
+
+        $.each(data, function(i, item) {
+            tableHeader += `<th scope="col" day="${item.dayID}">${item.day}</th>`;
+        });
+
+        tableHeader += '</tr></thead>';
+
+        let tBody = '';
+
+        let currentTime = '8.30';
+
+        for(let r = 0; r < maxRowsCount; r++)
+        {
+            let tr = '<tr>';
+            for (let c = 0; c < (data.length+1); c++)
+            {
+                if(c === 0){
+                    tr += `<td time="${currentTime}">${currentTime}</td>`;
+                }
+                else{
+                    tr += `<td time="${currentTime}"></td>`;
+                }
+            }
+            currentTime = moment(currentTime,'h:mm').add(30, 'minutes').format('h:mm');
+
+            tBody += tr;
+        }
+
+        let content = `<div>
+                        <table class="table table-bordered"  id="tbl_timeSlot">
+                          ${tableHeader}
+                          <tbody>
+                            ${tBody}
+                          </tbody>
+                        </table>
+                        </div>`;
+
+        $('#divTimeTable').append(content);
+
+        $('#tbl_timeSlot').find('thead').find('th').each(function (i, item){
+            if(i !== 0){
+                console.log($(item).attr('day'));
+
+                const currentDayTimeSet = ipcRenderer.sendSync('timetable:getByTypeAndDay', {type : objProx.timeTableType, day: $(item).attr('day')});
+                debugger;
+                $.each(currentDayTimeSet, function(n, timeVal) {
+                    $("#tbl_timeSlot tbody>tr").each(function(){
+                        debugger;
+                        let th = $('#tbl_timeSlot th').eq(i).html();
+                        const cellTime = $(this).find("td:eq(" + i + ")").attr('time');
+
+                        if(cellTime === timeVal.slot){
+                            $(this).find("td:eq(" + i + ")").text('-');
+                        }
+
+                    });
+                });
+
+            }
+        });
+
+        $('#tbl_timeSlot').find('tbody').find('tr').find('td').each(function()
+        {
+            const $this = $(this);
+            const index = $this.index();
+            const txt =  $this.text();
+            debugger;
+            if ('' === txt)
+            {
+                $($this.parent().prev().children()[index]).attr('rowspan', 2);
+                $this.hide();
+            }
+        });
+    }
+
+
+
+</script>
+
+</html>

@@ -183,7 +183,7 @@
 
             $.each(data, function(i, itemDay) {
                 let content = `<tr>
-                            <td timeat="${itemDay.slot}" class="cls-time-cus">${itemDay.slot}</td>
+                            <td timeat="${itemDay.slot}" period="${itemDay.period}" class="cls-time-cus">${itemDay.slot}</td>
                             <td></td>
                             <td><button type="button" class="btn btn-danger btn-header" onclick="removeRow();"><i class="fa fa-pencil" aria-hidden="true"></i> Remove</button></td>
                         </tr>`;

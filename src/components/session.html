@@ -379,7 +379,7 @@
                         let duration = this.$content.find('.duration').val();
                         let subject = this.$content.find('.subject').val();
                         let subSubGroups = this.$content.find('.sub-groups option:selected').text();
-
+                        debugger;
                         //check the name is not empty value
                         if (!lectures) {
                             $.alert('please select at least 1 lecturer');
@@ -533,13 +533,20 @@
 
                             let groupCal = 0;
                             let studentCal = 0;
-
+                            let ID_FO = 0;
                             if(existsData.length > 0){
                                 groupCal = existsData[0].groupCount;
                                 studentCal = existsData[0].studentCount;
+                                ID_FO = existsData[0].id;
+                            }else{
+
+                                ipcRenderer.sendSync('group:add', {name : displayData, groupCount : 0, studentCount:0});
+
+                                const newData = ipcRenderer.sendSync('group:getByName', displayData);
+                                ID_FO = newData[0].id
                             }
 
-                            generatedData.push({id: years.id, name : displayData, group : groupCal, students : studentCal});
+                            generatedData.push({id: ID_FO, name : displayData, group : groupCal, students : studentCal});
                         }
 
 
