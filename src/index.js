@@ -9,7 +9,6 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 }
 
 let mainWindow ;
-let printerWindow;
 
 const createWindow = () => {
   // Create the browser window.
@@ -18,23 +17,19 @@ const createWindow = () => {
     height: 600,
     webPreferences:
         {
-          //devTools : false,
+          devTools : false,
           nodeIntegration: true,
         }
   });
 
   mainWindow.maximize();
-
+  mainWindow.setMenu(null);
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'components/index.html'));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
-  printerWindow = new BrowserWindow({
-    show: false
-  });
-  printerWindow.loadFile(path.join(__dirname, 'components/print.html'));
 };
 
 // This method will be called when Electron has finished
@@ -61,10 +56,7 @@ app.on('activate', () => {
 
 
 global.share.ipcMain.on('print-data', async (event, data) => {
-  if (printerWindow) {
-    printerWindow.hide();
-    printer.print(data, printerWindow);
-  }
+
 });
 
 // database operations

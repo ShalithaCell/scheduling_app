@@ -286,6 +286,7 @@
             let maxDuration = 0;
 
             const allSessions = ipcRenderer.sendSync('session:get', null);
+            debugger;
             $.each(sessionIDs, function (x, val){
                 // debugger;
                 const currentSession = allSessions.filter((s) => s.id === Number(val));
