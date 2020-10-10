@@ -46,6 +46,7 @@
     }
   },
   "dependencies": {
+    "electron-print": "^1.0.2",
     "electron-squirrel-startup": "^1.0.0",
     "sequelize": "^6.3.4",
     "sqlite3": "^5.0.0"

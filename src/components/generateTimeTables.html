@@ -27,7 +27,7 @@
                 <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./timetables.html'">Back</button>
                 <h2 class="title-font-custom">Timetables</h2>
                 <div class="pull-right" style="margin-left: 56%;}">
-                    <button type="button" class="btn btn-success" onclick="PrintElem('setElement')">Print</button>
+                    <button type="button" class="btn btn-success" onclick="PrintElem()">Print</button>
                 </div>
             </div>
             <div>
@@ -80,10 +80,49 @@
     const electron = require('electron');
     const { ipcRenderer } = electron;
 
+    const printer = require('electron-print');
+
+
     const { generateParallelSessions,
         generateNotAvailableSessionObjects,
-        generateNotAvailableLectureObjects
+        generateNotAvailableLectureObjects,
+        generateConsecutiveSessions,
+        generateOverlapSessions,
+        generateNotAvailableSubGroupsObjects,
+        generateNotAvailableRoomObjects
     } = require("../services/applicationServices/commonServices");
+
+    const parallelSessionsList = generateParallelSessions(ipcRenderer);
+    const consecutiveSessionsList = generateConsecutiveSessions(ipcRenderer);
+    const notOverlapSessionsList = generateOverlapSessions(ipcRenderer);
+    const notAvailableSessionsList = generateNotAvailableSessionObjects(ipcRenderer);
+    const allNotAvailableLecturesList = generateNotAvailableLectureObjects(ipcRenderer);
+    const notAvailableGroupsList = ipcRenderer.sendSync('notAvailableGroup:get', null);
+    const notAvailableSubGroupsList = generateNotAvailableSubGroupsObjects(ipcRenderer);
+    const notAvailableRoomsList = generateNotAvailableRoomObjects(ipcRenderer);
+    const allSessions = ipcRenderer.sendSync('session:get', null);
+
+    //printing
+    console.log('parallelSessionsList');
+    console.log(JSON.stringify(parallelSessionsList));
+    console.log('consecutiveSessionsList');
+    console.log(JSON.stringify(consecutiveSessionsList));
+    console.log('notOverlapSessionsList');
+    console.log(JSON.stringify(notOverlapSessionsList));
+    console.log('notAvailableSessionsList');
+    console.log(JSON.stringify(notAvailableSessionsList));
+    console.log('allNotAvailableLecturesList');
+    console.log(JSON.stringify(allNotAvailableLecturesList));
+    console.log('notAvailableGroupsList');
+    console.log(JSON.stringify(notAvailableGroupsList));
+    console.log('notAvailableSubGroupsList');
+    console.log(JSON.stringify(notAvailableSubGroupsList));
+    console.log('notAvailableRoomsList');
+    console.log(JSON.stringify(notAvailableRoomsList));
+    console.log('allSessions');
+    console.log(JSON.stringify(allSessions));
+
+    const addedSessionIDs = [];
 
     $(window).on("load", function () {
         $("#navBarID").prepend(navBar);
@@ -164,9 +203,9 @@
         return generatedData;
     }
 
-    function PrintElem(elem)
+    function PrintElem()
     {
-        ipcRenderer.send('print-data', 'sdsdsd');
+        printer.print("Text sent to printer.")
     }
 
     function ViewTemplate(groupName, id){
@@ -177,7 +216,7 @@
         const maxRowsCount = Math.max.apply(Math, rowsSet.map(function(o) { return o.time; })) * 2;
 
         let tableHeader =  ' <thead><tr><th scope="col">Time</th>';
-        // debugger;
+        // 
         $.each(data, function(i, item) {
             tableHeader += `<th scope="col" day="${item.dayID}">${item.day}</th>`;
         });
@@ -241,7 +280,7 @@
             const $this = $(this);
             const index = $this.index();
             const txt =  $this.text();
-            // debugger;
+            // 
             if ('' === txt)
             {
                 $($this.parent().prev().children()[index]).attr('rowspan', 2);
@@ -259,100 +298,239 @@
             }
         });
 
-        const parallelSessions = generateParallelSessions(ipcRenderer);
-        const notAvailableSessions = generateNotAvailableSessionObjects(ipcRenderer);
-        const allNotAvailableLectures = generateNotAvailableLectureObjects(ipcRenderer);
-        const filteredParallelSessions = parallelSessions.filter((i) => i.program === groupName);
+        generateParallelSessionsToTable(groupName, id, `#tbl_timeSlot_${id}`, dayIds);
+        generateConsecutiveSessionsToTable(groupName, id, `#tbl_timeSlot_${id}`, dayIds);
+        generateConsecutiveSessionsToTable(groupName, id, `#tbl_timeSlot_${id}`, dayIds);
 
-        const sessionIDs = [];
-        debugger;
-        $.each(filteredParallelSessions, function (i,v){
-            if(v.session1ID !== 0)
-                sessionIDs.push(v.session1ID);
-            if(v.session2ID !== 0)
-                sessionIDs.push(v.session2ID);
-            if(v.session3ID !== 0)
-                sessionIDs.push(v.session3ID);
-            if(v.session4ID !== 0)
-                sessionIDs.push(v.session4ID);
-            if(v.session5ID !== 0)
-                sessionIDs.push(v.session5ID);
-            if(v.session6ID !== 0)
-                sessionIDs.push(v.session6ID);
+    }
 
-            const sessionsIDs = [];
-            const notAvailableLecturerForSession = [];
+    function generateConsecutiveSessionsToTable(groupName, groupID, tableID, dayIDs){
+        const table = $(tableID);
+        const groupAssociateConsecutiveSessions = allSessions.filter((s) => s.groupName === groupName);
 
-            let maxDuration = 0;
+        $.each(groupAssociateConsecutiveSessions, function (i, item){
+            const maxDuration = item.duration;
 
-            const allSessions = ipcRenderer.sendSync('session:get', null);
-            debugger;
-            $.each(sessionIDs, function (x, val){
-                // debugger;
-                const currentSession = allSessions.filter((s) => s.id === Number(val));
-                if(currentSession.length > 0){
-                    const lec = currentSession[0].lectures.split(',');
-                    sessionsIDs.push(currentSession[0]);
+            let perfectDay = 0;
 
-                    if(maxDuration < currentSession[0].duration){
-                        maxDuration = currentSession[0].duration;
-                    }
-
-                    $.each(lec, function (y, lecID){
-                        const notAvailableLec = allNotAvailableLectures.filter((l) => l.lecID === Number(lecID));
-                        if(notAvailableLec.length > 0){
-                            notAvailableLecturerForSession.push({lecID,
-                                fromTime: notAvailableLec[0].timeFrom ,
-                                toTime:notAvailableLec[0].timeTo,
-                                fromTimeStamp : moment(notAvailableLec[0].timeFrom, "h:mm a").toDate(),
-                                toTimeStamp : moment(notAvailableLec[0].timeTo, "h:mm a").toDate(),
-                            });
-                        }
-                    });
-                }
-            });
-
-            $.each(dayIds, function (index,value){
-
-                let counter = 0;
-                let nowValue = 0;
-                let success = false;
-
-                let okToFit = false;
-
-                $(`#tbl_timeSlot_${id}`).find(`.day_${value}`).each(function (){
+            $.each(dayIDs, function (n, dayID) {
+                let maxHold = 0;
+                table.find('.day_' + dayID).each(function () {
 
                     const isBooked = $(this).attr('booked');
 
                     if (typeof isBooked === typeof undefined || isBooked === false) {
-                        const currentPeriod = $(this).attr('period');
-                        nowValue += Number(currentPeriod)/60;
-                        counter++;
-                        if(nowValue >= maxDuration){
+                        const period = $(this).attr('period');
+                        maxHold += Number(period) / 60;
+                    }
+                });
+
+                if(maxHold >= maxDuration){
+                    perfectDay = dayID;
+                    return false;
+                }
+            });
+
+            if(perfectDay !== 0){
+
+                let counter = 0;
+                table.find(`.day_${perfectDay}`).each(function (x,val){
+                    const isBooked = $(this).attr('booked');
+
+                    if (typeof isBooked === typeof undefined || isBooked === false) {
+                        const period = $(this).attr('period');
+
+                        counter += (Number(period) / 60);
+
+                        let divContent = `<div>`;
+                        divContent += `${item.subjectCode}-${item.subjectName}`;
+                        divContent += `</br>`;
+                        divContent += `${item.subGroup}`;
+                        divContent += `</br>`;
+
+                        divContent += `</div>`
+
+                        $(val).html(divContent).attr('booked',1);
+
+                        if(counter >= Number(item.duration)){
+                            counter = 0;
+                        }
+
+                        if(counter === 0)
+                            return false;
+
+
+                    }
+                });
+            }
+
+        })
+    }
+
+    function generateConsecutiveSessionsToTable(groupName, groupID, tableID, dayIDs){
+        const table = $(tableID);
+        const groupAssociateConsecutiveSessions = consecutiveSessionsList.filter((s) => s.program === groupName);
+
+        if(groupAssociateConsecutiveSessions.length <= 0)
+            return ;
+
+        $.each(groupAssociateConsecutiveSessions, function (i, item){
+            let sessionIDList = [];
+            sessionIDList.push(item.session1ID);
+            sessionIDList.push(item.session2ID);
+            sessionIDList.push(item.session3ID);
+
+            sessionIDList = sessionIDList.filter( f => f !== 0);
+
+            let maxDuration = 0;
+
+            $.each(sessionIDList, function (x, val){
+                const currentSession = allSessions.filter((s) => s.id === Number(val));
+                maxDuration += currentSession[0].duration;
+
+            });
+
+            let perfectDay = 0;
+
+            $.each(dayIDs, function (n, dayID) {
+                let maxHold = 0;
+                table.find('.day_' + dayID).each(function () {
+
+                    const isBooked = $(this).attr('booked');
+
+                    if (typeof isBooked === typeof undefined || isBooked === false) {
+                        const period = $(this).attr('period');
+                        maxHold += Number(period) / 60;
+                    }
+                });
+
+                if(maxHold >= maxDuration){
+                    perfectDay = dayID;
+                    return false;
+                }
+            });
+
+            if(perfectDay !== 0){
+
+                const toApply = sessionIDList;
+                let counter = 0;
+                table.find(`.day_${perfectDay}`).each(function (x,val){
+                    const isBooked = $(this).attr('booked');
+
+                    if (typeof isBooked === typeof undefined || isBooked === false) {
+                        const period = $(this).attr('period');
+
+                        counter += (Number(period) / 60);
+
+                        if(toApply.length === 0)
+                            return false;
+
+                        const sessionFor = allSessions.filter((se) => se.id === toApply[0]);
+
+                        let divContent = `<div>`;
+                        divContent += `${sessionFor[0].subjectCode}-${sessionFor[0].subjectName}`;
+                        divContent += `</br>`;
+                        divContent += `${sessionFor[0].subGroup}`;
+                        divContent += `</br>`;
+
+                        divContent += `</div>`
+
+                        $(val).html(divContent).attr('booked',1);
+
+                        if(counter >= Number(sessionFor[0].duration)){
+                            counter = 0;
+                            toApply.shift();
+                        }
+
+
+                    }
+                });
+            }
+
+
+
+        });
+
+    }
+
+    function generateParallelSessionsToTable(groupName, groupID, tableID, dayIDs){
+
+        const table = $(tableID);
+
+        const groupAssociateParallelSessions = parallelSessionsList.filter((s) => s.program === groupName);
+        if(groupAssociateParallelSessions.length <= 0)
+            return ;
+
+
+        $.each(groupAssociateParallelSessions, function (i, item){
+            //sessions
+            let sessionIDList = [];
+            sessionIDList.push(item.session1ID);
+            sessionIDList.push(item.session2ID);
+            sessionIDList.push(item.session3ID);
+            sessionIDList.push(item.session4ID);
+            sessionIDList.push(item.session5ID);
+            sessionIDList.push(item.session6ID);
+
+            sessionIDList = sessionIDList.filter( f => f !== 0);
+
+            let maxDuration = 0;
+            $.each(sessionIDList, function (x, val){
+                const currentSession = allSessions.filter((s) => s.id === Number(val));
+                if(currentSession.length > 0){
+                    if(maxDuration < currentSession[0].duration){
+                        maxDuration = currentSession[0].duration;
+                    }
+                }
+            });
+            
+            //can check session overlaps
+
+
+            $.each(dayIDs, function (n, dayID) {
+
+                let cellWant = 0;
+                let timeCount = 0;
+                let success = false;
+
+                let okToFit = false;
+
+                table.find('.day_' + dayID).each(function () {
+
+                    const isBooked = $(this).attr('booked');
+
+                    if (typeof isBooked === typeof undefined || isBooked === false) {
+                        const period = $(this).attr('period');
+                        timeCount += Number(period) / 60;
+                        cellWant += 1;
+                        if (timeCount >= maxDuration) {
                             success = true;
                             return false;
                         }
                     }
-
-
                 });
+
                 if(success){
-                    $(`#tbl_timeSlot_${id}`).find(`.day_${value}`).each(function (x,val){
-                        if((x+1) <= counter){
+                    table.find(`.day_${dayID}`).each(function (x,val){
+                        if((x+1) <= cellWant){
 
                             let divContent = `<div>`;
 
-                            $.each(sessionsIDs, function (c, item_x){
-                                divContent += `${item_x.subjectCode}-${item_x.subjectName}`;
+                            $.each(sessionIDList, function (c, item_x){
+
+                                const sessionFor = allSessions.filter((se) => se.id === item_x);
+
+                                divContent += `${sessionFor[0].subjectCode}-${sessionFor[0].subjectName}`;
                                 divContent += `</br>`;
-                                divContent += `${item_x.subGroup}`;
+                                divContent += `${sessionFor[0].subGroup}`;
                                 divContent += `</br>`;
                             });
                             divContent += `</div>`
 
                             $(val).html(divContent).attr('booked',1);
                         }
-                        if((x+1) === counter){
+
+                        if((x+1) === cellWant){
                             okToFit = true;
                             return false;
                         }
@@ -361,7 +539,12 @@
 
                 if(okToFit)
                     return false;
+
             });
+
+
+
+
         });
     }
 
@@ -369,6 +552,7 @@
     function generateTimeTables(){
         const groups = selectGroups();
         $.each(groups, function (i,v){
+            debugger;
             ViewTemplate(v.name, v.id);
         });
     }
