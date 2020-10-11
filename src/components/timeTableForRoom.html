@@ -96,6 +96,11 @@
 
     });
 
+    const allSessions = ipcRenderer.sendSync('session:get', null);
+    const allTimeTableData = ipcRenderer.sendSync('timeTableG:get', null);
+    const allRoomSessions = ipcRenderer.sendSync('room-sessions:all', null);
+    const allTags = ipcRenderer.sendSync('tag:get', null);
+
 
     $(function() {
         ViewTemplate();
@@ -104,8 +109,30 @@
         $.each(roomList, function(i, center) {
             $('.lectures').append($("<option />").val(center.id).text(center.roomName));
         });
+
+        FillData();
+
+        $(".lectures").on('change', function(){
+            ClearTableData();
+            FillData();
+        });
     });
 
+    function ClearTableData(){
+        const dayIds = [];
+        $(`#tbl_timeSlot`).find('thead').find('th').each(function (){
+            const has = $(this).attr('day');
+            if (typeof has !== typeof undefined && has !== false) {
+                dayIds.push(has);
+            }
+        });
+
+        $.each(dayIds, function (n, dayID) {
+            $('#tbl_timeSlot').find('.day_' + dayID).each(function () {
+                $(this).html('');
+            });
+        });
+    }
 
     function ViewTemplate(){
 
@@ -159,15 +186,15 @@
                 console.log($(item).attr('day'));
 
                 const currentDayTimeSet = ipcRenderer.sendSync('timetable:getByTypeAndDay', {type : objProx.timeTableType, day: $(item).attr('day')});
-                debugger;
+                
                 $.each(currentDayTimeSet, function(n, timeVal) {
                     $("#tbl_timeSlot tbody>tr").each(function(){
-                        debugger;
+                        
                         let th = $('#tbl_timeSlot th').eq(i).html();
                         const cellTime = $(this).find("td:eq(" + i + ")").attr('time');
 
                         if(cellTime === timeVal.slot){
-                            $(this).find("td:eq(" + i + ")").text('-');
+                            $(this).find("td:eq(" + i + ")").text('-').addClass(`day_${$(item).attr('day')}`).attr('period', timeVal.period);
                         }
 
                     });
@@ -181,13 +208,128 @@
             const $this = $(this);
             const index = $this.index();
             const txt =  $this.text();
-            debugger;
+            
             if ('' === txt)
             {
                 $($this.parent().prev().children()[index]).attr('rowspan', 2);
                 $this.hide();
             }
         });
+    }
+
+    function FillData(){
+        const particularData = [];
+
+        $.each(allTimeTableData, function (i, item){
+            if(item.Rooms.split(',').includes($(".lectures").val())){
+                particularData.push(item);
+            }
+        });
+        debugger;
+
+        const dayIds = [];
+        $(`#tbl_timeSlot`).find('thead').find('th').each(function (){
+            const has = $(this).attr('day');
+            if (typeof has !== typeof undefined && has !== false) {
+                dayIds.push(has);
+            }
+        });
+
+        $.each(particularData, function (i,item){
+
+            $(`#tbl_timeSlot`).find('.day_' + item.DayID).each(function () {
+                const isBooked = $(this).attr('booked');
+                if (typeof isBooked === typeof undefined || isBooked === false) {
+                    if($(this).attr('time') === item.TimePeriod){
+                        const session = allSessions.filter((f) => item.SessionID.split(',').includes(f.id.toString()));
+
+                        let divContent = `<div>`;
+                        divContent += `${session[0].subjectCode}-${session[0].subjectName}`;
+                        divContent += `</br>`;
+                        divContent += `${session[0].subGroup}`;
+                        divContent += `</br>`;
+
+                        //check sub group or group
+                        if(item.subSubGroup){
+                            divContent += `${session[0].subSubGroup}`;
+                            divContent += `</br>`;
+                        }
+
+                        // rooms
+                        const roomIdSet = [];
+                        const roomSet = allRoomSessions.filter((r) => item.SessionID.split(',').includes(r.session.toString()));
+
+                        $.each(roomSet, function (co, room){
+                            if(!roomIdSet.includes(room.room)){
+                                divContent += `${room.roomName}`;
+                                roomIdSet.push(room.room);
+                            }
+
+                        });
+                        divContent += `</br>`;
+
+                        const tagIdSet = [];
+                        const tagSet = allTags.filter((t) => session[0].tags.split(',').includes(t.id.toString()));
+
+                        $.each(tagSet, function (co, tag){
+                            if(!tagIdSet.includes(tag.id)){
+                                divContent += `${tag.tagName} `;
+                                roomIdSet.push(tag.id);
+                            }
+
+                        });
+                        divContent += `</br>`;
+
+                        divContent += `</div>`;
+                        let exists = $(this).html();
+                        exists += `</br>`;
+                        exists += divContent
+                        $(this).html(exists).attr('booked',1)
+                            .attr('rooms', roomIdSet.join(',')).attr('booked',1);
+
+                    }
+                }
+            });
+
+        })
+
+    }
+
+    const BrowserWindow = electron.remote.BrowserWindow;
+
+    const current = document.getElementById('current');
+    const options = {
+        silent: false,
+        printBackground: true,
+        color: false,
+        margin: {
+            marginType: 'printableArea'
+        },
+        landscape: false,
+        pagesPerSheet: 1,
+        collate: false,
+        copies: 1,
+        header: 'Header of the Page',
+        footer: 'Footer of the Page'
+    }
+
+    function PrintElem()
+    {
+        $('.title-custom').hide();
+        let win = BrowserWindow.getFocusedWindow();
+        // let win = BrowserWindow.getAllWindows()[0];
+
+        win.webContents.print(options, (success, failureReason) => {
+            if (!success) {
+                $('.title-custom').show();
+                console.log(failureReason);
+            }else{
+                $('.title-custom').show();
+                console.log('Print Initiated');
+            }
+
+        });
+
     }
 
 
