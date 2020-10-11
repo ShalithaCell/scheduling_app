@@ -594,7 +594,7 @@
             sessionIDList.push(item.session6ID);
 
             sessionIDList = sessionIDList.filter( f => f !== 0);
-
+            debugger;
             let maxDuration = 0;
             $.each(sessionIDList, function (x, val){
                 const currentSession = allSessions.filter((s) => s.id === Number(val));
