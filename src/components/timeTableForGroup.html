@@ -26,9 +26,10 @@
             <div class="w-100 title-custom form-inline">
                 <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./timetables.html'">Back</button>
                 <h2 class="title-font-custom">Timetable for Group</h2>
-                <div class="pull-right" style="margin-left: 56%;}">
+                <div class="pull-right" style="margin-left: 50%;}">
                     <select class="form-control lectures select-dropdown">
                     </select>
+                    <button type="button" class="btn btn-success" onclick="PrintElem()">Print</button>
                 </div>
             </div>
             <div>
@@ -71,6 +72,7 @@
 <script src="../public/jConfirm/jquery-confirm.min.js"></script>
 <script src="../public/jtoaster/jquery.toast.min.js"></script>
 <script src="../public/moment.js"></script>
+<script src="../public/script/lodash.js"></script>
 
 <!-- Insert this line after script imports -->
 <script>
@@ -96,92 +98,29 @@
 
     });
 
+    const allSessions = ipcRenderer.sendSync('session:get', null);
+    const allTimeTableData = ipcRenderer.sendSync('timeTableG:get', null);
+    const allRoomSessions = ipcRenderer.sendSync('room-sessions:all', null);
+    const allTags = ipcRenderer.sendSync('tag:get', null);
+
 
     $(function() {
         ViewTemplate();
 
-        const groups = selectGroups();
+        const groups = ipcRenderer.sendSync('sub-group:get', null);
 
         $.each(groups, function(i, center) {
-            $('.lectures').append($("<option />").val(center.id).text(center.name));
+            $('.lectures').append($("<option />").val(center.id).text(center.groupName));
+
         });
+
+        FillData();
+
+        $(".lectures").on('change', function(){
+            ClearTableData();
+            FillData();
+        })
     });
-
-    function selectGroups(){
-        // get all programme data
-        const academicList = ipcRenderer.sendSync('academic:get', null);
-        const programList = ipcRenderer.sendSync('programme:getAllByRow', null);
-
-        let generatedData = [];
-
-        $.each(programList, function(i, program) {
-
-            const start = program.startYearText;
-            const end = program.endYearText;
-
-            const startYear = Number(start.split('.')[0].match(/\d+/));
-            const startSem = Number(start.split('.')[1].match(/\d+/));
-
-            const endYear = Number(end.split('.')[0].match(/\d+/));
-            const endSem = Number(end.split('.')[1].match(/\d+/));
-
-            $.each(academicList, function(i, years) {
-
-                const YearAC = Number(years.AcademicYearsandSemesters.split('.')[0].match(/\d+/));
-                const SemAC = Number(years.AcademicYearsandSemesters.split('.')[1].match(/\d+/));
-
-                if((startYear <= YearAC) && (endYear >=  YearAC)){
-
-                    let isAllowed = false;
-
-                    if(YearAC < endYear){
-                        // ok
-                        isAllowed = true;
-                    }else if((YearAC === startYear) && (startSem <= SemAC)){
-                        // ok
-                        isAllowed = true;
-                    }else if((YearAC === endYear) && (endSem >= SemAC)){
-                        //ok
-                        isAllowed = true;
-                    }
-
-                    if(isAllowed){
-                        const displayData = years.AcademicYearsandSemesters + '.' + program.name;
-
-                        const holdData = ipcRenderer.sendSync('hold-group:getByName', displayData);
-
-                        if(holdData.length == 0){
-                            const existsData = ipcRenderer.sendSync('group:getByName', displayData);
-
-                            let groupCal = 0;
-                            let studentCal = 0;
-                            let ID_FO = 0;
-                            if(existsData.length > 0){
-                                groupCal = existsData[0].groupCount;
-                                studentCal = existsData[0].studentCount;
-                                ID_FO = existsData[0].id;
-                            }else{
-
-                                ipcRenderer.sendSync('group:add', {name : displayData, groupCount : 0, studentCount:0});
-
-                                const newData = ipcRenderer.sendSync('group:getByName', displayData);
-                                ID_FO = newData[0].id
-                            }
-
-                            generatedData.push({id: ID_FO, name : displayData, group : groupCal, students : studentCal});
-                        }
-
-
-                    }
-                }
-
-            });
-
-        });
-
-        return generatedData;
-    }
-
 
     function ViewTemplate(){
 
@@ -235,15 +174,15 @@
                 console.log($(item).attr('day'));
 
                 const currentDayTimeSet = ipcRenderer.sendSync('timetable:getByTypeAndDay', {type : objProx.timeTableType, day: $(item).attr('day')});
-                debugger;
+                
                 $.each(currentDayTimeSet, function(n, timeVal) {
                     $("#tbl_timeSlot tbody>tr").each(function(){
-                        debugger;
+                        
                         let th = $('#tbl_timeSlot th').eq(i).html();
                         const cellTime = $(this).find("td:eq(" + i + ")").attr('time');
 
                         if(cellTime === timeVal.slot){
-                            $(this).find("td:eq(" + i + ")").text('-');
+                            $(this).find("td:eq(" + i + ")").text('-').addClass(`day_${$(item).attr('day')}`).attr('period', timeVal.period);
                         }
 
                     });
@@ -257,13 +196,150 @@
             const $this = $(this);
             const index = $this.index();
             const txt =  $this.text();
-            debugger;
+            
             if ('' === txt)
             {
                 $($this.parent().prev().children()[index]).attr('rowspan', 2);
                 $this.hide();
             }
         });
+    }
+
+    function ClearTableData(){
+        const dayIds = [];
+        $(`#tbl_timeSlot`).find('thead').find('th').each(function (){
+            const has = $(this).attr('day');
+            if (typeof has !== typeof undefined && has !== false) {
+                dayIds.push(has);
+            }
+        });
+
+        $.each(dayIds, function (n, dayID) {
+            $('#tbl_timeSlot').find('.day_' + dayID).each(function () {
+                $(this).html('');
+            });
+        });
+    }
+
+    function FillData(){
+        const particularData = [];
+
+        $.each(allTimeTableData, function (i, item){
+            const sessions = allSessions.filter((f) => item.SessionID.split(',').includes(f.id.toString()));
+
+            $.each(sessions, function (s, session){
+                if(session.subGroup === $(".lectures option:selected" ).text()){
+                    particularData.push(item);
+                }
+            });
+        });
+
+
+        const dayIds = [];
+        $(`#tbl_timeSlot`).find('thead').find('th').each(function (){
+            const has = $(this).attr('day');
+            if (typeof has !== typeof undefined && has !== false) {
+                dayIds.push(has);
+            }
+        });
+
+        $.each(particularData, function (i,item){
+
+            $(`#tbl_timeSlot`).find('.day_' + item.DayID).each(function () {
+                const isBooked = $(this).attr('booked');
+                if (typeof isBooked === typeof undefined || isBooked === false) {
+                    if($(this).attr('time') === item.TimePeriod){
+                        const session = allSessions.filter((f) => item.SessionID.split(',').includes(f.id.toString()));
+
+                        let divContent = `<div>`;
+                        divContent += `${session[0].subjectCode}-${session[0].subjectName}`;
+                        divContent += `</br>`;
+                        divContent += `${session[0].subGroup}`;
+                        divContent += `</br>`;
+
+                        //check sub group or group
+                        if(item.subSubGroup){
+                            divContent += `${session[0].subSubGroup}`;
+                            divContent += `</br>`;
+                        }
+
+                        // rooms
+                        const roomIdSet = [];
+                        const roomSet = allRoomSessions.filter((r) => item.SessionID.split(',').includes(r.session.toString()));
+
+                        $.each(roomSet, function (co, room){
+                            if(!roomIdSet.includes(room.room)){
+                                divContent += `${room.roomName}`;
+                                roomIdSet.push(room.room);
+                            }
+
+                        });
+                        divContent += `</br>`;
+
+                        const tagIdSet = [];
+                        const tagSet = allTags.filter((t) => session[0].tags.split(',').includes(t.id.toString()));
+
+                        $.each(tagSet, function (co, tag){
+                            if(!tagIdSet.includes(tag.id)){
+                                divContent += `${tag.tagName} `;
+                                roomIdSet.push(tag.id);
+                            }
+
+                        });
+                        divContent += `</br>`;
+
+                        divContent += `</div>`;
+                        let exists = $(this).html();
+                        exists += `</br>`;
+                        exists += divContent
+                        $(this).html(exists).attr('booked',1)
+                            .attr('rooms', roomIdSet.join(',')).attr('booked',1);
+
+                    }
+                }
+
+            });
+
+        })
+
+    }
+
+    const BrowserWindow = electron.remote.BrowserWindow;
+
+    const current = document.getElementById('current');
+    const options = {
+        silent: false,
+        printBackground: true,
+        color: false,
+        margin: {
+            marginType: 'printableArea'
+        },
+        landscape: false,
+        pagesPerSheet: 1,
+        collate: false,
+        copies: 1,
+        header: 'Header of the Page',
+        footer: 'Footer of the Page'
+    }
+
+    function PrintElem()
+    {
+        $('.title-custom').hide();
+        let win = BrowserWindow.getFocusedWindow();
+        // let win = BrowserWindow.getAllWindows()[0];
+
+        win.webContents.print(options, (success, failureReason) => {
+            if (!success) {
+                $('.title-custom').show();
+                console.log(failureReason);
+            }
+            else{
+                $('.title-custom').show();
+                console.log('Print Initiated');
+            }
+
+        });
+
     }
 
 

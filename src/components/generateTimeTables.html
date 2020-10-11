@@ -26,7 +26,7 @@
             <div class="w-100 title-custom form-inline">
                 <button type="button" class="btn btn-warning btn-arrow-left" style="margin-left: 6%;" onclick="window.location.href='./timetables.html'">Back</button>
                 <h2 class="title-font-custom">Timetables</h2>
-                <div class="pull-right" style="margin-left: 56%;}">
+                <div class="pull-right" style="margin-left: 50%;">
                     <button type="button" class="btn btn-success" onclick="PrintElem()">Print</button>
                 </div>
             </div>
@@ -101,6 +101,9 @@
     const notAvailableSubGroupsList = generateNotAvailableSubGroupsObjects(ipcRenderer);
     const notAvailableRoomsList = generateNotAvailableRoomObjects(ipcRenderer);
     const allSessions = ipcRenderer.sendSync('session:get', null);
+    const allSubGroups = ipcRenderer.sendSync('sub-group:get', null);
+    const allRoomSessions = ipcRenderer.sendSync('room-sessions:all', null);
+    const allTagList = ipcRenderer.sendSync('room-sessions:all', null);
 
     //printing
     console.log('parallelSessionsList');
@@ -121,6 +124,10 @@
     console.log(JSON.stringify(notAvailableRoomsList));
     console.log('allSessions');
     console.log(JSON.stringify(allSessions));
+    console.log('allSubGroups');
+    console.log(JSON.stringify(allSubGroups));
+    console.log('allRoomSessions');
+    console.log(JSON.stringify(allRoomSessions));
 
     const addedSessionIDs = [];
 
@@ -134,6 +141,7 @@
 
 
     $(function() {
+        ipcRenderer.sendSync('timeTableG:remove', null);
         generateTimeTables();
     });
     function selectGroups(){
@@ -203,9 +211,41 @@
         return generatedData;
     }
 
+    const BrowserWindow = electron.remote.BrowserWindow;
+
+    const current = document.getElementById('current');
+    const options = {
+        silent: false,
+        printBackground: true,
+        color: false,
+        margin: {
+            marginType: 'printableArea'
+        },
+        landscape: false,
+        pagesPerSheet: 1,
+        collate: false,
+        copies: 1,
+        header: 'Header of the Page',
+        footer: 'Footer of the Page'
+    }
+
     function PrintElem()
     {
-        printer.print("Text sent to printer.")
+        $('.title-custom').hide();
+        let win = BrowserWindow.getFocusedWindow();
+        // let win = BrowserWindow.getAllWindows()[0];
+
+        win.webContents.print(options, (success, failureReason) => {
+            if (!success) {
+                $('.title-custom').show();
+                console.log(failureReason);
+            }else{
+                $('.title-custom').show();
+                console.log('Print Initiated');
+            }
+
+        });
+
     }
 
     function ViewTemplate(groupName, id){
@@ -300,11 +340,11 @@
 
         generateParallelSessionsToTable(groupName, id, `#tbl_timeSlot_${id}`, dayIds);
         generateConsecutiveSessionsToTable(groupName, id, `#tbl_timeSlot_${id}`, dayIds);
-        generateConsecutiveSessionsToTable(groupName, id, `#tbl_timeSlot_${id}`, dayIds);
+        generateSessionsToTable(groupName, id, `#tbl_timeSlot_${id}`, dayIds);
 
     }
 
-    function generateConsecutiveSessionsToTable(groupName, groupID, tableID, dayIDs){
+    function generateSessionsToTable(groupName, groupID, tableID, dayIDs){
         const table = $(tableID);
         const groupAssociateConsecutiveSessions = allSessions.filter((s) => s.groupName === groupName);
 
@@ -342,15 +382,59 @@
 
                         counter += (Number(period) / 60);
 
+                        const lecturerIDs = [];
+
+                        let lecID = item.lectures.split(',');
+                        lecID.forEach(function(obj){
+                            lecturerIDs.push(parseInt(obj,10));
+                        });
+
                         let divContent = `<div>`;
                         divContent += `${item.subjectCode}-${item.subjectName}`;
                         divContent += `</br>`;
                         divContent += `${item.subGroup}`;
                         divContent += `</br>`;
 
-                        divContent += `</div>`
+                        //check sub group or group
+                        if(item.subSubGroup){
+                            divContent += `${item.subSubGroup}`;
+                            divContent += `</br>`;
+                        }
 
-                        $(val).html(divContent).attr('booked',1);
+                        // rooms
+                        const roomIdSet = [];
+                        const roomSet = allRoomSessions.filter((r) => r.session === item.id);
+                        $.each(roomSet, function (co, room){
+                            if(!roomIdSet.includes(room.room)){
+                                divContent += `${room.roomName}`;
+                                roomIdSet.push(room.room);
+                            }
+
+                        });
+                        divContent += `</br>`;
+
+                        divContent += `</div>`;
+
+                        const uniqueLecID = lecturerIDs.filter(function (elem, index, self) {
+                            return index === self.indexOf(elem);
+                        });
+
+
+                        
+                        $(val).html(divContent).attr('booked',1)
+                            .attr('lectures', uniqueLecID.join(','))
+                            .attr('rooms', roomIdSet.join(','));
+
+                        const obj = {
+                            ProgramID: groupID,
+                            DayID: perfectDay,
+                            TimePeriod: $(this).attr('time'),
+                            SessionID: item.id,
+                            Lecturers: uniqueLecID.join(','),
+                            Rooms: roomIdSet.join(','),
+                            roomIds:roomIdSet.join(',')
+                        }
+                        ipcRenderer.sendSync('timeTableG:add', obj );
 
                         if(counter >= Number(item.duration)){
                             counter = 0;
@@ -425,7 +509,14 @@
                         if(toApply.length === 0)
                             return false;
 
+                        const lecturerIDs = [];
+
                         const sessionFor = allSessions.filter((se) => se.id === toApply[0]);
+
+                        let lecID = sessionFor[0].lectures.split(',');
+                        lecID.forEach(function(obj){
+                            lecturerIDs.push(parseInt(obj,10));
+                        });
 
                         let divContent = `<div>`;
                         divContent += `${sessionFor[0].subjectCode}-${sessionFor[0].subjectName}`;
@@ -433,9 +524,39 @@
                         divContent += `${sessionFor[0].subGroup}`;
                         divContent += `</br>`;
 
-                        divContent += `</div>`
+                        // rooms
+                        const roomIdSet = [];
+                        const roomSet = allRoomSessions.filter((r) => r.session === sessionFor[0].id);
+                        $.each(roomSet, function (co, room){
+                            if(!roomIdSet.includes(room.room)){
+                                divContent += `${room.roomName}`;
+                                roomIdSet.push(room.room);
+                            }
 
-                        $(val).html(divContent).attr('booked',1);
+                        });
+                        divContent += `</br>`;
+
+                        divContent += `</div>`;
+
+                        const uniqueLecID = lecturerIDs.filter(function (elem, index, self) {
+                            return index === self.indexOf(elem);
+                        });
+
+                        $(val).html(divContent).attr('booked',1)
+                            .attr('lectures', uniqueLecID.join(','))
+                            .attr('rooms', roomIdSet.join(','));
+
+                        const obj = {
+                            ProgramID: groupID,
+                            DayID: perfectDay,
+                            TimePeriod: $(this).attr('time'),
+                            SessionID: sessionIDList.join(','),
+                            Lecturers: uniqueLecID.join(','),
+                            Rooms: roomIdSet.join(','),
+                            roomIds:roomIdSet.join(',')
+                        }
+
+                        ipcRenderer.sendSync('timeTableG:add', obj );
 
                         if(counter >= Number(sessionFor[0].duration)){
                             counter = 0;
@@ -512,22 +633,65 @@
 
                 if(success){
                     table.find(`.day_${dayID}`).each(function (x,val){
+                        const period = $(this).attr('period');
                         if((x+1) <= cellWant){
 
                             let divContent = `<div>`;
-
+                            const lecturerIDs = [];
+                            const roomIdSet = [];
+                            const roomNames = [];
                             $.each(sessionIDList, function (c, item_x){
 
                                 const sessionFor = allSessions.filter((se) => se.id === item_x);
+
+                                let lecID = sessionFor[0].lectures.split(',');
+                                lecID.forEach(function(obj){
+                                    lecturerIDs.push(parseInt(obj,10));
+                                });
 
                                 divContent += `${sessionFor[0].subjectCode}-${sessionFor[0].subjectName}`;
                                 divContent += `</br>`;
                                 divContent += `${sessionFor[0].subGroup}`;
                                 divContent += `</br>`;
-                            });
-                            divContent += `</div>`
 
-                            $(val).html(divContent).attr('booked',1);
+                                // rooms
+
+                                const roomSet = allRoomSessions.filter((r) => r.session === sessionFor[0].id);
+                                $.each(roomSet, function (co, room){
+                                    if(!roomIdSet.includes(room.room)){
+                                        roomNames.push(room.roomName);
+                                        roomIdSet.push(room.room);
+                                    }
+                                });
+
+
+                            });
+                            divContent += `${roomNames.join(',')}`;
+                            divContent += `</br>`;
+                            divContent += `</div>`;
+
+                            const uniqueLecID = lecturerIDs.filter(function (elem, index, self) {
+                                return index === self.indexOf(elem);
+                            });
+
+                            $(val).html(divContent).attr('booked',1)
+                                .attr('lectures', uniqueLecID.join(','))
+                                .attr('rooms', roomIdSet.join(','));
+
+
+                            const obj = {
+                                ProgramID: groupID,
+                                DayID: dayID,
+                                TimePeriod: $(this).attr('time'),
+                                SessionID: sessionIDList.join(','),
+                                Lecturers: uniqueLecID.join(','),
+                                Rooms: roomIdSet.join(','),
+                                roomIds:roomIdSet.join(',')
+                            }
+
+
+                            ipcRenderer.sendSync('timeTableG:add', obj );
+
                         }
 
                         if((x+1) === cellWant){
@@ -552,7 +716,7 @@
     function generateTimeTables(){
         const groups = selectGroups();
         $.each(groups, function (i,v){
-            debugger;
+            
             ViewTemplate(v.name, v.id);
         });
     }

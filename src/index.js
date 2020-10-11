@@ -23,7 +23,7 @@ const createWindow = () => {
   });
 
   mainWindow.maximize();
-  // mainWindow.setMenu(null);
+  //mainWindow.setMenu(null);
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'components/index.html'));
 
@@ -96,4 +96,5 @@ require('./services/parallelSessionDataService');
 require('./services/notOverlapSessionsService');
 require('./services/roomConsecutiveSessionDataService');
 require('./services/roomSubGroupsDataService');
+require('./services/timeTableGDataService');
 
