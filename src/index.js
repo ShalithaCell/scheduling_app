@@ -28,7 +28,7 @@ const createWindow = () => {
   mainWindow.loadFile(path.join(__dirname, 'components/index.html'));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
 };
 

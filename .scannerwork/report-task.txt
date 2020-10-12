@@ -1,0 +1,6 @@
+projectKey=electron-spm-timetable-app
+serverUrl=http://localhost:9000
+serverVersion=8.5.0.37579
+dashboardUrl=http://localhost:9000/dashboard?id=electron-spm-timetable-app
+ceTaskId=AXUb9y9iDcmSgdqjjWok
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AXUb9y9iDcmSgdqjjWok
