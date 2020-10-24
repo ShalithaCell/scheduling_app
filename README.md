@@ -12,7 +12,7 @@ The purpose of this project generate a timetable for universities as well as col
 ### 1. Retrieve our project (if you haven't done so already)
 
 ```git
- $ git clone git@github.com:ShalithaCell/CSSE_WEB.git
+ $ git clone git@github.com:ShalithaCell/scheduling_app.git
 ```
 
 ### 2. Goto root folder and run the ```npm install``` to install the necessary packages.
