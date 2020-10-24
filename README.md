@@ -1,5 +1,5 @@
 # scheduling_app
-Timetable management software application. can handle parallel sessions, conservative sessions, not overlap sessions, and not available time by lectures, rooms, and also groups. 
+Timetable management software standalone offline application. can handle parallel sessions, conservative sessions, not overlap sessions, and not available time by lectures, rooms, and also groups. 
 
 # Purpose
 
@@ -29,6 +29,7 @@ The purpose of this project generate a timetable for universities as well as col
 
  # Libraries
  
+  * [Electron](https://www.electronjs.org/)
   * [jQuery](https://jquery.com/)
   * [Bootstrap](https://getbootstrap.com/)
   * [sequelize](https://sequelize.org/)
